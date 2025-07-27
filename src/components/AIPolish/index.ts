@@ -92,13 +92,24 @@ function useAIPolish() {
     editor.on(`mousedown`, () => closeAll())
 
     /* 2️⃣ 鼠标抬起：根据选区显示按钮 */
-    editor.getWrapperElement().addEventListener(`mouseup`, (e) => {
+    editor.getWrapperElement().addEventListener(`mouseup`, () => {
       setTimeout(() => {
         const text = editor.getSelection()?.trim() ?? ``
         selectedText.value = text
         if (text) {
-          position.left = e.clientX
-          position.top = e.clientY
+          // 获取选中文字的位置
+          const selection = editor.getDoc().listSelections()[0]
+          if (selection) {
+            const startPos = editor.cursorCoords(selection.anchor, `page`)
+            const endPos = editor.cursorCoords(selection.head, `page`)
+
+            // 计算选区的中心和顶部位置
+            const selectionCenterX = (startPos.left + endPos.left) / 2
+            const selectionTop = Math.min(startPos.top, endPos.top)
+
+            position.left = selectionCenterX - 20 // 在选区中心水平位置，稍微偏移
+            position.top = selectionTop - 40 // 距离选区顶部上方40px
+          }
           AIPolishBtnRef.value?.show?.()
         }
         else {
@@ -133,9 +144,19 @@ function useAIPolish() {
           const cleaned = raw.trim()
           if (cleaned) {
             selectedText.value = cleaned
-            const rect = editor.getWrapperElement().getBoundingClientRect()
-            position.left = rect.right - 50
-            position.top = rect.top + rect.height / 2
+            // 全选时获取整个内容区域的上方
+            const selection = editor.getDoc().listSelections()[0]
+            if (selection) {
+              const startPos = editor.cursorCoords(selection.anchor, `page`)
+              const endPos = editor.cursorCoords(selection.head, `page`)
+
+              // 计算选区的中心和顶部位置
+              const selectionCenterX = (startPos.left + endPos.left) / 2
+              const selectionTop = Math.min(startPos.top, endPos.top)
+
+              position.left = selectionCenterX - 20 // 在选区中心水平位置，稍微偏移
+              position.top = selectionTop - 40 // 距离选区顶部上方40px
+            }
             AIPolishBtnRef.value?.show?.()
           }
           else {

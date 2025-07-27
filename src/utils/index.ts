@@ -399,7 +399,7 @@ export function exportPDF(primaryColor: string, title: string = `untitled`) {
             color: #666;
           }
           @bottom-left {
-            content: "微信 Markdown 编辑器";
+            content: "Easy Write";
             font-size: 10px;
             color: #999;
           }

@@ -1,0 +1,439 @@
+/* Typora Ayu 主题 - 适配微信公众号编辑器 */
+
+/* 基础容器样式 */
+.preview-wrapper {
+  line-height: 1.68;
+  -webkit-text-size-adjust: 100%;
+  max-width: 46rem;
+  margin: 0px auto;
+  padding: 1.6rem 3.2rem;
+  font-family:
+    -apple-system,
+    BlinkMacSystemFont,
+    Helvetica Neue,
+    Arial,
+    Segoe UI,
+    PingFang SC,
+    Microsoft Yahei,
+    Hiragino Sans GB,
+    sans-serif,
+    Apple Color Emoji,
+    Segoe UI Emoji,
+    Segoe UI Symbol,
+    Noto Color Emoji;
+  font-size: 16px;
+  color: #6b6884;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+.preview-wrapper * {
+  -moz-box-sizing: border-box;
+  -webkit-box-sizing: border-box;
+  box-sizing: border-box;
+}
+
+.preview-wrapper > *:first-child {
+  margin-top: 0 !important;
+}
+
+.preview-wrapper > *:last-child {
+  margin-bottom: 0 !important;
+}
+
+/* 标题样式 */
+.preview-wrapper h1,
+.preview-wrapper h2,
+.preview-wrapper h3,
+.preview-wrapper h4,
+.preview-wrapper h5,
+.preview-wrapper h6 {
+  color: #4d5255;
+  line-height: 1.4;
+  font-weight: 500;
+  margin-top: 1em;
+  margin-bottom: 0.37em;
+}
+
+.preview-wrapper h1 {
+  font-size: 26px;
+  margin-top: 26px;
+  margin-bottom: 10px;
+}
+
+.preview-wrapper h2 {
+  font-size: 22px;
+  margin-top: 22px;
+  margin-bottom: 8px;
+}
+
+.preview-wrapper h3 {
+  font-size: 20px;
+  margin-top: 20px;
+  margin-bottom: 8px;
+}
+
+.preview-wrapper h4 {
+  font-size: 18px;
+  margin-top: 18px;
+  margin-bottom: 8px;
+}
+
+.preview-wrapper h5 {
+  font-size: 16px;
+  margin-top: 16px;
+  margin-bottom: 8px;
+}
+
+.preview-wrapper h6 {
+  font-size: 16px;
+  margin-top: 16px;
+  margin-bottom: 8px;
+}
+
+/* 段落样式 */
+.preview-wrapper p,
+.preview-wrapper details,
+.preview-wrapper dl,
+.preview-wrapper ol,
+.preview-wrapper ul,
+.preview-wrapper xmp,
+.preview-wrapper plaintext,
+.preview-wrapper listing,
+.preview-wrapper blockquote,
+.preview-wrapper table,
+.preview-wrapper figure,
+.preview-wrapper hr {
+  margin-top: 8px;
+  margin-bottom: 8px;
+}
+
+.preview-wrapper p {
+  margin-left: 0;
+  margin-right: 0;
+  color: #6b6884;
+}
+
+/* 引用样式 */
+.preview-wrapper blockquote {
+  display: block;
+  margin-left: 0;
+  padding-left: 14px;
+  border-left: 2px solid #ff6a00;
+  color: #6b6884;
+}
+
+.preview-wrapper blockquote > :first-child {
+  margin-top: 0;
+}
+
+.preview-wrapper blockquote > :last-child {
+  margin-bottom: 0;
+}
+
+/* 代码样式 */
+.preview-wrapper pre,
+.preview-wrapper xmp,
+.preview-wrapper plaintext,
+.preview-wrapper listing {
+  font-family: Consolas, Monaco, 'Andale Mono', 'Ubuntu Mono', monospace;
+}
+
+.preview-wrapper pre.md-fences,
+.preview-wrapper pre.md-meta-block {
+  border-radius: 3px;
+  border: 1px solid #bfc1c4;
+  padding: 10px;
+  background-color: white;
+  margin-top: 8px;
+  margin-bottom: 8px;
+}
+
+.preview-wrapper code {
+  border-radius: 4px;
+  margin-left: 2px;
+  margin-right: 2px;
+  border: 1px solid #bfc1c4;
+  background-color: white;
+  word-spacing: normal;
+  line-height: 1.6;
+  padding: 0 2px;
+  color: #272d38;
+  font-family: Consolas, Monaco, 'Andale Mono', 'Ubuntu Mono', monospace;
+}
+
+/* 链接样式 */
+.preview-wrapper a {
+  color: #e66700;
+  text-decoration: none;
+  overflow-wrap: break-word;
+  word-wrap: break-word;
+  white-space: pre-wrap;
+  hyphens: auto;
+  word-break: break-word;
+}
+
+.preview-wrapper a:hover {
+  text-decoration: underline;
+}
+
+.preview-wrapper a img {
+  border: none;
+}
+
+/* 强调样式 */
+.preview-wrapper b,
+.preview-wrapper strong {
+  font-weight: bold;
+  color: #6b6884;
+}
+
+.preview-wrapper i,
+.preview-wrapper cite,
+.preview-wrapper em,
+.preview-wrapper var,
+.preview-wrapper address,
+.preview-wrapper dfn {
+  font-style: italic;
+  color: #6b6884;
+}
+
+.preview-wrapper u {
+  text-decoration: none;
+  background-image: linear-gradient(to bottom, rgba(0, 0, 0, 0) 50%, #ff6a00 50%);
+  background-repeat: repeat-x;
+  background-size: 2px 2px;
+  background-position: 0 1em;
+}
+
+.preview-wrapper del,
+.preview-wrapper s {
+  color: #8d8f95;
+}
+
+.preview-wrapper mark {
+  color: #6b6884;
+  padding: 0.2em 0;
+  background-color: #e6f9bd;
+}
+
+/* 分割线样式 */
+.preview-wrapper hr {
+  margin: 13px 0 12px;
+  border: 0px;
+  height: 1px;
+  background-origin: content-box;
+  background-image: linear-gradient(90deg, #bfc1c4, #bfc1c4);
+  background-repeat: no-repeat;
+}
+
+/* 图片样式 */
+.preview-wrapper img {
+  max-width: 100%;
+  height: auto;
+}
+
+/* 列表样式 */
+.preview-wrapper ul {
+  margin-left: 0;
+  padding-left: 22px;
+  list-style: none;
+}
+
+.preview-wrapper ul > li:not([class*='task-list-item']) {
+  word-wrap: break-all;
+  padding-left: 0px;
+  position: relative;
+}
+
+.preview-wrapper ul > li:not([class*='task-list-item']):before {
+  position: absolute;
+  top: 2px;
+  content: '•';
+  color: #ff6a00;
+  display: inline-block;
+  margin-left: -20px;
+  margin-right: 20px;
+  width: 0px;
+  font-size: 0.8em;
+  transform: scale(1.25);
+  font-family:
+    PingFangSC-Regular,
+    PingFang SC;
+}
+
+.preview-wrapper ul > li:not([class*='task-list-item']) li:not([class*='task-list-item'])::before {
+  content: '◦';
+  transform: scale(1);
+  font-weight: 700;
+}
+
+.preview-wrapper
+  ul
+  > li:not([class*='task-list-item'])
+  li:not([class*='task-list-item'])
+  li:not([class*='task-list-item'])::before {
+  content: '▪';
+  transform: scale(1.25);
+  font-weight: normal;
+}
+
+.preview-wrapper ol {
+  counter-reset: ol_counter;
+  margin-left: 0;
+  padding-left: 22px;
+  list-style: none;
+}
+
+.preview-wrapper ol > li:not([class*='task-list-item']) {
+  word-wrap: break-all;
+  padding-left: 0px;
+  position: relative;
+}
+
+.preview-wrapper ol > li:not([class*='task-list-item']):before {
+  content: counter(ol_counter) '.';
+  counter-increment: ol_counter;
+  color: #ff6a00;
+  position: absolute;
+  margin-left: -22px;
+  margin-right: 4px;
+  padding-left: 2px;
+  padding-right: 2px;
+  text-align: left;
+  white-space: nowrap;
+  overflow: visible;
+  min-width: 18px;
+  border-radius: 2px;
+  transform: translateX(-2px);
+  font-family:
+    Helvetica Neue,
+    Consolas;
+}
+
+.preview-wrapper li {
+  word-wrap: break-all;
+}
+
+.preview-wrapper li + li {
+  margin-top: 4px;
+}
+
+.preview-wrapper ul ul,
+.preview-wrapper ol ul,
+.preview-wrapper ul ol,
+.preview-wrapper ol ol {
+  margin-top: 0;
+  margin-bottom: 0;
+}
+
+.preview-wrapper li + li,
+.preview-wrapper ul ul,
+.preview-wrapper ol ul,
+.preview-wrapper ul ol,
+.preview-wrapper ol ol,
+.preview-wrapper li ul,
+.preview-wrapper li ol {
+  margin-top: 4px;
+}
+
+/* 任务列表样式 */
+.preview-wrapper .task-list-item {
+  list-style-type: none;
+  padding-left: 0.3rem;
+}
+
+.preview-wrapper .task-list-item > p {
+  transition:
+    color 0.3s,
+    opacity 0.3s;
+}
+
+.preview-wrapper .task-list-item.task-list-done > p {
+  color: #8d8f95;
+  text-decoration: line-through;
+}
+
+.preview-wrapper .task-list-item.task-list-done > p > .md-emoji {
+  opacity: 0.5;
+}
+
+.preview-wrapper .task-list-item.task-list-done > p > .md-link > a {
+  opacity: 0.6;
+}
+
+.preview-wrapper .task-list-item > input {
+  -webkit-appearance: initial;
+  display: block;
+  position: absolute;
+  border: 1px solid #bfc1c4;
+  border-radius: 0.25rem;
+  margin-left: -1.5rem;
+  height: 1.2rem;
+  width: 1.2rem;
+  transition: border-color 0.3s;
+  background-color: #fafafa;
+}
+
+.preview-wrapper .task-list-item > input:focus {
+  outline: none;
+  box-shadow: none;
+}
+
+.preview-wrapper .task-list-item > input:hover {
+  border-color: #ff6a00;
+}
+
+.preview-wrapper .task-list-item > input[checked]::before {
+  content: '';
+  position: absolute;
+  top: 20%;
+  left: 50%;
+  height: 60%;
+  width: 2px;
+  transform: rotate(40deg);
+  background: #ff6a00;
+}
+
+.preview-wrapper .task-list-item > input[checked]::after {
+  content: '';
+  position: absolute;
+  top: 46%;
+  left: 25%;
+  height: 30%;
+  width: 2px;
+  transform: rotate(-40deg);
+  background: #ff6a00;
+}
+
+/* 表格样式 */
+.preview-wrapper table {
+  color: #272d38;
+  border-collapse: collapse;
+  background-color: white;
+  border-spacing: 2px;
+  font-size: 1em;
+  margin: 8px 0;
+}
+
+.preview-wrapper th,
+.preview-wrapper td {
+  border-color: #bfc1c4;
+  border-width: 1px;
+  border-style: solid;
+}
+
+.preview-wrapper th {
+  padding: 8px 8px;
+  font-size: 1em;
+  font-weight: 500;
+  background-color: white;
+  color: #272d38;
+}
+
+.preview-wrapper td {
+  padding: 8px 8px;
+  font-size: 1em;
+  font-weight: normal;
+  color: #272d38;
+}

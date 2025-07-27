@@ -61,12 +61,17 @@ function applyHeading(editor: CodeMirror.Editor, level: number) {
   editor.operation(() => {
     const ranges = editor.listSelections()
 
-    ranges.forEach((range) => {
+    ranges.filter(range => range && typeof range.from === `function` && typeof range.to === `function`).forEach((range) => {
       const from = range.from()
       const to = range.to()
 
+      if (!from || !to || typeof from.line === `undefined` || typeof to.line === `undefined`)
+        return
+
       for (let line = from.line; line <= to.line; line++) {
         const text = editor.getLine(line)
+        if (typeof text !== `string`)
+          continue
         // 去掉已有的 # 前缀（1~6 个）+ 空格
         const cleaned = text.replace(/^#{1,6}\s+/, ``).trimStart()
         const heading = `${`#`.repeat(level)} ${cleaned}`
@@ -136,6 +141,10 @@ export function createExtraKeys(openSearchWithSelection: (cm: CodeMirror.Editor)
         suffix: `\``,
         check: s => s.startsWith(`\``) && s.endsWith(`\``),
       })
+    },
+
+    [`${ctrlKey}-H`]: function heading(editor) {
+      applyHeading(editor, 1)
     },
 
     [`${ctrlKey}-1`]: (ed: CodeMirror.Editor) => applyHeading(ed, 1),

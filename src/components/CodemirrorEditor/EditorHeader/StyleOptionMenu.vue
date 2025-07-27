@@ -32,8 +32,6 @@ function setStyle(title: string, value: string) {
       <MenubarCheckboxItem
         v-for="{ label, value, desc } in options"
         :key="value"
-        :label="label"
-        :model-value="value"
         class="w-50"
         :checked="current === value"
         @click="change(value)"

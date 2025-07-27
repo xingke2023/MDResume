@@ -12,9 +12,12 @@ import { VitePluginRadar } from 'vite-plugin-radar'
 import vueDevTools from 'vite-plugin-vue-devtools'
 
 export default defineConfig({
-  base: process.env.SERVER_ENV === `NETLIFY` ? `/` : `/md/`,
+  base: `/`,
   define: { process },
   envPrefix: [`VITE_`, `CF_`],
+  server: {
+    allowedHosts: [`www.easy-write.com`],
+  },
   plugins: [
     vue(),
     UnoCSS(),
@@ -59,6 +62,10 @@ export default defineConfig({
               return `cytoscape`
             if (id.includes(`highlight.js`))
               return `hljs`
+            if (id.includes(`prettier`))
+              return `prettier`
+            if (id.includes(`codemirror`))
+              return `codemirror`
             const pkg = id
               .split(`node_modules/`)[1]
               .split(`/`)[0]

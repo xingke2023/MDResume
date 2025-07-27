@@ -25,8 +25,8 @@ function hydrate(cmd: QuickCommandPersisted): QuickCommandRuntime {
 // 4 条默认指令
 const DEFAULT_COMMANDS: QuickCommandPersisted[] = [
   { id: `polish`, label: `润色`, template: `请润色以下内容：\n\n{{sel}}` },
-  { id: `to-en`, label: `翻译成英文`, template: `请将以下内容翻译为英文：\n\n{{sel}}` },
-  { id: `to-zh`, label: `翻译成中文`, template: `Please translate the following content into Chinese:\n\n{{sel}}` },
+  { id: `to-en`, label: `译成英文`, template: `请将以下内容翻译为英文：\n\n{{sel}}` },
+  { id: `to-zh`, label: `译成中文`, template: `Please translate the following content into Chinese:\n\n{{sel}}` },
   { id: `summary`, label: `总结`, template: `请对以下内容进行总结：\n\n{{sel}}` },
 ]
 

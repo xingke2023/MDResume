@@ -1,0 +1,357 @@
+/**
+ * Typora Ayu 主题 - 适配微信公众号编辑器
+ * 基于 Typora Bear 主题风格
+ * 主色调：橙色 #ff6a00
+ */
+
+/* 顶层容器样式 */
+container {
+  line-height: 1.68;
+  max-width: 46rem;
+  margin: 0px auto;
+  padding: 1.6rem 3.2rem;
+  font-family:
+    -apple-system,
+    BlinkMacSystemFont,
+    Helvetica Neue,
+    Arial,
+    Segoe UI,
+    PingFang SC,
+    Microsoft Yahei,
+    Hiragino Sans GB,
+    sans-serif,
+    Apple Color Emoji,
+    Segoe UI Emoji,
+    Segoe UI Symbol,
+    Noto Color Emoji;
+  color: #6b6884;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+/* 一级标题样式 */
+h1 {
+  font-size: 1.6em;
+  font-weight: 500;
+  margin-top: 1.6em;
+  margin-bottom: 0.6em;
+  color: #4d5255;
+  line-height: 1.4;
+}
+
+/* 二级标题样式 */
+h2 {
+  font-size: 1.4em;
+  font-weight: 500;
+  margin-top: 1.4em;
+  margin-bottom: 0.5em;
+  color: #4d5255;
+  line-height: 1.4;
+}
+
+/* 三级标题样式 */
+h3 {
+  font-size: 1.25em;
+  font-weight: 500;
+  margin-top: 1.25em;
+  margin-bottom: 0.5em;
+  color: #4d5255;
+  line-height: 1.4;
+}
+
+/* 四级标题样式 */
+h4 {
+  font-size: 1.1em;
+  font-weight: 500;
+  margin-top: 1.1em;
+  margin-bottom: 0.5em;
+  color: #4d5255;
+  line-height: 1.4;
+}
+
+/* 五级标题样式 */
+h5 {
+  font-size: 1em;
+  font-weight: 500;
+  margin-top: 1em;
+  margin-bottom: 0.5em;
+  color: #4d5255;
+  line-height: 1.4;
+}
+
+/* 六级标题样式 */
+h6 {
+  font-size: 1em;
+  font-weight: 500;
+  margin-top: 1em;
+  margin-bottom: 0.5em;
+  color: #4d5255;
+  line-height: 1.4;
+}
+
+/* 图片样式 */
+image {
+  max-width: 100%;
+  height: auto;
+  margin: 8px 0;
+}
+
+/* 引用样式 */
+blockquote {
+  display: block;
+  margin-left: 0;
+  padding-left: 14px;
+  border-left: 2px solid var(--md-primary-color);
+  margin-top: 8px;
+  margin-bottom: 8px;
+  color: #6b6884;
+}
+
+/* 引用段落样式 */
+blockquote_p {
+  margin: 0;
+  color: #6b6884;
+}
+
+/* 段落样式 */
+p {
+  margin: 8px 0;
+  color: #6b6884;
+}
+
+/* 分割线样式 */
+hr {
+  margin: 13px 0 12px;
+  border: 0px;
+  height: 1px;
+  background-origin: content-box;
+  background-image: linear-gradient(90deg, #bfc1c4, #bfc1c4);
+  background-repeat: no-repeat;
+}
+
+/* 行内代码样式 */
+codespan {
+  border-radius: 4px;
+  margin-left: 2px;
+  margin-right: 2px;
+  border: 1px solid #bfc1c4;
+  background-color: white;
+  word-spacing: normal;
+  line-height: 1.6;
+  padding: 0 2px;
+  color: #272d38;
+  font-family: Consolas, Monaco, 'Andale Mono', 'Ubuntu Mono', monospace;
+}
+
+/* 斜体样式 */
+em {
+  font-style: italic;
+  color: #6b6884;
+}
+
+/* 粗体样式 */
+strong {
+  font-weight: bold;
+  color: #6b6884;
+}
+
+/* 链接样式 */
+link {
+  color: #e66700;
+  text-decoration: none;
+  overflow-wrap: break-word;
+  word-wrap: break-word;
+  white-space: pre-wrap;
+  hyphens: auto;
+  word-break: break-word;
+}
+
+/* 微信链接样式 */
+wx_link {
+  color: #e66700;
+  text-decoration: none;
+}
+
+/* 有序列表样式 */
+ol {
+  counter-reset: ol_counter;
+  margin-left: 0;
+  padding-left: 22px;
+  list-style: none;
+  margin-top: 8px;
+  margin-bottom: 8px;
+}
+
+/* 无序列表样式 */
+ul {
+  margin-left: 0;
+  padding-left: 22px;
+  list-style: none;
+  margin-top: 8px;
+  margin-bottom: 8px;
+}
+
+/* 列表项样式 */
+listitem {
+  word-wrap: break-all;
+  padding-left: 0px;
+  margin: 4px 0;
+  position: relative;
+}
+
+/* 代码块样式 */
+code {
+  font-family: Consolas, Monaco, 'Andale Mono', 'Ubuntu Mono', monospace;
+}
+
+/* 代码块外层样式 */
+code_pre {
+  border-radius: 3px;
+  border: 1px solid #bfc1c4;
+  padding: 10px;
+  background-color: white;
+  margin-top: 8px;
+  margin-bottom: 8px;
+}
+
+/* 行内公式样式 */
+inline_katex {
+  display: inline-flex;
+  max-width: 100%;
+  overflow-x: auto;
+  padding-bottom: 5px;
+  vertical-align: middle;
+}
+
+/* 公式块样式 */
+block_katex {
+  max-width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  padding: 0.5em 0;
+  text-align: center;
+}
+
+/* GFM note 样式 */
+blockquote_note {
+  border-left-color: #478be6;
+}
+
+/* GFM tip 样式 */
+blockquote_tip {
+  border-left-color: #57ab5a;
+}
+
+/* GFM info 样式 */
+blockquote_info {
+  border-left-color: #93c5fd;
+}
+
+/* GFM important 样式 */
+blockquote_important {
+  border-left-color: #986ee2;
+}
+
+/* GFM warning 样式 */
+blockquote_warning {
+  border-left-color: #c69026;
+}
+
+/* GFM caution 样式 */
+blockquote_caution {
+  border-left-color: #e5534b;
+}
+
+/* GFM 通用标题 */
+blockquote_title {
+  display: flex;
+  align-items: center;
+  gap: 0.5em;
+  margin-bottom: 0.5em;
+}
+
+/* GFM note 标题 */
+blockquote_title_note {
+  color: #478be6;
+}
+
+/* GFM tip 标题 */
+blockquote_title_tip {
+  color: #57ab5a;
+}
+
+/* GFM info 标题 */
+blockquote_title_info {
+  color: #93c5fd;
+}
+
+/* GFM important 标题 */
+blockquote_title_important {
+  color: #986ee2;
+}
+
+/* GFM warning 标题 */
+blockquote_title_warning {
+  color: #c69026;
+}
+
+/* GFM caution 标题 */
+blockquote_title_caution {
+  color: #e5534b;
+}
+
+/* GFM note 段落样式 */
+blockquote_p_note {
+  color: #6b6884;
+}
+
+/* GFM tip 段落样式 */
+blockquote_p_tip {
+  color: #6b6884;
+}
+
+/* GFM info 段落样式 */
+blockquote_p_info {
+  color: #6b6884;
+}
+
+/* GFM important 段落样式 */
+blockquote_p_important {
+  color: #6b6884;
+}
+
+/* GFM warning 段落样式 */
+blockquote_p_warning {
+  color: #6b6884;
+}
+
+/* GFM caution 段落样式 */
+blockquote_p_caution {
+  color: #6b6884;
+}
+
+/* 表格样式 */
+table {
+  color: #272d38;
+  border-collapse: collapse;
+  background-color: white;
+  border-spacing: 2px;
+  font-size: 1em;
+  margin: 8px 0;
+}
+
+thead {
+  background-color: white;
+  font-weight: 500;
+  color: #272d38;
+}
+
+td {
+  border-color: #bfc1c4;
+  border-width: 1px;
+  border-style: solid;
+  padding: 8px 8px;
+  font-size: 1em;
+  font-weight: normal;
+  color: #272d38;
+}

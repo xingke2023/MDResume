@@ -368,6 +368,62 @@ function createFormTextArea(dom: HTMLTextAreaElement) {
     }
   })
 
+  // 手机端禁用右键上下文菜单，但保留AIPolish功能
+  if (store.isMobile) {
+    const editorElement = textArea.getWrapperElement()
+
+    // 禁用长按弹出的系统上下文菜单
+    editorElement.addEventListener(`contextmenu`, (event) => {
+      event.preventDefault()
+      return false
+    })
+
+    // 为触摸设备添加长按选择支持，确保AIPolish能正常工作
+    let touchTimer: NodeJS.Timeout | null = null
+    let startX = 0
+    let startY = 0
+
+    editorElement.addEventListener(`touchstart`, (event) => {
+      if (event.touches.length === 1) {
+        startX = event.touches[0].clientX
+        startY = event.touches[0].clientY
+
+        // 设置长按定时器
+        touchTimer = setTimeout(() => {
+          // 长按后触发选择，让AIPolish可以检测到选区
+          // 为了让AIPolish定位到右上角，我们模拟的鼠标事件位置不重要
+          const mouseEvent = new MouseEvent(`mouseup`, {
+            clientX: 0,
+            clientY: 0,
+            bubbles: true,
+          })
+          editorElement.dispatchEvent(mouseEvent)
+        }, 500) // 500ms长按
+      }
+    })
+
+    editorElement.addEventListener(`touchmove`, (event) => {
+      if (touchTimer && event.touches.length === 1) {
+        const touch = event.touches[0]
+        const deltaX = Math.abs(touch.clientX - startX)
+        const deltaY = Math.abs(touch.clientY - startY)
+
+        // 如果移动距离太大，取消长按
+        if (deltaX > 10 || deltaY > 10) {
+          clearTimeout(touchTimer)
+          touchTimer = null
+        }
+      }
+    })
+
+    editorElement.addEventListener(`touchend`, () => {
+      if (touchTimer) {
+        clearTimeout(touchTimer)
+        touchTimer = null
+      }
+    })
+  }
+
   return textArea
 }
 
@@ -438,8 +494,8 @@ onUnmounted(() => {
       >
         <ResizablePanelGroup direction="horizontal">
           <ResizablePanel
-            :default-size="15"
-            :max-size="store.isOpenPostSlider ? 30 : 0"
+            :default-size="50"
+            :max-size="store.isOpenPostSlider ? 60 : 0"
             :min-size="store.isOpenPostSlider ? 10 : 0"
           >
             <PostSlider />
@@ -517,7 +573,7 @@ onUnmounted(() => {
       <div v-if="store.isMobile" class="fixed bottom-16 right-6 z-50 flex flex-col gap-2">
         <!-- 切换编辑/预览按钮 -->
         <button
-          class="bg-primary flex items-center justify-center rounded-full p-3 text-white shadow-lg transition active:scale-95 hover:scale-105 dark:bg-gray-700 dark:text-white dark:ring-2 dark:ring-white/30"
+          class="flex items-center justify-center rounded-full bg-orange-500 p-3 text-white shadow-lg transition active:scale-95 hover:scale-105 dark:bg-orange-600 hover:bg-orange-600 dark:text-white dark:hover:bg-orange-700"
           aria-label="切换编辑/预览"
           @click="toggleView"
         >

@@ -130,7 +130,7 @@ function submit(formValues: any) {
             <Input
               v-bind="field"
               v-model.trim="field.value"
-              placeholder="例：https://doocs.com/mp-logo.png"
+              placeholder=""
             />
           </FormItem>
         </Field>
@@ -141,7 +141,7 @@ function submit(formValues: any) {
               v-bind="field"
               v-model.trim="field.value"
               rows="3"
-              placeholder="例：GitHub 开源组织 @Doocs 旗下唯一公众号，专注分享技术领域相关知识及行业最新资讯。"
+              placeholder="例：唯一公众号，专注分享技术领域相关知识及行业最新资讯。"
             />
           </FormItem>
         </Field>

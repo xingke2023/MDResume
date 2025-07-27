@@ -57,3 +57,12 @@ components.d.ts
 .output
 web-ext.config.ts
 .wrangler
+
+# Claude Code specific files
+.claude/
+CLAUDE.local.md
+.vscode/sftp.json
+
+# Backup files
+backup.zip
+*.zip

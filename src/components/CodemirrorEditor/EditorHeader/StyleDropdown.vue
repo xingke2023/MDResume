@@ -124,7 +124,7 @@ const formatOptions = ref<Format[]>([`rgb`, `hex`, `hsl`, `hsv`])
       </MenubarCheckboxItem>
       <MenubarSeparator />
       <MenubarCheckboxItem divided @click="resetStyleConfirm">
-        重置
+        重置自定义样式
       </MenubarCheckboxItem>
     </MenubarContent>
   </MenubarMenu>

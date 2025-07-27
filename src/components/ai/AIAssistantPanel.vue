@@ -1,19 +1,24 @@
 <script setup lang="ts">
 import {
+  ArrowDown,
   Check,
   Copy,
   Edit,
   Pause,
   Plus,
   RefreshCcw,
+  Replace,
   Send,
   Settings,
   Trash2,
+  X,
 } from 'lucide-vue-next'
+import { nextTick, ref } from 'vue'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
@@ -35,8 +40,10 @@ const dialogVisible = ref(props.open)
 watch(() => props.open, val => (dialogVisible.value = val))
 watch(dialogVisible, (val) => {
   emit(`update:open`, val)
-  if (val)
+  if (val) {
     scrollToBottom(true)
+    // 不再默认选择任何上下文选项
+  }
 })
 
 /* ---------- 输入 & 历史 ---------- */
@@ -51,7 +58,10 @@ const fetchController = ref<AbortController | null>(null)
 const copiedIndex = ref<number | null>(null)
 const memoryKey = `ai_memory_context`
 const isQuoteAllContent = ref(false)
+const isQuoteCursorBefore = ref(false)
+const isQuoteCursorMiddle = ref(false)
 const cmdMgrOpen = ref(false)
+const quotedContent = ref(``)
 
 /* ---------- 消息结构 ---------- */
 interface ChatMessage {
@@ -68,14 +78,36 @@ const { apiKey, endpoint, model, temperature, maxToken, type } = storeToRefs(AIC
 /* ---------- 快捷指令 ---------- */
 const quickCmdStore = useQuickCommands()
 
+/* ---------- 引用内容管理 ---------- */
+function setQuotedContent(content: string) {
+  quotedContent.value = content
+  // 设置引用内容时清除其他上下文状态
+  if (content.trim()) {
+    isQuoteAllContent.value = false
+    isQuoteCursorBefore.value = false
+    isQuoteCursorMiddle.value = false
+  }
+}
+
+function clearQuotedContent() {
+  quotedContent.value = ``
+  isQuoteAllContent.value = false
+  isQuoteCursorBefore.value = false
+  isQuoteCursorMiddle.value = false
+}
+
+// 暴露方法给父组件
+defineExpose({
+  setQuotedContent,
+  clearQuotedContent,
+})
+
 function getSelectedText(): string {
   try {
     const cm: any = editor.value
-    if (!cm)
+    if (!cm || typeof cm.getSelection !== `function`)
       return ``
-    if (typeof cm.getSelection === `function`)
-      return cm.getSelection() || ``
-    return ``
+    return cm.getSelection() || ``
   }
   catch (e) {
     console.warn(`获取选中文本失败`, e)
@@ -105,7 +137,8 @@ onMounted(async () => {
   await scrollToBottom(true)
 })
 function getDefaultMessages(): ChatMessage[] {
-  return [{ role: `assistant`, content: `你好，我是 AI 助手，有什么可以帮你的？` }]
+  // return [{ role: `assistant`, content: `你好，我是 AI 助手，请输入写作要求。` }]
+  return []
 }
 
 /* ---------- 事件处理 ---------- */
@@ -170,6 +203,54 @@ function editMessage(content: string) {
   })
 }
 
+// 自定义Toast状态
+const customToastVisible = ref(false)
+const customToastMessage = ref(``)
+
+// 显示自定义Toast
+function showCustomToast(message: string) {
+  customToastMessage.value = message
+  customToastVisible.value = true
+  setTimeout(() => {
+    customToastVisible.value = false
+  }, 2000) // 1秒后隐藏
+}
+
+function replaceSelectedText(content: string) {
+  if (!store.editor) {
+    console.error(`编辑器未初始化`)
+    return
+  }
+  const cm = toRaw(store.editor)
+  if (cm.getSelection().trim()) {
+    // 有选中内容，替换选中内容
+    cm.replaceSelection(content)
+  }
+  else {
+    // 没有选中内容，在光标位置插入
+    cm.replaceSelection(content)
+  }
+  cm.focus()
+  showCustomToast(`内容已替换到编辑器`)
+  // 关闭AI窗口
+  dialogVisible.value = false
+}
+
+function insertTextAtCursor(content: string) {
+  if (!store.editor) {
+    console.error(`编辑器未初始化`)
+    return
+  }
+  const cm = toRaw(store.editor)
+  const cursor = cm.getCursor()
+  // 在光标位置插入内容，并在前后添加换行
+  cm.replaceRange(`\n${content}\n`, cursor)
+  cm.focus()
+  showCustomToast(`内容已插入到编辑器`)
+  // 关闭AI窗口
+  dialogVisible.value = false
+}
+
 function resetMessages() {
   if (fetchController.value) {
     fetchController.value.abort()
@@ -208,7 +289,141 @@ async function scrollToBottom(force = false) {
 
 /* ---------- 引用全文 ---------- */
 function quoteAllContent() {
-  isQuoteAllContent.value = !isQuoteAllContent.value
+  if (isQuoteAllContent.value) {
+    // 如果已激活，则取消
+    isQuoteAllContent.value = false
+  }
+  else {
+    // 激活引用全文，清除其他上下文
+    // 先清除其他状态
+    isQuoteCursorBefore.value = false
+    isQuoteCursorMiddle.value = false
+    quotedContent.value = `` // 只清除引用内容，不调用clearQuotedContent
+    // 再设置当前状态
+    isQuoteAllContent.value = true
+  }
+}
+
+/* ---------- 引用光标前内容 ---------- */
+function quoteCursorBefore() {
+  console.log(`quoteCursorBefore函数开始，当前值:`, isQuoteCursorBefore.value)
+  if (isQuoteCursorBefore.value) {
+    // 如果已激活，则取消
+    console.log(`取消激活`)
+    isQuoteCursorBefore.value = false
+  }
+  else {
+    // 检查光标前内容是否为空
+    const cursorBeforeContent = getCursorBeforeContent()
+    if (!cursorBeforeContent.trim()) {
+      console.log(`光标前内容为空，不激活`)
+      return
+    }
+
+    // 激活引用光标前，清除其他上下文
+    console.log(`激活引用光标前`)
+    // 先清除其他状态
+    isQuoteAllContent.value = false
+    isQuoteCursorMiddle.value = false
+    quotedContent.value = `` // 只清除引用内容，不调用clearQuotedContent
+    // 再设置当前状态
+    isQuoteCursorBefore.value = true
+  }
+  console.log(`quoteCursorBefore函数结束，新值:`, isQuoteCursorBefore.value)
+}
+
+/* ---------- 引用光标中间部分 ---------- */
+function quoteCursorMiddle() {
+  console.log(`quoteCursorMiddle函数开始，当前值:`, isQuoteCursorMiddle.value)
+  if (isQuoteCursorMiddle.value) {
+    // 如果已激活，则取消
+    console.log(`取消激活光标中间`)
+    isQuoteCursorMiddle.value = false
+  }
+  else {
+    // 检查光标前后是否都有内容
+    const cursorBeforeContent = getCursorBeforeContent()
+    const cursorAfterContent = getCursorAfterContent()
+    if (!cursorBeforeContent.trim() || !cursorAfterContent.trim()) {
+      console.log(`光标前后内容不完整，不激活`)
+      return
+    }
+
+    // 激活引用光标中间，清除其他上下文
+    console.log(`激活引用光标中间`)
+    // 先清除其他状态
+    isQuoteAllContent.value = false
+    isQuoteCursorBefore.value = false
+    quotedContent.value = `` // 只清除引用内容，不调用clearQuotedContent
+    // 再设置当前状态
+    isQuoteCursorMiddle.value = true
+  }
+  console.log(`quoteCursorMiddle函数结束，新值:`, isQuoteCursorMiddle.value)
+}
+
+function getCursorBeforeContent(): string {
+  try {
+    const cm: any = editor.value
+    if (!cm || typeof cm.getCursor !== `function` || typeof cm.getValue !== `function`)
+      return ``
+
+    const cursor = cm.getCursor()
+    if (!cursor || typeof cursor.line === `undefined` || typeof cursor.ch === `undefined`)
+      return ``
+
+    const content = cm.getValue()
+    if (typeof content !== `string`)
+      return ``
+
+    const lines = content.split(`\n`)
+    if (!Array.isArray(lines))
+      return ``
+
+    // 获取光标前的所有行
+    const beforeLines = lines.slice(0, cursor.line)
+    // 加上当前行光标前的内容
+    const currentLine = lines[cursor.line] || ``
+    const currentLineBefore = currentLine.substring(0, cursor.ch)
+
+    return [...beforeLines, currentLineBefore].join(`\n`).trim()
+  }
+  catch (e) {
+    console.warn(`获取光标前内容失败`, e)
+    return ``
+  }
+}
+
+function getCursorAfterContent(): string {
+  try {
+    const cm: any = editor.value
+    if (!cm || typeof cm.getCursor !== `function` || typeof cm.getValue !== `function`)
+      return ``
+
+    const cursor = cm.getCursor()
+    if (!cursor || typeof cursor.line === `undefined` || typeof cursor.ch === `undefined`)
+      return ``
+
+    const content = cm.getValue()
+    if (typeof content !== `string`)
+      return ``
+
+    const lines = content.split(`\n`)
+    if (!Array.isArray(lines))
+      return ``
+
+    // 获取当前行光标后的内容
+    const currentLine = lines[cursor.line] || ``
+    const currentLineAfter = currentLine.substring(cursor.ch)
+
+    // 获取光标后的所有行
+    const afterLines = lines.slice(cursor.line + 1)
+
+    return [currentLineAfter, ...afterLines].join(`\n`).trim()
+  }
+  catch (e) {
+    console.warn(`获取光标后内容失败`, e)
+    return ``
+  }
 }
 
 /* ---------- 重新生成最后一条消息 ---------- */
@@ -267,18 +482,52 @@ async function sendMessage() {
   else {
     contextHistory = allHistory.slice(-10)
   }
-  const quoteMessages: ChatMessage[] = isQuoteAllContent.value
-    ? [{
-        role: `system`,
-        content:
-          `下面是一篇 Markdown 文章全文，请严格以此为主完成后续指令：\n\n${editor.value!.getValue()}`,
-      }]
-    : []
+  // 构建引用上下文消息
+  const quoteMessages: ChatMessage[] = []
+
+  // 如果有引用的内容，添加到上下文
+  if (quotedContent.value.trim()) {
+    quoteMessages.push({
+      role: `user`,
+      content: `请以此为上下文参考：\n\n${quotedContent.value.trim()}`,
+    })
+  }
+
+  // 如果启用了引用全文，添加全文到上下文
+  if (isQuoteAllContent.value) {
+    quoteMessages.push({
+      role: `assistant`,
+      content: `\n\n${editor.value!.getValue()}`,
+    })
+  }
+
+  // 如果启用了引用光标前内容，添加光标前内容到上下文
+  if (isQuoteCursorBefore.value) {
+    const cursorBeforeContent = getCursorBeforeContent()
+    if (cursorBeforeContent) {
+      quoteMessages.push({
+        role: `assistant`,
+        content: `\n\n${cursorBeforeContent}\n\n根据以上内容续写，要接住最后一句话继续写，不要写提纲，只写内容，写成段落长文，只写本部分内容\n\n`,
+      })
+    }
+  }
+
+  // 如果启用了引用光标中间部分，添加光标前后内容到上下文
+  if (isQuoteCursorMiddle.value) {
+    const cursorBeforeContent = getCursorBeforeContent()
+    const cursorAfterContent = getCursorAfterContent()
+    if (cursorBeforeContent && cursorAfterContent) {
+      quoteMessages.push({
+        role: `assistant`,
+        content: `请根据前文和后文，补充写中间的部分的内容，不要写提纲，只写内容，写成段落，一定不要跨越大纲markdown标题级别，只需要写本markdown标题级别的部分，前文内容和后文不要重复，一定要接着前文写。\n\n前文是：\n\n${cursorBeforeContent}\n\n后文是：\n\n${cursorAfterContent}\n\n`,
+      })
+    }
+  }
 
   const payloadMessages: ChatMessage[] = [
     {
       role: `system`,
-      content: `你是一个专业的 Markdown 编辑器助手，请用简洁中文回答。`,
+      content: `回复必须用Markdown格式，直接输出 Markdown 源码，一定不要包含 \`\`\`markdown 或任何代码块标记 `,
     },
     ...quoteMessages,
     ...contextHistory,
@@ -378,38 +627,45 @@ async function sendMessage() {
     >
       <!-- ============ 头部 ============ -->
       <DialogHeader class="space-y-1 flex flex-col items-start">
-        <div class="space-x-1 flex items-center">
-          <DialogTitle>AI 对话</DialogTitle>
+        <div class="w-full flex items-center justify-left">
+          <div class="flex items-center">
+            <DialogTitle>AI助手</DialogTitle>
+            <span class="text-muted-foreground ml-2 text-xs"> - 帮您编写和优化内容</span>
+          </div>
 
-          <Button
-            title="配置参数"
-            aria-label="配置参数"
-            variant="ghost"
-            size="icon"
-            @click="configVisible = !configVisible"
-          >
-            <Settings class="h-4 w-4" />
-          </Button>
-
-          <Button
-            title="清空对话内容"
-            aria-label="清空对话内容"
-            variant="ghost"
-            size="icon"
-            @click="resetMessages"
-          >
-            <Trash2 class="h-4 w-4" />
-          </Button>
+          <div class="flex items-center gap-1">
+            <Button
+              title="清空对话内容"
+              aria-label="清空对话内容"
+              variant="ghost"
+              size="sm"
+              class="px-2 text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300"
+              @click="resetMessages"
+            >
+              <Trash2 class="mr-1 h-4 w-4" />
+              清空对话
+            </Button>
+            <Button
+              title="配置参数"
+              aria-label="配置参数"
+              variant="ghost"
+              size="icon"
+              @click="configVisible = !configVisible"
+            >
+              <Settings class="h-4 w-4" />
+            </Button>
+          </div>
         </div>
-        <p class="text-muted-foreground text-sm">
-          使用 AI 助手帮助您编写和优化内容
-        </p>
+
+        <DialogDescription class="sr-only">
+          AI助手对话框，用于与AI进行对话交流，帮助您编写和优化内容
+        </DialogDescription>
       </DialogHeader>
 
       <!-- ============ 快捷指令 ============ -->
       <div
         v-if="!configVisible"
-        class="mb-3 flex flex-wrap gap-2 overflow-x-auto pb-1"
+        class="mb-1 flex flex-wrap gap-2 overflow-x-auto pb-1"
       >
         <template v-if="quickCmdStore.commands.length">
           <Button
@@ -450,6 +706,103 @@ async function sendMessage() {
         @saved="handleConfigSaved"
       />
 
+      <!-- ============ 上下文选择按钮 ============ -->
+      <div v-if="!configVisible" class="mb-3 flex flex-wrap items-center gap-2">
+        <!-- 选择上下文标签 -->
+        <span class="text-sm text-gray-700 font-medium dark:text-gray-300">上下文引用:</span>
+        <Button
+          size="sm"
+          variant="outline"
+          class="h-8 flex items-center gap-1 rounded-md px-3 font-medium transition-colors duration-150"
+          :style="quotedContent.trim() ? { backgroundColor: '#000000', color: '#ffffff', borderColor: '#000000' } : {}"
+          aria-label="选取的上下文"
+          :disabled="!quotedContent.trim()"
+          @click="quotedContent.trim() && clearQuotedContent()"
+        >
+          <Check v-if="quotedContent.trim()" class="h-4 w-4" />
+          <span class="text-xs">鼠标选取</span>
+        </Button>
+
+        <!-- 引用光标前作为上下文按钮 -->
+        <Button
+          size="sm"
+          variant="outline"
+          class="h-8 flex items-center gap-1 rounded-md px-3 font-medium transition-colors duration-150"
+          :style="isQuoteCursorBefore ? { backgroundColor: '#000000', color: '#ffffff', borderColor: '#000000' } : {}"
+          aria-label="引用光标前作为上下文"
+          @click="() => { console.log('点击光标前，当前状态:', isQuoteCursorBefore); quoteCursorBefore(); nextTick(() => console.log('点击光标前后，新状态:', isQuoteCursorBefore)); }"
+        >
+          <Check v-if="isQuoteCursorBefore" class="h-4 w-4" />
+          <span class="text-xs">光标前全文</span>
+        </Button>
+
+        <!-- 写光标中间部分按钮 -->
+        <Button
+          size="sm"
+          variant="outline"
+          class="h-8 flex items-center gap-1 rounded-md px-3 font-medium transition-colors duration-150"
+          :style="isQuoteCursorMiddle ? { backgroundColor: '#000000', color: '#ffffff', borderColor: '#000000' } : {}"
+          aria-label="写光标中间部分"
+          @click="() => { console.log('点击光标中间，当前状态:', isQuoteCursorMiddle); quoteCursorMiddle(); nextTick(() => console.log('点击光标中间后，新状态:', isQuoteCursorMiddle)); }"
+        >
+          <Check v-if="isQuoteCursorMiddle" class="h-4 w-4" />
+          <span class="text-xs">写光标中间</span>
+        </Button>
+
+        <!-- 引用全文按钮 -->
+        <Button
+          size="sm"
+          variant="outline"
+          class="h-8 flex items-center gap-1 rounded-md px-3 font-medium transition-colors duration-150"
+          :style="isQuoteAllContent ? { backgroundColor: '#000000', color: '#ffffff', borderColor: '#000000' } : {}"
+          aria-label="引用全文作为上下文"
+          @click="() => { console.log('点击全文，当前状态:', isQuoteAllContent); quoteAllContent(); nextTick(() => console.log('点击全文后，新状态:', isQuoteAllContent)); }"
+        >
+          <Check v-if="isQuoteAllContent" class="h-4 w-4" />
+          <span class="text-xs">全文</span>
+        </Button>
+      </div>
+
+      <!-- ============ 引用的内容 ============ -->
+      <div
+        v-if="!configVisible && (quotedContent || (isQuoteCursorBefore && getCursorBeforeContent().trim()) || isQuoteAllContent || (isQuoteCursorMiddle && getCursorBeforeContent().trim() && getCursorAfterContent().trim()))"
+        class="relative mb-1 border rounded-lg p-3"
+        :class="isQuoteCursorBefore ? 'bg-green-50 dark:bg-green-900/20' : 'bg-gray-50 dark:bg-gray-800/50'"
+      >
+        <div class="mb-2 pr-20 text-sm text-gray-700 font-semibold dark:text-gray-300">
+          {{
+            isQuoteCursorBefore ? '光标前全文'
+            : isQuoteAllContent ? '全文'
+              : isQuoteCursorMiddle ? '光标前后上下文'
+                : '选取的上下文'
+          }}
+        </div>
+
+        <!-- 清除引用按钮 - 右上角 -->
+        <Button
+          variant="ghost"
+          size="sm"
+          class="absolute right-2 top-2 h-6 px-2 text-xs hover:bg-gray-200 dark:hover:bg-gray-700"
+          title="清除引用"
+          aria-label="清除引用"
+          @click="clearQuotedContent"
+        >
+          <X class="mr-1 h-3 w-3" />
+          清除选取的上下文
+        </Button>
+
+        <div
+          class="custom-scroll max-h-16 overflow-y-auto whitespace-pre-wrap text-sm text-gray-600 dark:text-gray-400"
+        >
+          {{
+            isQuoteCursorBefore ? getCursorBeforeContent()
+            : isQuoteAllContent ? (editor?.getValue() || '')
+              : isQuoteCursorMiddle ? `前文：${getCursorBeforeContent()}\n\n后文：${getCursorAfterContent()}`
+                : quotedContent
+          }}
+        </div>
+      </div>
+
       <!-- ============ 聊天内容 ============ -->
       <div
         v-if="!configVisible"
@@ -462,10 +815,12 @@ async function sendMessage() {
           :class="msg.role === 'user' ? 'justify-end' : 'justify-start'"
         >
           <div
-            class="ring-border/20 max-w-[75%] rounded-2xl px-4 py-2 text-sm leading-relaxed shadow-sm ring-1"
-            :class="msg.role === 'user'
-              ? 'bg-black text-white dark:bg-primary dark:text-primary-foreground'
-              : 'bg-gray-100 text-gray-800 dark:bg-muted/60 dark:text-muted-foreground'"
+            class="ring-border/20 rounded-2xl px-4 py-2 text-sm leading-relaxed shadow-sm ring-1"
+            :class="[
+              msg.role === 'user'
+                ? 'bg-green-100 text-gray-800 dark:bg-green-900/50 dark:text-green-100 max-w-[65%]'
+                : 'bg-gray-100 text-gray-800 dark:bg-muted/60 dark:text-muted-foreground max-w-[85%]',
+            ]"
           >
             <!-- reasoning -->
             <div v-if="msg.reasoning" class="text-muted-foreground mb-1 italic">
@@ -485,43 +840,72 @@ async function sendMessage() {
 
             <!-- 工具按钮 -->
             <div
-              class="mt-1 flex"
+              class="mt-2 flex flex-wrap gap-1"
               :class="msg.role === 'user' ? 'justify-end' : 'justify-start'"
             >
+              <!-- 复制按钮 -->
               <Button
                 v-if="index > 0 && !(msg.role === 'assistant' && index === messages.length - 1 && !msg.done)"
                 variant="ghost"
                 size="icon"
-                class="ml-0 h-5 w-5 p-1"
+                class="h-6 w-6 p-1"
                 aria-label="复制内容"
                 @click="copyToClipboard(msg.content, index)"
               >
                 <Check
                   v-if="copiedIndex === index"
-                  class="h-3 w-3 text-green-600"
+                  class="h-4 w-4 text-green-600"
                 />
-                <Copy v-else class="text-muted-foreground h-3 w-3" />
+                <Copy v-else class="text-muted-foreground h-4 w-4" />
               </Button>
+
+              <!-- 编辑按钮 -->
               <Button
                 v-if="index > 0 && !(msg.role === 'assistant' && index === messages.length - 1 && !msg.done)"
                 variant="ghost"
                 size="icon"
-                class="ml-1 h-5 w-5 p-1"
+                class="h-6 w-6 p-1"
                 aria-label="编辑内容"
                 @click="editMessage(msg.content)"
               >
-                <Edit class="text-muted-foreground h-3 w-3" />
+                <Edit class="text-muted-foreground h-4 w-4" />
               </Button>
+
+              <!-- 重新生成按钮 -->
               <Button
                 v-if="msg.role === 'assistant' && msg.done && index === messages.length - 1"
                 variant="ghost"
                 size="icon"
-                class="ml-1 h-5 w-5 p-1"
+                class="h-6 w-6 p-1"
                 aria-label="重新生成"
                 @click="regenerateLast"
               >
-                <RefreshCcw class="text-muted-foreground h-3 w-3" />
+                <RefreshCcw class="text-muted-foreground h-4 w-4" />
               </Button>
+
+              <!-- AI回复专用：替换和插入按钮 -->
+              <template v-if="msg.role === 'assistant' && msg.done && msg.content.trim()">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  class="h-6 px-2 text-xs"
+                  aria-label="替换到编辑器"
+                  @click="replaceSelectedText(msg.content)"
+                >
+                  <Replace class="mr-1 h-3 w-3" />
+                  替换
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  class="h-6 px-2 text-xs"
+                  aria-label="插入到编辑器"
+                  @click="insertTextAtCursor(msg.content)"
+                >
+                  <ArrowDown class="mr-1 h-3 w-3" />
+                  插入
+                </Button>
+              </template>
             </div>
           </div>
         </div>
@@ -534,34 +918,17 @@ async function sendMessage() {
         >
           <Textarea
             v-model="input"
-            placeholder="说些什么… (Enter 发送，Shift+Enter 换行)"
+            placeholder="请输入写作要求… (Enter 发送，Shift+Enter 换行)"
             rows="2"
             class="custom-scroll min-h-16 w-full resize-none border-none bg-transparent p-0 focus-visible:outline-none focus:outline-none focus-visible:ring-0 focus:ring-0 focus-visible:ring-offset-0 focus:ring-offset-0 focus-visible:ring-transparent focus:ring-transparent"
             @keydown="handleKeydown"
           />
 
-          <!-- 引用全文按钮 -->
-          <Button
-            size="sm"
-            variant="outline"
-            class="h-8 flex items-center gap-1 rounded-md px-3 font-medium transition-colors duration-150"
-            :class="[
-              isQuoteAllContent
-                ? 'bg-primary text-white border-primary dark:bg-white dark:text-black dark:border-white'
-                : 'bg-background text-muted-foreground border-border hover:text-foreground hover:border-foreground dark:bg-muted dark:text-gray-400 dark:hover:text-white dark:hover:border-white/60',
-            ]"
-            aria-label="引用全文"
-            @click="quoteAllContent"
-          >
-            <component :is="isQuoteAllContent ? Check : Copy" class="h-4 w-4" />
-            <span class="text-xs">引用全文</span>
-          </Button>
-
           <!-- 发送 / 暂停按钮 -->
           <Button
             :disabled="!input.trim() && !loading"
             size="icon"
-            class="hover:bg-primary/90 bg-primary text-primary-foreground absolute bottom-3 right-3 rounded-full disabled:opacity-40"
+            class="bg-primary text-primary-foreground hover:bg-primary/90 absolute bottom-3 right-3 rounded-full disabled:opacity-40"
             :aria-label="loading ? '暂停' : '发送'"
             @click="loading ? pauseStreaming() : sendMessage()"
           >
@@ -572,11 +939,41 @@ async function sendMessage() {
       </div>
     </DialogContent>
   </Dialog>
+
+  <!-- 自定义Toast -->
+  <Transition name="toast-fade">
+    <div
+      v-if="customToastVisible"
+      class="backdrop-blur-sm fixed left-1/2 top-1/2 z-[100] transform rounded-lg bg-green-600/90 px-4 py-2 text-sm text-white font-medium -translate-x-1/2 -translate-y-1/2"
+    >
+      {{ customToastMessage }}
+    </div>
+  </Transition>
 </template>
 
 <style scoped>
 :root {
   --safe-bottom: env(safe-area-inset-bottom);
+}
+
+/* 自定义Toast动画 */
+.toast-fade-enter-active,
+.toast-fade-leave-active {
+  transition:
+    opacity 0.2s ease-in-out,
+    transform 0.2s ease-in-out;
+}
+
+.toast-fade-enter-from,
+.toast-fade-leave-to {
+  opacity: 0;
+  transform: translate(-50%, -50%) scale(0.9);
+}
+
+.toast-fade-enter-to,
+.toast-fade-leave-from {
+  opacity: 1;
+  transform: translate(-50%, -50%) scale(1);
 }
 
 /* 聊天容器底部内边距，适配安全区 */
@@ -625,5 +1022,25 @@ async function sendMessage() {
 }
 .dark .custom-scroll {
   scrollbar-color: rgb(107 114 128 / 0.4) transparent;
+}
+
+/* 隐藏AIAssistantPanel组件内的文本选择高亮和选择角标 */
+.bg-card ::selection {
+  background: transparent !important;
+}
+
+.bg-card ::-moz-selection {
+  background: transparent !important;
+}
+
+/* 隐藏选择角标 */
+.bg-card {
+  user-select: none;
+}
+
+/* 但允许输入框可以选择 */
+.bg-card textarea,
+.bg-card input {
+  user-select: text;
 }
 </style>

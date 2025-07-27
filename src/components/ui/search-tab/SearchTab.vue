@@ -80,8 +80,12 @@ function findAllMatches() {
   let matchCount = 0
   const _matchPositions: CodeMirror.Position[][] = []
   while (cursor.findNext()) {
-    _matchPositions.push([cursor.from(), cursor.to()])
-    matchCount++
+    const from = cursor.from()
+    const to = cursor.to()
+    if (from && to) {
+      _matchPositions.push([from, to])
+      matchCount++
+    }
   }
   matchPositions.value = _matchPositions
   if (matchCount === indexOfMatch.value) {

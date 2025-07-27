@@ -9,6 +9,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
+import { Textarea } from '@/components/ui/textarea'
 import useAIConfigStore from '@/stores/AIConfig'
 
 /* -------------------- props / emits -------------------- */
@@ -26,11 +27,11 @@ const visible = ref(false)
 const message = ref(``)
 const loading = ref(false)
 const abortController = ref<AbortController | null>(null)
-const customPrompts = ref<string[]>([])
+const customPromptText = ref(``)
 const hasResult = ref(false)
 const selectedAction = ref<
   `optimize` | `summarize` | `spellcheck` | `translate-zh` | `translate-en` | `custom`
->(`optimize`)
+>(`custom`)
 const currentText = ref(``)
 const error = ref(``)
 
@@ -51,6 +52,7 @@ interface ActionOption {
 }
 
 const actionOptions: ActionOption[] = [
+  { value: `custom`, label: `自定义提示词`, defaultPrompt: `` },
   {
     value: `optimize`,
     label: `优化文本`,
@@ -76,7 +78,6 @@ const actionOptions: ActionOption[] = [
     label: `翻译为英文`,
     defaultPrompt: `请将文本翻译为自然流畅的英文。`,
   },
-  { value: `custom`, label: `自定义`, defaultPrompt: `` },
 ]
 
 /* -------------------- watchers -------------------- */
@@ -87,8 +88,9 @@ watch(message, async () => {
 })
 
 watch(selectedAction, (val) => {
-  if (val !== `custom`)
-    customPrompts.value = []
+  if (val !== `custom`) {
+    customPromptText.value = ``
+  }
 })
 
 // 当 visible 且 props.selectedText 变更时，更新原文并重置状态
@@ -103,19 +105,6 @@ watch(
 )
 
 /* -------------------- prompt handlers -------------------- */
-function addPrompt(e: KeyboardEvent) {
-  const input = e.target as HTMLInputElement
-  const prompt = input.value.trim()
-  if (prompt && !customPrompts.value.includes(prompt)) {
-    customPrompts.value.push(prompt)
-  }
-  input.value = ``
-  emit(`recalcPos`)
-}
-
-function removePrompt(index: number) {
-  customPrompts.value.splice(index, 1)
-}
 
 function resetState() {
   message.value = ``
@@ -138,22 +127,46 @@ async function runAIAction() {
   abortController.value = new AbortController()
 
   const systemPrompt
-    = `你是一名专业的多语言文本助手，请根据用户的指令处理下列内容。在输出时，不要输出任何额外的信息，只输出处理后的文本。`
+    = `请根据用户的指令处理下列内容。在输出时，只输出处理后的文本。`
   const picked = actionOptions.find(o => o.value === selectedAction.value)!
   const parts: string[] = []
 
-  if (picked.defaultPrompt)
+  if (picked.defaultPrompt) {
     parts.push(picked.defaultPrompt)
-  if (customPrompts.value.length)
-    parts.push(`请同时满足以下要求：${customPrompts.value.join(`、`)}。`)
-  if (!parts.length)
+  }
+  else if (selectedAction.value === `custom` && customPromptText.value.trim()) {
+    // 对于自定义选项，直接使用文本框中的内容作为prompt
+    parts.push(customPromptText.value.trim())
+  }
+  else if (selectedAction.value === `custom` && !customPromptText.value.trim()) {
+    // 如果是自定义但没有输入内容，使用默认提示
     parts.push(`请根据最佳实践优化文本。`)
+  }
+
+  // 如果非自定义选项且没有默认提示词，使用兜底提示
+  if (!parts.length) {
+    parts.push(`请根据最佳实践优化文本。`)
+  }
 
   const userCommand = parts.join(` `)
+
+  // 构建消息数组，包含引用的上下文
   const messages = [
     { role: `system`, content: systemPrompt },
-    { role: `user`, content: `${userCommand}\n\n待处理文本：\n${text}` },
   ]
+
+  // 如果有引用的上下文内容，添加到消息中
+  if (currentText.value && currentText.value.trim()) {
+    messages.push({
+      role: `system`,
+      content: `以下是引用的上下文内容，请以此为参考：\n\n${currentText.value.trim()}`,
+    })
+  }
+
+  messages.push({
+    role: `user`,
+    content: `${userCommand}\n\n待处理文本：\n${text}`,
+  })
 
   const payload = {
     model: model.value,
@@ -249,25 +262,47 @@ function replaceText() {
   resetState()
 }
 
+function insertText() {
+  const cm = toRaw(store.editor!)!
+  const cursor = cm.getCursor(`end`) // 获取选区结束位置
+  const line = cursor.line
+
+  // 在下一行插入AI生成的内容
+  cm.replaceRange(`\n${message.value}`, cursor)
+
+  // 选中插入的内容（不包括换行符）
+  const insertStart = { line: line + 1, ch: 0 }
+  const insertEnd = { line: line + 1, ch: message.value.length }
+  cm.setSelection(insertStart, insertEnd)
+  cm.focus()
+
+  resetState()
+}
+
 function show() {
   emit(`closeBtn`)
-  if (!props.selectedText.trim()) {
+
+  // 重新获取当前编辑器中选中的文字
+  const currentSelection = store.editor?.getSelection()?.trim() || ``
+
+  if (!currentSelection) {
     toast.error(`请选择需要处理的内容`)
     return
   }
+
   visible.value = true
-  currentText.value = props.selectedText
+  currentText.value = currentSelection
   emit(`recalcPos`)
 }
 
 function close() {
   visible.value = false
-  customPrompts.value = []
-  selectedAction.value = `optimize`
+  customPromptText.value = ``
+  selectedAction.value = `custom`
   resetState()
 }
 
-defineExpose({ visible, runAIAction, replaceText, show, close, stopAI })
+defineExpose({ visible, runAIAction, replaceText, insertText, show, close, stopAI })
 </script>
 
 <template>
@@ -307,6 +342,18 @@ defineExpose({ visible, runAIAction, replaceText, show, close, stopAI })
 
       <!-- main content -->
       <section v-else class="custom-scroll space-y-3 flex-1 overflow-y-auto px-4 pb-2 pt-3 sm:px-6">
+        <!-- original text -->
+        <div>
+          <div class="mb-1 text-sm font-semibold">
+            引用的上下文
+          </div>
+          <div
+            class="custom-scroll text-muted-foreground max-h-32 overflow-y-auto whitespace-pre-line rounded bg-gray-50 px-3 py-2 text-sm dark:bg-gray-800/50"
+          >
+            {{ currentText }}
+          </div>
+        </div>
+
         <!-- action selector -->
         <div>
           <div class="mb-1 text-sm font-semibold">
@@ -330,44 +377,26 @@ defineExpose({ visible, runAIAction, replaceText, show, close, stopAI })
           </Select>
         </div>
 
-        <!-- original text -->
-        <div>
-          <div class="mb-1 text-sm font-semibold">
-            原文
-          </div>
-          <div
-            class="border-border custom-scroll bg-muted/20 text-muted-foreground max-h-32 overflow-y-auto whitespace-pre-line border rounded px-3 py-2 text-sm"
-          >
-            {{ currentText }}
-          </div>
-        </div>
-
         <!-- custom prompts -->
         <div v-if="selectedAction === 'custom'">
           <div class="mb-1 text-sm font-semibold">
-            自定义提示词（可选）
+            请输入提示词
           </div>
-          <div
-            class="custom-scroll border-border max-h-24 min-h-[40px] flex flex-wrap gap-2 overflow-y-auto border rounded px-2 py-1"
-          >
-            <template v-for="(prompt, index) in customPrompts" :key="index">
-              <div
-                class="text-muted-foreground bg-muted flex items-center gap-1 rounded-full px-2 py-1 text-sm"
-              >
-                <span>{{ prompt }}</span>
-                <button
-                  class="hover:bg-muted/60 h-4 w-4 flex items-center justify-center rounded-full"
-                  @click="removePrompt(index)"
-                >
-                  <X class="h-3 w-3" />
-                </button>
-              </div>
-            </template>
-            <input
-              class="min-w-[100px] flex-1 bg-transparent py-1 text-sm focus:outline-none"
-              placeholder="输入提示词后按回车"
-              @keydown.enter="addPrompt"
-            >
+
+          <!-- 多行文本输入框 -->
+          <div class="mb-3">
+            <Textarea
+              v-model="customPromptText"
+              class="min-h-[60px] resize-none"
+              placeholder="请输入你的要求，点击AI处理即可开始处理...
+例如：
+- 将这段文字改写为更正式的语调
+- 翻译成英文并保持原意
+- 提取关键信息并总结"
+            />
+            <!-- <div class="text-muted-foreground mt-2 text-xs">
+              💡 提示：直接在上方输入框中写下你的要求，点击"AI 处理"即可开始处理
+            </div> -->
           </div>
         </div>
 
@@ -390,7 +419,7 @@ defineExpose({ visible, runAIAction, replaceText, show, close, stopAI })
         </div>
 
         <!-- footer buttons -->
-        <div class="border-border flex justify-end gap-2 border-t px-6 pb-3 pt-2">
+        <div class="flex justify-end gap-2 px-6 pb-3 pt-2">
           <Button v-if="loading" variant="secondary" @click="stopAI">
             <Pause class="mr-1 h-4 w-4" /> 终止
           </Button>
@@ -399,7 +428,14 @@ defineExpose({ visible, runAIAction, replaceText, show, close, stopAI })
             variant="default"
             @click="replaceText"
           >
-            接受
+            替换
+          </Button>
+          <Button
+            v-if="hasResult && !loading"
+            variant="outline"
+            @click="insertText"
+          >
+            插入
           </Button>
           <Button
             v-if="!loading"

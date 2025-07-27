@@ -1,6 +1,4 @@
 <script setup lang="ts">
-import { Bot } from 'lucide-vue-next'
-
 defineProps<{
   position: {
     top: number
@@ -32,14 +30,14 @@ defineExpose({
     <button
       v-show="visible"
       aria-label="AI 工具箱"
-      class="bg-primary absolute z-50 flex cursor-pointer items-center justify-center rounded-full p-2 text-white shadow-lg transition active:scale-95 hover:scale-105 dark:bg-gray-700 dark:text-white dark:ring-2 dark:ring-white/30"
+      class="absolute z-50 flex cursor-pointer items-center justify-center rounded-full bg-blue-500 px-3 py-2 text-white shadow-lg transition active:scale-95 hover:scale-105 dark:bg-blue-600 hover:bg-blue-600 dark:text-white dark:ring-2 dark:ring-white/30 dark:hover:bg-blue-700"
       :style="{
         left: `${position.left}px`,
         top: `${position.top}px`,
       }"
       @click="emit('click')"
     >
-      <Bot class="h-4 w-4" />
+      <span class="text-xs font-semibold">AI</span>
     </button>
   </Transition>
 </template>
