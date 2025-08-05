@@ -1,16 +1,16 @@
 {
-  "name": "md",
+  "name": "mdresume",
   "type": "module",
-  "version": "2.0.4",
+  "version": "1.0.0",
   "private": false,
-  "description": "WeChat Markdown Editor | 一款高度简洁的微信 Markdown 编辑器：支持 Markdown 语法、自定义主题样式、内容管理、多图床、AI 助手等特性",
-  "homepage": "https://www.easy-write.com",
+  "description": "妈的简历 - AI驱动的智能简历生成工具，基于微信Markdown编辑器的专业简历制作平台",
+  "homepage": "https://github.com/xingke2023/mdresume",
   "repository": {
     "type": "git",
-    "url": "https://github.com/a/md"
+    "url": "https://github.com/xingke2023/mdresume"
   },
   "bugs": {
-    "url": "https://github.com/a/md/issues"
+    "url": "https://github.com/xingke2023/mdresume/issues"
   },
   "scripts": {
     "start": "npm run dev",
