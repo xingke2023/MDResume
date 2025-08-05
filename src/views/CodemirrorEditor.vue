@@ -8,6 +8,7 @@ import {
   AIPolishPopover,
   useAIPolish,
 } from '@/components/AIPolish'
+import PresetContentPanel from '@/components/CodemirrorEditor/PresetContentPanel.vue'
 import {
   ResizableHandle,
   ResizablePanel,
@@ -502,69 +503,73 @@ onUnmounted(() => {
           </ResizablePanel>
           <ResizableHandle />
           <ResizablePanel class="flex">
-            <div
-              v-show="!store.isMobile || (store.isMobile && showEditor)"
-              ref="codeMirrorWrapper"
-              class="codeMirror-wrapper relative flex-1"
-              :class="{
-                'order-1 border-l': !store.isEditOnLeft,
-                'border-r': store.isEditOnLeft,
-              }"
-            >
-              <SearchTab v-if="editor" ref="searchTabRef" :editor="editor" />
-              <AIFixedBtn
-                :is-mobile="store.isMobile"
-                :show-editor="showEditor"
-              />
-
-              <EditorContextMenu>
-                <textarea
-                  id="editor"
-                  ref="editorRef"
-                  type="textarea"
-                  placeholder="Your markdown text here."
-                />
-              </EditorContextMenu>
-            </div>
-            <div
-              v-show="!store.isMobile || (store.isMobile && !showEditor)"
-              class="relative flex-1 overflow-x-hidden transition-width"
-              :class="[store.isOpenRightSlider ? 'w-0' : 'w-100']"
-            >
+            <!-- 预设内容面板 -->
+            <PresetContentPanel />
+            <div class="flex flex-1">
               <div
-                id="preview"
-                ref="previewRef"
-                class="preview-wrapper w-full p-5"
+                v-show="!store.isMobile || (store.isMobile && showEditor)"
+                ref="codeMirrorWrapper"
+                class="codeMirror-wrapper relative flex-1"
+                :class="{
+                  'order-1 border-l': !store.isEditOnLeft,
+                  'border-r': store.isEditOnLeft,
+                }"
+              >
+                <SearchTab v-if="editor" ref="searchTabRef" :editor="editor" />
+                <AIFixedBtn
+                  :is-mobile="store.isMobile"
+                  :show-editor="showEditor"
+                />
+
+                <EditorContextMenu>
+                  <textarea
+                    id="editor"
+                    ref="editorRef"
+                    type="textarea"
+                    placeholder="Your markdown text here."
+                  />
+                </EditorContextMenu>
+              </div>
+              <div
+                v-show="!store.isMobile || (store.isMobile && !showEditor)"
+                class="relative flex-1 overflow-x-hidden transition-width"
+                :class="[store.isOpenRightSlider ? 'w-0' : 'w-100']"
               >
                 <div
-                  id="output-wrapper"
-                  class="w-full"
-                  :class="{ output_night: !backLight }"
+                  id="preview"
+                  ref="previewRef"
+                  class="preview-wrapper w-full p-5"
                 >
                   <div
-                    class="preview border-x-1 shadow-xl"
-                    :class="[store.previewWidth]"
+                    id="output-wrapper"
+                    class="w-full"
+                    :class="{ output_night: !backLight }"
                   >
-                    <section id="output" class="w-full" v-html="output" />
-                    <div v-if="isCoping" class="loading-mask">
-                      <div class="loading-mask-box">
-                        <div class="loading__img" />
-                        <span>正在生成</span>
+                    <div
+                      class="preview border-x-1 shadow-xl"
+                      :class="[store.previewWidth]"
+                    >
+                      <section id="output" class="w-full" v-html="output" />
+                      <div v-if="isCoping" class="loading-mask">
+                        <div class="loading-mask-box">
+                          <div class="loading__img" />
+                          <span>正在生成</span>
+                        </div>
                       </div>
                     </div>
                   </div>
+                  <BackTop
+                    target="preview"
+                    :right="store.isMobile ? 24 : 20"
+                    :bottom="store.isMobile ? 90 : 20"
+                  />
                 </div>
-                <BackTop
-                  target="preview"
-                  :right="store.isMobile ? 24 : 20"
-                  :bottom="store.isMobile ? 90 : 20"
-                />
-              </div>
 
-              <FloatingToc />
+                <FloatingToc />
+              </div>
+              <CssEditor class="order-2 flex-1" />
+              <RightSlider class="order-2" />
             </div>
-            <CssEditor class="order-2 flex-1" />
-            <RightSlider class="order-2" />
           </ResizablePanel>
         </ResizablePanelGroup>
       </div>
