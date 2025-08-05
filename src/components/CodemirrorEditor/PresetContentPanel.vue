@@ -528,14 +528,15 @@ function insertContent(content: string) {
     // 获取当前光标位置
     const cursor = editor.getCursor()
 
-    // 插入内容
-    editor.replaceSelection(content)
+    // 插入内容，并在末尾添加两个换行符
+    const contentWithNewlines = `${content}\n\n`
+    editor.replaceSelection(contentWithNewlines)
 
-    // 计算插入后的光标位置
-    const lines = content.split(`\n`)
+    // 计算插入后的光标位置（定位到内容末尾的换行符后）
+    const lines = contentWithNewlines.split(`\n`)
     const newCursor = {
       line: cursor.line + lines.length - 1,
-      ch: lines.length === 1 ? cursor.ch + content.length : lines[lines.length - 1].length,
+      ch: 0,
     }
 
     // 使用 nextTick 确保 DOM 更新完成后再设置光标
@@ -612,7 +613,7 @@ function insertContent(content: string) {
     <!-- 添加自定义预设按钮 -->
     <div class="border-border mt-4 border-t pt-3">
       <button
-        class="border-muted-foreground/50 text-muted-foreground hover:border-border hover:text-foreground w-full flex items-center justify-center gap-2 border rounded-lg border-dashed p-2 text-xs transition-colors"
+        class="text-muted-foreground border-muted-foreground/50 hover:border-border hover:text-foreground w-full flex items-center justify-center gap-2 border rounded-lg border-dashed p-2 text-xs transition-colors"
         @click="toast.info('自定义预设功能开发中...')"
       >
         <Plus class="h-3 w-3" />
