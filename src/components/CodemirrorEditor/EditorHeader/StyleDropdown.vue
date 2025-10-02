@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import type { Format } from 'vue-pick-colors'
 import { Menu } from 'lucide-vue-next'
 import {
   codeBlockThemeOptions,
@@ -51,12 +50,6 @@ const {
 
 const importMarkdownContent = useImportMarkdownContent()
 
-const colorPicker = ref<HTMLElement & { show: () => void } | null>(null)
-
-function showPicker() {
-  colorPicker.value?.show()
-}
-
 // 自定义CSS样式
 function customStyle() {
   toggleShowCssEditor()
@@ -64,10 +57,6 @@ function customStyle() {
     cssEditor.value!.refresh()
   }, 50)
 }
-
-const pickColorsContainer = useTemplateRef(`pickColorsContainer`)
-const format = ref<Format>(`rgb`)
-const formatOptions = ref<Format[]>([`rgb`, `hex`, `hsl`, `hsv`])
 </script>
 
 <template>
