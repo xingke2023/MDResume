@@ -41,7 +41,7 @@ async function prePost() {
     auto = {
       thumb: document.querySelector<HTMLImageElement>(`#output img`)?.src ?? ``,
       title: [1, 2, 3, 4, 5, 6]
-        .map(h => document.querySelector(`#output h${h}`)!)
+        .map(h => document.querySelector(`#output h${h}`))
         .find(h => h)
         ?.textContent ?? ``,
       desc: document.querySelector(`#output p`)?.textContent?.trim() ?? ``,
@@ -70,7 +70,7 @@ declare global {
 async function getAccounts(): Promise<void> {
   return new Promise((resolve) => {
     window.$syncer?.getAccounts((resp: PostAccount[]) => {
-      allAccounts.value = resp.map(a => ({ ...a, checked: true }))
+      allAccounts.value = (resp || []).map(a => ({ ...a, checked: true }))
       resolve()
     })
   })

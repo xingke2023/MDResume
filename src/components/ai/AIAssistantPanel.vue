@@ -4,6 +4,7 @@ import {
   Check,
   Copy,
   Edit,
+  Image as ImageIcon,
   Pause,
   Plus,
   RefreshCcw,
@@ -23,6 +24,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import { Textarea } from '@/components/ui/textarea'
+import { useDisplayStore } from '@/stores'
 import useAIConfigStore from '@/stores/AIConfig'
 import type { QuickCommandRuntime } from '@/stores/useQuickCommands'
 import { useQuickCommands } from '@/stores/useQuickCommands'
@@ -34,6 +36,13 @@ const emit = defineEmits([`update:open`])
 
 const store = useStore()
 const { editor } = storeToRefs(store)
+const displayStore = useDisplayStore()
+const { toggleAIImageDialog } = displayStore
+
+function switchToImageGen() {
+  dialogVisible.value = false
+  setTimeout(() => toggleAIImageDialog(true), 100)
+}
 
 /* ---------- 弹窗开关 ---------- */
 const dialogVisible = ref(props.open)
@@ -630,10 +639,19 @@ async function sendMessage() {
         <div class="w-full flex items-center justify-left">
           <div class="flex items-center">
             <DialogTitle>AI助手</DialogTitle>
-            <span class="text-muted-foreground ml-2 text-xs"> - 帮您编写和优化内容</span>
+            <span class="text-muted-foreground ml-2 text-xs"> - </span>
           </div>
 
           <div class="flex items-center gap-1">
+            <Button
+              title="AI 文生图"
+              aria-label="AI 文生图"
+              variant="ghost"
+              size="icon"
+              @click="switchToImageGen"
+            >
+              <ImageIcon class="h-4 w-4" />
+            </Button>
             <Button
               title="清空对话内容"
               aria-label="清空对话内容"

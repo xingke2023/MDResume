@@ -9,6 +9,11 @@ const isOpenEditDialog = ref(false)
 const editInputVal = ref(``)
 const tabHistory = ref([``, store.cssContentConfig.active])
 
+// 关闭CSS编辑器
+function closeCssEditor() {
+  displayStore.toggleShowCssEditor()
+}
+
 function rename(name: string) {
   editInputVal.value = name
   isOpenEditDialog.value = true
@@ -103,7 +108,128 @@ function tabChanged(tabName: string | number) {
 </script>
 
 <template>
-  <transition enter-active-class="bounceInRight">
+  <!-- 手机端：全屏弹窗 -->
+  <transition
+    v-if="store.isMobile"
+    enter-active-class="mobile-editor-enter-active"
+    leave-active-class="mobile-editor-leave-active"
+  >
+    <div
+      v-show="displayStore.isShowCssEditor"
+      class="fixed inset-0 z-50 flex flex-col bg-white dark:bg-[#191c20]"
+    >
+      <!-- 顶部栏 -->
+      <div class="flex items-center justify-between border-b border-gray-200 bg-white px-4 py-3 dark:border-gray-700 dark:bg-[#191c20]">
+        <h2 class="text-lg font-semibold">
+          自定义 CSS
+        </h2>
+        <Button
+          variant="outline"
+          size="icon"
+          @click="closeCssEditor"
+        >
+          <X class="size-4" />
+        </Button>
+      </div>
+
+      <!-- CSS 编辑器内容 -->
+      <div class="flex flex-1 flex-col overflow-hidden">
+        <Tabs
+          v-model="store.cssContentConfig.active"
+          @update:model-value="tabChanged"
+        >
+          <TabsList class="w-full overflow-x-auto">
+            <TabsTrigger
+              v-for="item in store.cssContentConfig.tabs"
+              :key="item.name"
+              :value="item.name"
+              class="flex-1"
+            >
+              {{ item.title }}
+              <Edit3
+                v-show="store.cssContentConfig.active === item.name" class="inline size-4 rounded-full p-0.5 transition-color hover:bg-gray-200 dark:hover:bg-gray-600"
+                @click="rename(item.name)"
+              />
+              <X
+                v-show="store.cssContentConfig.active === item.name" class="inline size-4 rounded-full p-0.5 transition-color hover:bg-gray-200 dark:hover:bg-gray-600"
+                @click.self="removeHandler(item.name)"
+              />
+            </TabsTrigger>
+            <TabsTrigger value="add">
+              <Plus class="h-5 w-5" />
+            </TabsTrigger>
+          </TabsList>
+        </Tabs>
+        <textarea
+          id="cssEditor"
+          type="textarea"
+          placeholder="Your custom css here."
+        />
+      </div>
+
+      <!-- 新增弹窗 -->
+      <Dialog v-model:open="isOpenAddDialog">
+        <DialogContent class="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>新建自定义 CSS</DialogTitle>
+            <DialogDescription>
+              请输入方案名称
+            </DialogDescription>
+          </DialogHeader>
+          <Input v-model="addInputVal" />
+          <DialogFooter>
+            <Button variant="outline" @click="isOpenAddDialog = false">
+              取消
+            </Button>
+            <Button @click="addTab()">
+              保存
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <!-- 重命名弹窗 -->
+      <Dialog v-model:open="isOpenEditDialog">
+        <DialogContent class="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>编辑方案名称</DialogTitle>
+            <DialogDescription>
+              请输入新的方案名称
+            </DialogDescription>
+          </DialogHeader>
+          <Input v-model="editInputVal" />
+          <DialogFooter>
+            <Button variant="outline" @click="isOpenEditDialog = false">
+              取消
+            </Button>
+            <Button @click="editTabName">
+              保存
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <AlertDialog v-model:open="isOpenDelTabConfirmDialog">
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>提示</AlertDialogTitle>
+            <AlertDialogDescription>
+              此操作将删除该自定义方案，是否继续？
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>取消</AlertDialogCancel>
+            <AlertDialogAction @click="delTab">
+              确认
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </div>
+  </transition>
+
+  <!-- 桌面端：侧边栏 -->
+  <transition v-else enter-active-class="bounceInRight">
     <div v-show="displayStore.isShowCssEditor" class="cssEditor-wrapper h-full flex flex-col border-l-2 border-gray/50">
       <Tabs
         v-model="store.cssContentConfig.active"
@@ -200,6 +326,7 @@ function tabChanged(tabName: string | number) {
 </template>
 
 <style lang="less" scoped>
+/* 桌面端动画 */
 .bounceInRight {
   animation-name: bounceInRight;
   animation-duration: 1s;
@@ -235,6 +362,44 @@ function tabChanged(tabName: string | number) {
 
   100% {
     transform: none;
+  }
+}
+
+/* 手机端全屏动画 */
+.mobile-editor-enter-active,
+.mobile-editor-leave-active {
+  transition:
+    transform 0.3s ease-out,
+    opacity 0.3s ease-out;
+}
+
+.mobile-editor-enter-active {
+  animation: slideUp 0.3s ease-out;
+}
+
+.mobile-editor-leave-active {
+  animation: slideDown 0.3s ease-out;
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes slideDown {
+  from {
+    transform: translateY(0);
+    opacity: 1;
+  }
+  to {
+    transform: translateY(100%);
+    opacity: 0;
   }
 }
 </style>

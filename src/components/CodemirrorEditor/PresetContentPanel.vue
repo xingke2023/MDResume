@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Award, Briefcase, Calendar, ChevronDown, Code, FileText, Heart, Image, List, Mail, Plus, Quote, Table, Target, Type, User, UserCircle, Zap } from 'lucide-vue-next'
+import { Award, Briefcase, Calendar, ChevronDown, Code, FileText, Heart, Image, List, Mail, Plus, Quote, Table, Target, Type, User, UserCircle, X, Zap } from 'lucide-vue-next'
 import { toast } from 'vue-sonner'
 import useAIConfigStore from '@/stores/AIConfig'
 
@@ -334,6 +334,11 @@ const isGenerating = ref(false)
 const generatingText = ref(``)
 const store = useStore()
 
+// 关闭面板
+function closePanel() {
+  store.isOpenPresetPanel = false
+}
+
 // AI配置
 const AIConfigStore = useAIConfigStore()
 const { apiKey, endpoint, model, temperature, maxToken, type } = storeToRefs(AIConfigStore)
@@ -561,146 +566,155 @@ function insertContent(content: string) {
 </script>
 
 <template>
-  <div class="preset-panel h-full w-40 flex flex-col border-r bg-gray-50 p-2 dark:bg-gray-800">
-    <div class="relative mb-4">
-      <!-- 标题栏，点击显示/隐藏分类菜单 -->
+  <div class="preset-panel fixed bottom-0 left-0 top-[60px] z-[60] w-[200px] flex flex-col border-r bg-white shadow-xl dark:border-gray-700 dark:bg-gray-800">
+    <!-- 头部：标题 + 关闭按钮 -->
+    <div class="flex items-center justify-between border-b p-3 dark:border-gray-700">
+      <h3 class="text-base text-gray-900 font-semibold dark:text-gray-100">
+        预设内容
+      </h3>
       <button
-        class="text-foreground mb-3 w-full flex cursor-pointer items-center justify-center border rounded-md bg-white px-3 py-2 text-base font-bold shadow-sm transition-colors dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600"
-        @click="toggleCategoryMenu"
+        class="flex items-center justify-center rounded-md p-1 text-gray-500 transition-colors hover:bg-gray-100 dark:text-gray-400 hover:text-gray-900 dark:hover:bg-gray-700 dark:hover:text-gray-100"
+        @click="closePanel"
       >
-        <span class="flex-1 text-center">{{ currentCategoryName }}</span>
-        <ChevronDown
-          class="absolute right-3 h-4 w-4 transition-transform duration-200"
-          :class="{ 'rotate-180': showCategoryMenu }"
-        />
+        <X class="h-5 w-5" />
       </button>
+    </div>
 
-      <!-- 分类下拉菜单 -->
-      <div
-        v-show="showCategoryMenu"
-        class="absolute left-0 right-0 top-full z-10 mt-1 overflow-hidden border rounded-md bg-white shadow-lg dark:bg-gray-700"
-      >
+    <!-- 主体内容 -->
+    <div class="flex flex-1 flex-col overflow-hidden p-3">
+      <div class="relative mb-4">
+        <!-- 分类选择按钮 -->
         <button
-          v-for="category in categories"
-          :key="category.key"
-          class="w-full px-3 py-2 text-left text-sm transition-colors hover:bg-gray-100 dark:hover:bg-gray-600"
-          :class="{ 'bg-gray-100 dark:bg-gray-600': selectedCategory === category.key }"
-          @click="selectCategory(category.key)"
+          class="text-foreground w-full flex cursor-pointer items-center justify-center border rounded-md bg-gray-50 px-3 py-2 text-sm font-medium shadow-sm transition-colors dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600"
+          @click="toggleCategoryMenu"
         >
-          {{ category.name }}
+          <span class="flex-1 text-center">{{ currentCategoryName }}</span>
+          <ChevronDown
+            class="absolute right-3 h-4 w-4 transition-transform duration-200"
+            :class="{ 'rotate-180': showCategoryMenu }"
+          />
+        </button>
+
+        <!-- 分类下拉菜单 -->
+        <div
+          v-show="showCategoryMenu"
+          class="absolute left-0 right-0 top-full z-10 mt-1 overflow-hidden border rounded-md bg-white shadow-lg dark:bg-gray-700"
+        >
+          <button
+            v-for="category in categories"
+            :key="category.key"
+            class="w-full px-3 py-2 text-left text-sm transition-colors hover:bg-gray-100 dark:hover:bg-gray-600"
+            :class="{ 'bg-gray-100 dark:bg-gray-600': selectedCategory === category.key }"
+            @click="selectCategory(category.key)"
+          >
+            {{ category.name }}
+          </button>
+        </div>
+      </div>
+
+      <!-- 预设内容按钮列表 -->
+      <div class="space-y-2 flex-1 overflow-y-auto">
+        <button
+          v-for="item in filteredItems"
+          :key="item.name"
+          class="w-full flex items-center gap-2 border rounded-lg p-3 text-left text-sm transition-colors"
+          :class="{
+            'bg-pink-50 border-pink-200 hover:bg-pink-100 dark:bg-pink-900/20 dark:border-pink-800 dark:hover:bg-pink-900/30': ['我的情况', '岗位需求'].includes(item.name),
+            'bg-green-50 border-green-200 hover:bg-green-100 dark:bg-green-900/20 dark:border-green-800 dark:hover:bg-green-900/30': selectedCategory === 'resume' && !['我的情况', '岗位需求'].includes(item.name),
+            'hover:bg-accent hover:text-accent-foreground': selectedCategory !== 'resume',
+          }"
+          @click="handleItemClick(item)"
+        >
+          <component :is="item.icon" class="h-4 w-4 flex-shrink-0" />
+          <span>{{ item.name }}</span>
         </button>
       </div>
-    </div>
 
-    <!-- 预设内容按钮列表 -->
-    <div class="space-y-2 flex-1 overflow-y-auto">
-      <button
-        v-for="item in filteredItems"
-        :key="item.name"
-        class="w-full flex items-center gap-2 border rounded-lg p-3 text-left text-sm transition-colors"
-        :class="{
-          'bg-pink-50 border-pink-200 hover:bg-pink-100 dark:bg-pink-900/20 dark:border-pink-800 dark:hover:bg-pink-900/30': ['我的情况', '岗位需求'].includes(item.name),
-          'bg-green-50 border-green-200 hover:bg-green-100 dark:bg-green-900/20 dark:border-green-800 dark:hover:bg-green-900/30': selectedCategory === 'resume' && !['我的情况', '岗位需求'].includes(item.name),
-          'hover:bg-accent hover:text-accent-foreground': selectedCategory !== 'resume',
-        }"
-        @click="handleItemClick(item)"
-      >
-        <component :is="item.icon" class="h-4 w-4 flex-shrink-0" />
-        <span>{{ item.name }}</span>
-      </button>
-    </div>
+      <!-- 添加自定义预设按钮 -->
+      <div class="border-border mt-4 border-t pt-3">
+        <button
+          class="text-muted-foreground border-muted-foreground/50 hover:border-border hover:text-foreground w-full flex items-center justify-center gap-2 border rounded-lg border-dashed p-2 text-xs transition-colors"
+          @click="toast.info('自定义预设功能开发中...')"
+        >
+          <Plus class="h-3 w-3" />
+          添加自定义
+        </button>
+      </div>
 
-    <!-- 添加自定义预设按钮 -->
-    <div class="border-border mt-4 border-t pt-3">
-      <button
-        class="text-muted-foreground border-muted-foreground/50 hover:border-border hover:text-foreground w-full flex items-center justify-center gap-2 border rounded-lg border-dashed p-2 text-xs transition-colors"
-        @click="toast.info('自定义预设功能开发中...')"
-      >
-        <Plus class="h-3 w-3" />
-        添加自定义
-      </button>
-    </div>
-
-    <!-- 岗位需求对话框 -->
-    <div v-if="showJobRequirementDialog" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-      <div class="max-w-[90vw] w-[500px] rounded-lg bg-white p-6 dark:bg-gray-800">
-        <h3 class="mb-4 text-lg font-semibold">
-          输入岗位需求
-        </h3>
-        <textarea
-          v-model="jobRequirement"
-          placeholder="可以复制粘贴目标岗位的JobDescription到这里，包括技能要求、工作职责等..."
-          class="h-48 w-full resize-none border rounded-md p-3 focus:outline-none focus:ring-2 focus:ring-blue-500"
-        />
-        <div class="mt-4 flex justify-end gap-3">
-          <button
-            class="border rounded-md px-4 py-2 text-sm hover:bg-gray-50 dark:hover:bg-gray-700"
-            @click="showJobRequirementDialog = false"
-          >
-            取消
-          </button>
-          <button
-            class="rounded-md bg-blue-500 px-4 py-2 text-sm text-white hover:bg-blue-600"
-            @click="saveJobRequirement"
-          >
-            保存
-          </button>
+      <!-- 岗位需求对话框 -->
+      <div v-if="showJobRequirementDialog" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+        <div class="max-w-[90vw] w-[500px] rounded-lg bg-white p-6 dark:bg-gray-800">
+          <h3 class="mb-4 text-lg font-semibold">
+            输入岗位需求
+          </h3>
+          <textarea
+            v-model="jobRequirement"
+            placeholder="可以复制粘贴目标岗位的JobDescription到这里，包括技能要求、工作职责等..."
+            class="h-48 w-full resize-none border rounded-md p-3 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+          <div class="mt-4 flex justify-end gap-3">
+            <button
+              class="border rounded-md px-4 py-2 text-sm hover:bg-gray-50 dark:hover:bg-gray-700"
+              @click="showJobRequirementDialog = false"
+            >
+              取消
+            </button>
+            <button
+              class="rounded-md bg-blue-500 px-4 py-2 text-sm text-white hover:bg-blue-600"
+              @click="saveJobRequirement"
+            >
+              保存
+            </button>
+          </div>
         </div>
       </div>
-    </div>
 
-    <!-- 我的情况对话框 -->
-    <div v-if="showMyInfoDialog" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-      <div class="max-w-[90vw] w-[600px] rounded-lg bg-white p-6 dark:bg-gray-800">
-        <h3 class="mb-4 text-lg font-semibold">
-          我的情况
-        </h3>
-        <p class="mb-4 text-sm text-gray-600 dark:text-gray-400">
-          请粘贴您的个人信息、工作经历等等内容，格式不限，越乱越好，或者干脆把您的旧简历复制粘贴到这里，也可以只录入基本信息。
-        </p>
-        <textarea
-          v-model="myInfo"
-          placeholder=""
-          class="h-80 w-full resize-none border rounded-md p-3 focus:outline-none focus:ring-2 focus:ring-blue-500"
-        />
-        <div class="mt-4 flex justify-end gap-3">
-          <button
-            class="border rounded-md px-4 py-2 text-sm hover:bg-gray-50 dark:hover:bg-gray-700"
-            @click="showMyInfoDialog = false"
-          >
-            取消
-          </button>
-          <button
-            class="rounded-md bg-blue-500 px-4 py-2 text-sm text-white hover:bg-blue-600"
-            @click="saveMyInfo"
-          >
-            保存
-          </button>
+      <!-- 我的情况对话框 -->
+      <div v-if="showMyInfoDialog" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+        <div class="max-w-[90vw] w-[600px] rounded-lg bg-white p-6 dark:bg-gray-800">
+          <h3 class="mb-4 text-lg font-semibold">
+            我的情况
+          </h3>
+          <p class="mb-4 text-sm text-gray-600 dark:text-gray-400">
+            请粘贴您的个人信息、工作经历等等内容，格式不限，越乱越好，或者干脆把您的旧简历复制粘贴到这里，也可以只录入基本信息。
+          </p>
+          <textarea
+            v-model="myInfo"
+            placeholder=""
+            class="h-80 w-full resize-none border rounded-md p-3 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+          <div class="mt-4 flex justify-end gap-3">
+            <button
+              class="border rounded-md px-4 py-2 text-sm hover:bg-gray-50 dark:hover:bg-gray-700"
+              @click="showMyInfoDialog = false"
+            >
+              取消
+            </button>
+            <button
+              class="rounded-md bg-blue-500 px-4 py-2 text-sm text-white hover:bg-blue-600"
+              @click="saveMyInfo"
+            >
+              保存
+            </button>
+          </div>
         </div>
       </div>
-    </div>
 
-    <!-- AI生成进度提示框 -->
-    <div v-if="isGenerating" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-      <div class="w-80 rounded-lg bg-white p-6 dark:bg-gray-800">
-        <div class="flex items-center gap-3">
-          <div class="animate-spin h-5 w-5 border-2 border-blue-500 border-t-transparent rounded-full" />
-          <span class="text-sm font-medium">{{ generatingText }}</span>
+      <!-- AI生成进度提示框 -->
+      <div v-if="isGenerating" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+        <div class="w-80 rounded-lg bg-white p-6 dark:bg-gray-800">
+          <div class="flex items-center gap-3">
+            <div class="animate-spin h-5 w-5 border-2 border-blue-500 border-t-transparent rounded-full" />
+            <span class="text-sm font-medium">{{ generatingText }}</span>
+          </div>
+          <div class="mt-4 h-2 rounded-full bg-gray-200 dark:bg-gray-700">
+            <div class="animate-pulse h-2 rounded-full bg-blue-500" style="width: 60%" />
+          </div>
+          <p class="mt-2 text-center text-xs text-gray-500 dark:text-gray-400">
+            请稍候，AI正在为您生成内容...
+          </p>
         </div>
-        <div class="mt-4 h-2 rounded-full bg-gray-200 dark:bg-gray-700">
-          <div class="animate-pulse h-2 rounded-full bg-blue-500" style="width: 60%" />
-        </div>
-        <p class="mt-2 text-center text-xs text-gray-500 dark:text-gray-400">
-          请稍候，AI正在为您生成内容...
-        </p>
       </div>
     </div>
   </div>
 </template>
-
-<style scoped>
-.preset-panel {
-  min-width: 150px;
-  max-width: 170px;
-}
-</style>

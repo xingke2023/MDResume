@@ -401,27 +401,27 @@ function onDrop(e: DragEvent) {
 
 <template>
   <Dialog v-model:open="displayStore.isShowUploadImgDialog">
-    <DialogContent class="max-w-max" @pointer-down-outside="ev => ev.preventDefault()">
+    <DialogContent class="max-h-[90vh] max-w-[95vw] overflow-y-auto sm:max-w-max" @pointer-down-outside="ev => ev.preventDefault()">
       <DialogHeader>
         <DialogTitle>本地上传</DialogTitle>
       </DialogHeader>
-      <Tabs v-model="activeName" class="w-max">
-        <TabsList>
-          <TabsTrigger value="upload">
+      <Tabs v-model="activeName" class="w-full items-start sm:w-max">
+        <TabsList class="h-auto w-full flex-wrap justify-start sm:flex-nowrap">
+          <TabsTrigger value="upload" class="flex-shrink-0">
             选择上传
           </TabsTrigger>
-          <TabsTrigger v-for="item in options.filter(item => item.value !== 'default')" :key="item.value" :value="item.value">
+          <TabsTrigger v-for="item in options.filter(item => item.value !== 'default')" :key="item.value" :value="item.value" class="flex-shrink-0">
             {{ item.label }}
           </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="upload">
-          <Label>
+        <TabsContent value="upload" class="w-full flex flex-col items-start">
+          <Label class="w-full">
             <span class="my-4 block">
               图床
             </span>
             <Select v-model="imgHost" @update:model-value="changeImgHost">
-              <SelectTrigger>
+              <SelectTrigger class="w-full">
                 <SelectValue placeholder="请选择" />
               </SelectTrigger>
               <SelectContent>
@@ -437,7 +437,7 @@ function onDrop(e: DragEvent) {
             </Select>
           </Label>
           <div
-            class="bg-clip-padding mt-4 h-50 flex flex-col cursor-pointer items-center justify-evenly border-2 rounded border-dashed transition-colors hover:border-gray-700 hover:bg-gray-400/50 dark:hover:border-gray-200 dark:hover:bg-gray-500/50"
+            class="bg-clip-padding mt-4 h-50 w-full flex flex-col cursor-pointer items-center justify-evenly border-2 rounded border-dashed transition-colors hover:border-gray-700 hover:bg-gray-400/50 dark:hover:border-gray-200 dark:hover:bg-gray-500/50"
             :class="{
               'border-gray-700 bg-gray-400/50 dark:border-gray-200 dark:bg-gray-500/50': dragover,
             }"
@@ -447,21 +447,22 @@ function onDrop(e: DragEvent) {
             @dragleave.prevent="dragover = false"
           >
             <UploadCloud class="size-20" />
-            <p>
+            <p class="px-4 text-center">
               将图片拖到此处，或
               <strong>点击上传</strong>
             </p>
           </div>
         </TabsContent>
 
-        <TabsContent value="github">
-          <Form :validation-schema="githubSchema" :initial-values="githubConfig" @submit="githubSubmit">
+        <TabsContent value="github" class="w-full flex flex-col items-start">
+          <Form :validation-schema="githubSchema" :initial-values="githubConfig" class="w-full text-left" @submit="githubSubmit">
             <Field v-slot="{ field, errorMessage }" name="repo">
               <FormItem label="GitHub 仓库" required :error="errorMessage">
                 <Input
                   v-bind="field"
                   v-model="field.value"
                   placeholder="如：github.com/yanglbme/resource"
+                  class="max-w-[300px]"
                 />
               </FormItem>
             </Field>
@@ -472,6 +473,7 @@ function onDrop(e: DragEvent) {
                   v-bind="field"
                   v-model="field.value"
                   placeholder="如：release，可不填，默认 master"
+                  class="max-w-[300px]"
                 />
               </FormItem>
             </Field>
@@ -483,6 +485,7 @@ function onDrop(e: DragEvent) {
                   v-model="field.value"
                   type="password"
                   placeholder="如：cc1d0c1426d0fd0902bd2d7184b14da61b8abc46"
+                  class="max-w-[300px]"
                 />
               </FormItem>
             </Field>
@@ -507,8 +510,8 @@ function onDrop(e: DragEvent) {
           </Form>
         </TabsContent>
 
-        <TabsContent value="aliOSS">
-          <Form :validation-schema="aliOSSSchema" :initial-values="aliOSSConfig" @submit="aliOSSSubmit">
+        <TabsContent value="aliOSS" class="w-full flex flex-col items-start">
+          <Form :validation-schema="aliOSSSchema" :initial-values="aliOSSConfig" class="w-full text-left" @submit="aliOSSSubmit">
             <Field v-slot="{ field, errorMessage }" name="accessKeyId">
               <FormItem label="AccessKey ID" required :error="errorMessage">
                 <Input
@@ -601,8 +604,8 @@ function onDrop(e: DragEvent) {
           </Form>
         </TabsContent>
 
-        <TabsContent value="txCOS">
-          <Form :validation-schema="txCOSSchema" :initial-values="txCOSConfig" @submit="txCOSSubmit">
+        <TabsContent value="txCOS" class="w-full flex flex-col items-start">
+          <Form :validation-schema="txCOSSchema" :initial-values="txCOSConfig" class="w-full text-left" @submit="txCOSSubmit">
             <Field v-slot="{ field, errorMessage }" name="secretId">
               <FormItem label="SecretId" required :error="errorMessage">
                 <Input
@@ -684,8 +687,8 @@ function onDrop(e: DragEvent) {
           </Form>
         </TabsContent>
 
-        <TabsContent value="qiniu">
-          <Form :validation-schema="qiniuSchema" :initial-values="qiniuConfig" @submit="qiniuSubmit">
+        <TabsContent value="qiniu" class="w-full flex flex-col items-start">
+          <Form :validation-schema="qiniuSchema" :initial-values="qiniuConfig" class="w-full text-left" @submit="qiniuSubmit">
             <Field v-slot="{ field, errorMessage }" name="accessKey">
               <FormItem label="AccessKey" required :error="errorMessage">
                 <Input
@@ -767,8 +770,8 @@ function onDrop(e: DragEvent) {
           </Form>
         </TabsContent>
 
-        <TabsContent value="minio">
-          <Form :validation-schema="minioOSSSchema" :initial-values="minioOSSConfig" @submit="minioOSSSubmit">
+        <TabsContent value="minio" class="w-full flex flex-col items-start">
+          <Form :validation-schema="minioOSSSchema" :initial-values="minioOSSConfig" class="w-full text-left" @submit="minioOSSSubmit">
             <Field v-slot="{ field, errorMessage }" name="endpoint">
               <FormItem label="Endpoint" required :error="errorMessage">
                 <Input
@@ -843,8 +846,8 @@ function onDrop(e: DragEvent) {
           </Form>
         </TabsContent>
 
-        <TabsContent value="mp">
-          <Form :validation-schema="mpSchema" :initial-values="mpConfig" @submit="mpSubmit">
+        <TabsContent value="mp" class="w-full flex flex-col items-start">
+          <Form :validation-schema="mpSchema" :initial-values="mpConfig" class="w-full text-left" @submit="mpSubmit">
             <!-- 只有在需要代理时才显示 proxyOrigin 字段 -->
             <Field
               v-if="isProxyRequired"
@@ -911,11 +914,11 @@ function onDrop(e: DragEvent) {
           </Form>
         </TabsContent>
 
-        <TabsContent value="r2">
-          <Form :validation-schema="r2Schema" :initial-values="r2Config" @submit="r2Submit">
+        <TabsContent value="r2" class="w-full flex flex-col items-start">
+          <Form :validation-schema="r2Schema" :initial-values="r2Config" class="w-full text-left" @submit="r2Submit">
             <Field v-slot="{ field, errorMessage }" name="accountId">
               <FormItem label="AccountId" required :error="errorMessage">
-                <Input v-bind="field" v-model="field.value" placeholder="如: 0030f123e55a57546f4c281c564e560" class="min-w-[350px]" />
+                <Input v-bind="field" v-model="field.value" placeholder="如: 0030f123e55a57546f4c281c564e560" class="w-full sm:min-w-[350px]" />
               </FormItem>
             </Field>
 
@@ -980,11 +983,11 @@ function onDrop(e: DragEvent) {
           </Form>
         </TabsContent>
 
-        <TabsContent value="upyun">
-          <Form :validation-schema="upyunSchema" :initial-values="upyunConfig" @submit="upyunSubmit">
+        <TabsContent value="upyun" class="w-full flex flex-col items-start">
+          <Form :validation-schema="upyunSchema" :initial-values="upyunConfig" class="w-full text-left" @submit="upyunSubmit">
             <Field v-slot="{ field, errorMessage }" name="bucket">
               <FormItem label="Bucket" required :error="errorMessage">
-                <Input v-bind="field" v-model="field.value" placeholder="如: md" class="min-w-[350px]" />
+                <Input v-bind="field" v-model="field.value" placeholder="如: md" class="w-full sm:min-w-[350px]" />
               </FormItem>
             </Field>
 
@@ -1032,8 +1035,8 @@ function onDrop(e: DragEvent) {
           </Form>
         </TabsContent>
 
-        <TabsContent value="telegram">
-          <Form :validation-schema="telegramSchema" :initial-values="telegramConfig" @submit="telegramSubmit">
+        <TabsContent value="telegram" class="w-full flex flex-col items-start">
+          <Form :validation-schema="telegramSchema" :initial-values="telegramConfig" class="w-full text-left" @submit="telegramSubmit">
             <Field v-slot="{ field, errorMessage }" name="token">
               <FormItem label="Bot Token" required :error="errorMessage">
                 <Input v-bind="field" v-model="field.value" placeholder="如：123456789:ABCdefGHIjkl-MNOPqrSTUvwxYZ" />
@@ -1063,10 +1066,11 @@ function onDrop(e: DragEvent) {
           </Form>
         </TabsContent>
 
-        <TabsContent value="cloudinary">
+        <TabsContent value="cloudinary" class="w-full flex flex-col items-start">
           <Form
             :validation-schema="cloudinarySchema"
             :initial-values="cloudinaryConfig"
+            class="w-full text-left"
             @submit="cloudinarySubmit"
           >
             <Field v-slot="{ field, errorMessage }" name="cloudName">
@@ -1142,7 +1146,7 @@ function onDrop(e: DragEvent) {
           </Form>
         </TabsContent>
 
-        <TabsContent value="formCustom">
+        <TabsContent value="formCustom" class="w-full flex flex-col items-start">
           <CustomUploadForm />
         </TabsContent>
       </Tabs>

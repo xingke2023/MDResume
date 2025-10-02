@@ -1,9 +1,25 @@
 <script setup lang="ts">
-import { ArrowUpNarrowWide, ChevronsDownUp, ChevronsUpDown, PlusSquare } from 'lucide-vue-next'
+import { ArrowUpNarrowWide, ChevronsDownUp, ChevronsUpDown, PlusSquare, X } from 'lucide-vue-next'
 import { useStore } from '@/stores'
 import { addPrefix } from '@/utils'
 
 const store = useStore()
+
+// 控制是否启用动画
+const enableAnimation = ref(false)
+
+// 监听 PostSlider 开关状态变化
+watch(() => store.isOpenPostSlider, () => {
+  if (store.isMobile) {
+    // 在移动端，用户操作时启用动画
+    enableAnimation.value = true
+  }
+})
+
+// 监听设备类型变化，重置动画状态
+watch(() => store.isMobile, () => {
+  enableAnimation.value = false
+})
 
 /* ============ 新增内容 ============ */
 const parentId = ref<string | null>(null)
@@ -182,128 +198,170 @@ function handleDragEnd() {
 </script>
 
 <template>
-  <!-- 侧栏外框 -->
+  <!-- 移动端遮罩层 -->
   <div
-    class="h-full w-full overflow-hidden border-2 border-dashed bg-gray/20 transition-colors duration-300 dark:bg-[#191c20]"
+    v-if="store.isMobile && store.isOpenPostSlider"
+    class="fixed inset-0 z-30 bg-black/50"
+    @click="store.isOpenPostSlider = false"
+  />
+
+  <!-- 侧栏容器 -->
+  <div
+    class="mobile-drawer h-full w-full overflow-hidden"
     :class="{
-      'border-gray-700 bg-gray-400/50 dark:border-gray-200 dark:bg-gray-500/50': dragover,
+      // 移动端样式
+      'fixed top-0 left-0 z-35 border-r bg-background shadow-lg': store.isMobile,
+      'animate': store.isMobile && enableAnimation,
+      // 桌面端样式
+      'border-2 border-dashed border-[#0000] bg-gray/20 transition-colors': !store.isMobile,
+      'border-gray-700 bg-gray-400/50 dark:border-gray-200 dark:bg-gray-500/50': !store.isMobile && dragover,
+    }"
+    :style="{
+      transform: store.isMobile && store.isOpenPostSlider ? 'translateX(0)'
+        : store.isMobile && !store.isOpenPostSlider ? 'translateX(-100%)'
+          : undefined,
     }"
     @dragover.prevent="dragover = true"
     @dragleave.prevent="dragover = false"
     @dragend="handleDragEnd"
   >
     <nav
-      class="space-y-1 h-full flex flex-col border-r-2 border-gray/20 py-2 transition-transform"
-      :class="{
-        'translate-x-100': store.isOpenPostSlider,
-        '-translate-x-full': !store.isOpenPostSlider,
-      }"
+      class="h-full flex flex-col overflow-hidden transition-transform"
+      :class="{ 'p-2': store.isMobile }"
       @dragover="handleDragOver"
       @drop.prevent="handleDrop(null)"
     >
+      <!-- 移动端标题栏 -->
+      <div v-if="store.isMobile" class="bg-background sticky top-0 z-10 mb-2 flex items-center justify-center border-b px-4 py-3">
+        <h2 class="text-lg font-semibold">
+          内容管理
+        </h2>
+      </div>
       <!-- 顶部：新增 + 排序按钮 -->
-      <div class="space-x-4 mb-2 flex justify-center">
-        <!-- 新增 -->
-        <Dialog v-model:open="isOpenAddDialog">
-          <DialogTrigger>
-            <TooltipProvider :delay-duration="200">
-              <Tooltip>
-                <TooltipTrigger as-child>
-                  <Button variant="ghost" size="xs" class="h-max p-1">
-                    <PlusSquare class="size-5" />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent side="bottom">
-                  新增内容
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
-          </DialogTrigger>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>新增内容</DialogTitle>
-              <DialogDescription>请输入内容名称</DialogDescription>
-            </DialogHeader>
-            <Input v-model="addPostInputVal" @keyup.enter="addPost" />
-            <DialogFooter>
-              <Button @click="addPost">
-                确 定
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
+      <div class="mb-2 flex shrink-0 items-center justify-between px-2 py-2">
+        <!-- 左侧：新增 + 排序按钮 -->
+        <div class="space-x-4 flex">
+          <!-- 新增 -->
+          <Dialog v-model:open="isOpenAddDialog">
+            <DialogTrigger>
+              <TooltipProvider :delay-duration="200">
+                <Tooltip>
+                  <TooltipTrigger as-child>
+                    <Button variant="ghost" size="xs" class="h-max p-1">
+                      <PlusSquare class="size-5" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent side="bottom">
+                    新增内容
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>新增内容</DialogTitle>
+                <DialogDescription>请输入内容名称</DialogDescription>
+              </DialogHeader>
+              <Input v-model="addPostInputVal" @keyup.enter="addPost" />
+              <DialogFooter>
+                <Button @click="addPost">
+                  确 定
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
 
-        <!-- 排序 -->
-        <DropdownMenu>
-          <DropdownMenuTrigger>
-            <TooltipProvider :delay-duration="200">
-              <Tooltip>
-                <TooltipTrigger as-child>
-                  <Button variant="ghost" size="xs" class="h-max p-1">
-                    <ArrowUpNarrowWide class="size-5" />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent side="bottom">
-                  排序模式
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent>
-            <DropdownMenuRadioGroup v-model="sortMode">
-              <DropdownMenuRadioItem value="A-Z">
-                文件名（A-Z）
-              </DropdownMenuRadioItem>
-              <DropdownMenuRadioItem value="Z-A">
-                文件名（Z-A）
-              </DropdownMenuRadioItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuRadioItem value="update-new-old">
-                编辑时间（新→旧）
-              </DropdownMenuRadioItem>
-              <DropdownMenuRadioItem value="update-old-new">
-                编辑时间（旧→新）
-              </DropdownMenuRadioItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuRadioItem value="create-new-old">
-                创建时间（新→旧）
-              </DropdownMenuRadioItem>
-              <DropdownMenuRadioItem value="create-old-new">
-                创建时间（旧→新）
-              </DropdownMenuRadioItem>
-            </DropdownMenuRadioGroup>
-          </DropdownMenuContent>
-        </DropdownMenu>
+          <!-- 排序 -->
+          <DropdownMenu>
+            <DropdownMenuTrigger>
+              <TooltipProvider :delay-duration="200">
+                <Tooltip>
+                  <TooltipTrigger as-child>
+                    <Button variant="ghost" size="xs" class="h-max p-1">
+                      <ArrowUpNarrowWide class="size-5" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent side="bottom">
+                    排序模式
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent>
+              <DropdownMenuRadioGroup v-model="sortMode">
+                <DropdownMenuRadioItem value="A-Z">
+                  文件名（A-Z）
+                </DropdownMenuRadioItem>
+                <DropdownMenuRadioItem value="Z-A">
+                  文件名（Z-A）
+                </DropdownMenuRadioItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuRadioItem value="update-new-old">
+                  编辑时间（新→旧）
+                </DropdownMenuRadioItem>
+                <DropdownMenuRadioItem value="update-old-new">
+                  编辑时间（旧→新）
+                </DropdownMenuRadioItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuRadioItem value="create-new-old">
+                  创建时间（新→旧）
+                </DropdownMenuRadioItem>
+                <DropdownMenuRadioItem value="create-old-new">
+                  创建时间（旧→新）
+                </DropdownMenuRadioItem>
+              </DropdownMenuRadioGroup>
+            </DropdownMenuContent>
+          </DropdownMenu>
 
+          <TooltipProvider :delay-duration="200">
+            <Tooltip>
+              <TooltipTrigger as-child>
+                <Button variant="ghost" size="xs" class="h-max p-1" @click="store.collapseAllPosts">
+                  <ChevronsDownUp class="size-5" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent side="bottom">
+                全部收起
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+
+          <TooltipProvider :delay-duration="200">
+            <Tooltip>
+              <TooltipTrigger as-child>
+                <Button variant="ghost" size="xs" class="h-max p-1" @click="store.expandAllPosts">
+                  <ChevronsUpDown class="size-5" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent side="bottom">
+                全部展开
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        </div>
+
+        <!-- 右侧：关闭按钮 -->
         <TooltipProvider :delay-duration="200">
           <Tooltip>
             <TooltipTrigger as-child>
-              <Button variant="ghost" size="xs" class="h-max p-1" @click="store.collapseAllPosts">
-                <ChevronsDownUp class="size-5" />
+              <Button
+                variant="ghost"
+                size="icon"
+                class="hover:bg-red-100 dark:hover:bg-red-900/30"
+                @click="store.isOpenPostSlider = false"
+              >
+                <X class="size-5 text-red-500 dark:text-red-400" />
               </Button>
             </TooltipTrigger>
             <TooltipContent side="bottom">
-              全部收起
-            </TooltipContent>
-          </Tooltip>
-        </TooltipProvider>
-
-        <TooltipProvider :delay-duration="200">
-          <Tooltip>
-            <TooltipTrigger as-child>
-              <Button variant="ghost" size="xs" class="h-max p-1" @click="store.expandAllPosts">
-                <ChevronsUpDown class="size-5" />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent side="bottom">
-              全部展开
+              关闭
             </TooltipContent>
           </Tooltip>
         </TooltipProvider>
       </div>
 
       <!-- 列表 -->
-      <div class="space-y-1 px-1">
+      <div class="space-y-1 flex-1 overflow-y-auto px-1">
         <!-- 包裹根文章和子文章，保持间距 -->
         <PostItem
           :parent-id="null"
@@ -420,3 +478,10 @@ function handleDragEnd() {
     </nav>
   </div>
 </template>
+
+<style scoped>
+/* 移动端侧边栏动画 - 只有添加了 animate 类才启用 */
+.mobile-drawer.animate {
+  transition: transform 300ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+</style>

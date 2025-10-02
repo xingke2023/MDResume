@@ -1,27 +1,32 @@
 <script setup lang="ts">
 import {
   Bold,
-  ChevronDownIcon,
-  Clipboard,
-  Copy,
+  ChartPie,
+  Code,
   CreditCard,
-  Heading1,
+  Eraser,
   ImagePlus,
+  Italic,
+  LayoutList,
+  Link,
   List,
   ListOrdered,
-  Moon,
+  MinusSquare,
   Palette,
-  PanelLeftClose,
-  PanelLeftOpen,
+  Pencil,
+  Quote,
   Redo,
   Settings,
   Sparkles,
-  Sun,
+  Strikethrough,
   Table,
+  Trash2,
   Undo,
   Wand2,
+  Wrench,
 } from 'lucide-vue-next'
-import { altSign, ctrlKey, ctrlSign, shiftSign, themeOptions } from '@/config'
+import { toast } from 'vue-sonner'
+import { ctrlKey, themeOptions } from '@/config'
 import { useDisplayStore, useStore } from '@/stores'
 import useAIConfigStore from '@/stores/AIConfig'
 import { addPrefix, processClipboardContent } from '@/utils'
@@ -34,38 +39,78 @@ const aiConfigStore = useAIConfigStore()
 
 const {
   isDark,
-  isCiteStatus,
-  isCountStatus,
   output,
   primaryColor,
-  isOpenPostSlider,
+  isOpenPresetPanel,
   editor,
   theme,
+  isMobile,
+  isShowMobileToolbar,
 } = storeToRefs(store)
 
 const {
   toggleDark,
   editorRefresh,
-  citeStatusChanged,
-  countStatusChanged,
   formatContent,
   themeChanged,
   undo,
   redo,
-  copyToClipboard,
-  pasteFromClipboard,
-  clearContent,
-  importDefaultContent,
 } = store
 
 // 工具函数，添加格式
 function addFormat(cmd: string) {
-  const command = (editor.value as any).options.extraKeys[cmd]
-  if (typeof command === `function`) {
-    command(editor.value)
+  if (!editor.value)
+    return
+
+  const editorInstance = editor.value
+
+  // 定义格式符号映射
+  const formatMap: Record<string, { before: string, after: string, offset: number }> = {
+    [`${ctrlKey}-B`]: { before: `**`, after: `**`, offset: 2 }, // 加粗
+    [`${ctrlKey}-I`]: { before: `*`, after: `*`, offset: 1 }, // 斜体
+    [`${ctrlKey}-D`]: { before: `~~`, after: `~~`, offset: 2 }, // 删除线
+    [`${ctrlKey}-E`]: { before: `\``, after: `\``, offset: 1 }, // 行内代码
+    [`${ctrlKey}-K`]: { before: `[`, after: `](url)`, offset: 1 }, // 超链接
+  }
+
+  const format = formatMap[cmd]
+  if (format) {
+    // 自定义格式处理，支持光标定位
+    const selection = editorInstance.getSelection()
+    const cursor = editorInstance.getCursor()
+
+    if (selection) {
+      // 有选中文本，包裹选中内容
+      const wrapped = `${format.before}${selection}${format.after}`
+      editorInstance.replaceSelection(wrapped)
+      // 选中被包裹的文本
+      const start = cursor
+      const end = { line: cursor.line, ch: cursor.ch + wrapped.length - format.after.length }
+      editorInstance.setSelection(start, end)
+    }
+    else {
+      // 无选中文本，插入格式符号并将光标放在中间
+      const text = `${format.before}${format.after}`
+      editorInstance.replaceSelection(text)
+      // 将光标移动到中间位置
+      editorInstance.setCursor({
+        line: cursor.line,
+        ch: cursor.ch + format.offset,
+      })
+    }
+    editorInstance.focus()
   }
   else {
-    console.warn(`Command ${cmd} not found in extraKeys`)
+    // 使用原有的命令处理其他格式（如列表）
+    const command = (editorInstance as any).options.extraKeys[cmd]
+    if (typeof command === `function`) {
+      command(editorInstance)
+      // 保持编辑器焦点
+      editorInstance.focus()
+    }
+    else {
+      console.warn(`Command ${cmd} not found in extraKeys`)
+    }
   }
 }
 
@@ -100,55 +145,150 @@ function applyHeadingLevel(level: number) {
       }
     })
   })
+  // 保持编辑器焦点
+  editorInstance.focus()
 }
 
-const formatItems = [
-  {
-    label: `加粗`,
-    kbd: [ctrlSign, `B`],
-    cmd: `${ctrlKey}-B`,
-  },
-  {
-    label: `斜体`,
-    kbd: [ctrlSign, `I`],
-    cmd: `${ctrlKey}-I`,
-  },
-  {
-    label: `删除线`,
-    kbd: [ctrlSign, `D`],
-    cmd: `${ctrlKey}-D`,
-  },
-  {
-    label: `超链接`,
-    kbd: [ctrlSign, `K`],
-    cmd: `${ctrlKey}-K`,
-  },
-  {
-    label: `行内代码`,
-    kbd: [ctrlSign, `E`],
-    cmd: `${ctrlKey}-E`,
-  },
-  {
-    label: `标题`,
-    kbd: [ctrlSign, `H`],
-    cmd: `${ctrlKey}-H`,
-  },
-  {
-    label: `无序列表`,
-    kbd: [ctrlSign, `U`],
-    cmd: `${ctrlKey}-U`,
-  },
-  {
-    label: `有序列表`,
-    kbd: [ctrlSign, `O`],
-    cmd: `${ctrlKey}-O`,
-  },
-  {
-    label: `格式化`,
-    kbd: [altSign, shiftSign, `F`],
-    cmd: `formatContent`,
-  },
-] as const
+// 应用引用格式
+function applyQuote() {
+  if (!editor.value)
+    return
+
+  const editorInstance = editor.value
+  editorInstance.operation(() => {
+    const ranges = editorInstance.listSelections()
+
+    ranges.filter(range => range && typeof range.from === `function` && typeof range.to === `function`).forEach((range) => {
+      const from = range.from()
+      const to = range.to()
+
+      if (!from || !to || typeof from.line === `undefined` || typeof to.line === `undefined`)
+        return
+
+      for (let line = from.line; line <= to.line; line++) {
+        const text = editorInstance.getLine(line)
+        if (typeof text !== `string`)
+          continue
+        // 如果已经是引用，则去掉引用；否则添加引用
+        if (text.startsWith(`> `)) {
+          const unquoted = text.replace(/^>\s+/, ``)
+          editorInstance.replaceRange(
+            unquoted,
+            { line, ch: 0 },
+            { line, ch: text.length },
+          )
+        }
+        else {
+          const quoted = `> ${text}`
+          editorInstance.replaceRange(
+            quoted,
+            { line, ch: 0 },
+            { line, ch: text.length },
+          )
+        }
+      }
+    })
+  })
+  // 保持编辑器焦点
+  editorInstance.focus()
+}
+
+// 插入分割线
+function insertHorizontalRule() {
+  if (!editor.value)
+    return
+
+  const editorInstance = editor.value
+  const cursor = editorInstance.getCursor()
+  // 插入分割线，前后添加空行
+  const hrText = `\n---\n`
+  editorInstance.replaceSelection(hrText)
+  // 将光标移动到分割线后
+  editorInstance.setCursor({
+    line: cursor.line + 2,
+    ch: 0,
+  })
+  editorInstance.focus()
+}
+
+// 插入 Mermaid 图表
+function insertMermaidChart() {
+  if (!editor.value)
+    return
+
+  const editorInstance = editor.value
+  // 插入 Mermaid 饼图示例
+  const mermaidText = `\n\`\`\`mermaid
+pie
+    title 浏览器市场份额
+    "Chrome" : 65
+    "Safari" : 15
+    "Firefox" : 10
+    "其他" : 10
+\`\`\`\n`
+  editorInstance.replaceSelection(mermaidText)
+  editorInstance.focus()
+}
+
+// 撤销
+function handleUndo() {
+  if (!editor.value)
+    return
+  editor.value.undo()
+  editor.value.focus()
+}
+
+// 重做
+function handleRedo() {
+  if (!editor.value)
+    return
+  editor.value.redo()
+  editor.value.focus()
+}
+
+// 清空内容
+function handleClearContent() {
+  if (!editor.value)
+    return
+  if (window.confirm(`确定要清空编辑器内容吗？`)) {
+    editor.value.setValue(``)
+    editor.value.focus()
+    toast.success(`已清空内容`)
+  }
+}
+
+// 删除光标所在行
+function handleDeleteCurrentLine() {
+  if (!editor.value)
+    return
+  const editorInstance = editor.value
+  const cursor = editorInstance.getCursor()
+  const line = cursor.line
+  const lineCount = editorInstance.lineCount()
+
+  // 获取所有内容
+  const allLines = editorInstance.getValue().split(`\n`)
+
+  // 如果只有一行，清空内容
+  if (lineCount === 1) {
+    editorInstance.setValue(``)
+    editorInstance.setCursor({ line: 0, ch: 0 })
+  }
+  else {
+    // 删除指定行
+    allLines.splice(line, 1)
+    const newContent = allLines.join(`\n`)
+
+    // 设置新内容
+    editorInstance.setValue(newContent)
+
+    // 设置光标位置
+    const newLine = Math.min(line, editorInstance.lineCount() - 1)
+    editorInstance.setCursor({ line: newLine, ch: 0 })
+  }
+
+  editorInstance.focus()
+}
 
 const copyMode = useStorage(addPrefix(`copyMode`), `txt`)
 
@@ -304,6 +444,215 @@ ${content}`
   }
 }
 
+// 抓取工具状态
+const isFetching = ref(false)
+const fetchDialogVisible = ref(false)
+const fetchUrl = ref(``)
+
+// 一键改写状态
+const isRewriting = ref(false)
+const rewriteDialogVisible = ref(false)
+const rewriteRequirement = ref(``)
+
+// 显示改写对话框
+function showRewriteDialog() {
+  if (!editor.value)
+    return
+
+  const content = editor.value.getValue()
+  if (!content.trim()) {
+    toast.error(`编辑器内容为空，无法改写`)
+    return
+  }
+
+  rewriteRequirement.value = ``
+  rewriteDialogVisible.value = true
+}
+
+// 一键改写功能
+async function rewriteContent() {
+  if (!editor.value || isRewriting.value)
+    return
+
+  const content = editor.value.getValue()
+  if (!content.trim()) {
+    toast.error(`编辑器内容为空`)
+    return
+  }
+
+  const requirement = rewriteRequirement.value.trim()
+  if (!requirement) {
+    toast.error(`请输入改写要求`)
+    return
+  }
+
+  isRewriting.value = true
+
+  try {
+    // TODO: 替换为实际的API接口地址
+    const apiEndpoint = `https://api.example.com/rewrite` // 稍后替换为真实接口
+
+    const response = await fetch(apiEndpoint, {
+      method: `POST`,
+      headers: {
+        'Content-Type': `application/json`,
+      },
+      body: JSON.stringify({
+        content,
+        requirement,
+      }),
+    })
+
+    if (!response.ok) {
+      const errorText = await response.text()
+      console.error(`改写接口错误详情:`, errorText)
+      throw new Error(`改写失败 (${response.status}): ${response.statusText}`)
+    }
+
+    const data = await response.json()
+    const rewrittenContent = data.content || data.text || data.markdown || data.result
+
+    if (!rewrittenContent) {
+      console.error(`API响应数据:`, data)
+      throw new Error(`API 返回内容为空`)
+    }
+
+    // 追加到编辑器末尾，添加分隔符
+    const currentContent = editor.value.getValue()
+    const separator = `\n\n---\n\n## 改写版本\n\n`
+    const newContent = currentContent + separator + rewrittenContent
+
+    editor.value.setValue(newContent)
+
+    // 滚动到改写内容位置
+    const lineCount = editor.value.lineCount()
+    editor.value.scrollIntoView({ line: lineCount - 1, ch: 0 })
+
+    toast.success(`改写完成！内容已追加到原文后面`)
+    rewriteDialogVisible.value = false
+  }
+  catch (error) {
+    console.error(`改写失败:`, error)
+
+    // 提供更友好的错误提示
+    let errorMessage = `改写失败`
+    const errorMsg = error instanceof Error ? error.message : String(error)
+    if (errorMsg.includes(`Failed to fetch`) || errorMsg.includes(`CORS`) || errorMsg.includes(`cross-origin`)) {
+      errorMessage = `CORS跨域错误：请确保改写接口支持跨域访问`
+    }
+    else if (errorMsg.includes(`401`)) {
+      errorMessage = `API密钥验证失败，请检查配置`
+    }
+    else if (errorMsg.includes(`429`)) {
+      errorMessage = `API调用频率超限，请稍后重试`
+    }
+    else if (errorMsg.includes(`403`)) {
+      errorMessage = `API访问被拒绝，请检查权限`
+    }
+    else if (errorMsg.includes(`404`)) {
+      errorMessage = `API接口地址错误，请检查配置`
+    }
+    else {
+      errorMessage = `改写失败: ${errorMsg}`
+    }
+
+    toast.error(errorMessage)
+  }
+  finally {
+    isRewriting.value = false
+  }
+}
+
+// 显示抓取工具对话框
+function showFetchDialog() {
+  fetchUrl.value = ``
+  fetchDialogVisible.value = true
+}
+
+// 抓取公众号文章
+async function fetchArticle() {
+  if (!editor.value || isFetching.value)
+    return
+
+  const url = fetchUrl.value.trim()
+  if (!url) {
+    toast.error(`请输入公众号文章链接`)
+    return
+  }
+
+  // 简单的URL验证
+  if (!url.startsWith(`http://`) && !url.startsWith(`https://`)) {
+    toast.error(`请输入有效的网址`)
+    return
+  }
+
+  isFetching.value = true
+
+  try {
+    // TODO: 替换为实际的API接口地址
+    const apiEndpoint = `https://api.example.com/fetch-article` // 稍后替换为真实接口
+
+    const response = await fetch(apiEndpoint, {
+      method: `POST`,
+      headers: {
+        'Content-Type': `application/json`,
+      },
+      body: JSON.stringify({
+        url,
+      }),
+    })
+
+    if (!response.ok) {
+      const errorText = await response.text()
+      console.error(`抓取接口错误详情:`, errorText)
+      throw new Error(`抓取失败 (${response.status}): ${response.statusText}`)
+    }
+
+    const data = await response.json()
+    const content = data.content || data.text || data.markdown
+
+    if (!content) {
+      console.error(`API响应数据:`, data)
+      throw new Error(`API 返回内容为空`)
+    }
+
+    // 替换编辑器内容
+    toRaw(editor.value).setValue(content)
+    toast.success(`文章抓取成功！内容已导入编辑器`)
+    fetchDialogVisible.value = false
+  }
+  catch (error) {
+    console.error(`抓取文章失败:`, error)
+
+    // 提供更友好的错误提示
+    let errorMessage = `抓取文章失败`
+    const errorMsg = error instanceof Error ? error.message : String(error)
+    if (errorMsg.includes(`Failed to fetch`) || errorMsg.includes(`CORS`) || errorMsg.includes(`cross-origin`)) {
+      errorMessage = `CORS跨域错误：请确保抓取接口支持跨域访问`
+    }
+    else if (errorMsg.includes(`401`)) {
+      errorMessage = `API密钥验证失败，请检查配置`
+    }
+    else if (errorMsg.includes(`429`)) {
+      errorMessage = `API调用频率超限，请稍后重试`
+    }
+    else if (errorMsg.includes(`403`)) {
+      errorMessage = `API访问被拒绝，请检查权限`
+    }
+    else if (errorMsg.includes(`404`)) {
+      errorMessage = `API接口地址错误，请检查配置`
+    }
+    else {
+      errorMessage = `抓取文章失败: ${errorMsg}`
+    }
+
+    toast.error(errorMessage)
+  }
+  finally {
+    isFetching.value = false
+  }
+}
+
 const { copy: copyContent } = useClipboard({
   legacy: true,
 })
@@ -373,99 +722,38 @@ async function copy() {
     })
   }, 350)
 }
+
+// 处理复制操作
+function handleCopyWithMode(mode: string) {
+  copyMode.value = mode
+  copy()
+}
 </script>
 
 <template>
   <header
-    class="backdrop-blur-sm header-container sticky top-0 z-50 min-h-15 flex flex-wrap items-center gap-y-1 border-b border-gray-200 bg-white px-2 py-1 sm:h-15 dark:border-gray-700 dark:bg-[#191c20] sm:px-5"
+    class="backdrop-blur-sm header-container fixed left-0 right-0 top-0 z-50 min-h-15 flex flex-wrap items-center bg-white px-2 py-1 sm:h-15 dark:bg-[#191c20] sm:px-5"
   >
     <!-- 左侧操作区：所有工具按钮 -->
     <div class="space-x-1 sm:space-x-2 w-full flex items-center sm:min-w-0 sm:flex-1">
-      <!-- 展开/收起左侧内容栏 -->
+      <!-- 菜单栏 -->
+      <Menubar class="compact-mobile menubar compact-menubar extra-compact">
+        <StyleDropdown :copy-mode="copyMode" :on-copy="handleCopyWithMode" />
+      </Menubar>
+
+      <!-- 移动端工具栏切换 -->
       <Button
+        v-if="isMobile"
         variant="outline"
         size="icon"
-        @click="isOpenPostSlider = !isOpenPostSlider"
+        title="工具"
+        class="text-red-500 -ml-2 dark:text-red-400" :class="[
+          isShowMobileToolbar ? 'bg-blue-50 dark:bg-blue-950' : '',
+        ]"
+        @click="isShowMobileToolbar = !isShowMobileToolbar"
       >
-        <PanelLeftOpen v-show="!isOpenPostSlider" class="size-4" />
-        <PanelLeftClose v-show="isOpenPostSlider" class="size-4" />
+        <Pencil class="size-4" />
       </Button>
-
-      <!-- 暗色切换 -->
-      <Button variant="outline" size="icon" @click="toggleDark()">
-        <Moon v-show="isDark" class="size-4" />
-        <Sun v-show="!isDark" class="size-4" />
-      </Button>
-
-      <!-- 菜单栏 -->
-      <Menubar class="compact-mobile menubar">
-        <MenubarMenu>
-          <MenubarTrigger> 格式</MenubarTrigger>
-          <MenubarContent class="w-60" align="start">
-            <MenubarCheckboxItem
-              v-for="{ label, kbd, cmd } in formatItems"
-              :key="label"
-              @click="
-                cmd === 'formatContent' ? formatContent() : addFormat(cmd)
-              "
-            >
-              {{ label }}
-              <MenubarShortcut>
-                <kbd
-                  v-for="item in kbd"
-                  :key="item"
-                  class="mx-1 bg-gray-2 dark:bg-stone-9"
-                >
-                  {{ item }}
-                </kbd>
-              </MenubarShortcut>
-            </MenubarCheckboxItem>
-            <MenubarSeparator />
-            <MenubarCheckboxItem
-              :checked="isCiteStatus"
-              @click="citeStatusChanged()"
-            >
-              微信外链转底部引用
-            </MenubarCheckboxItem>
-            <MenubarSeparator />
-            <MenubarCheckboxItem
-              :checked="isCountStatus"
-              @click="countStatusChanged()"
-            >
-              统计字数和阅读时间
-            </MenubarCheckboxItem>
-            <MenubarSeparator />
-            <MenubarCheckboxItem
-              @click="displayStore.toggleShowUploadImgDialog()"
-            >
-              上传图片
-            </MenubarCheckboxItem>
-            <MenubarCheckboxItem
-              @click="displayStore.toggleShowInsertFormDialog()"
-            >
-              插入表格
-            </MenubarCheckboxItem>
-            <MenubarCheckboxItem
-              @click="displayStore.toggleShowInsertMpCardDialog()"
-            >
-              插入公众号名片
-            </MenubarCheckboxItem>
-            <MenubarSeparator />
-
-            <MenubarCheckboxItem
-              @click="importDefaultContent()"
-            >
-              教学模版文档(覆盖原文)
-            </MenubarCheckboxItem>
-            <MenubarCheckboxItem
-              @click="clearContent()"
-            >
-              清空内容
-            </MenubarCheckboxItem>
-          </MenubarContent>
-        </MenubarMenu>
-        <StyleDropdown />
-      </Menubar>
 
       <!-- 撤销重做 - 电脑端显示 -->
       <Button
@@ -486,63 +774,6 @@ async function copy() {
       >
         <Redo class="size-4" />
       </Button>
-
-      <!-- 复制粘贴 -->
-      <Button
-        variant="outline"
-        size="icon"
-        title="复制选中文本"
-        @click="copyToClipboard()"
-      >
-        <Copy class="size-4" />
-      </Button>
-      <Button
-        variant="outline"
-        size="icon"
-        title="粘贴"
-        @click="pasteFromClipboard()"
-      >
-        <Clipboard class="size-4" />
-      </Button>
-
-      <!-- 标题级别下拉菜单 -->
-      <DropdownMenu>
-        <DropdownMenuTrigger as-child>
-          <Button
-            variant="outline"
-            size="icon"
-            title="选择标题级别"
-          >
-            <Heading1 class="size-4" />
-          </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="center" class="w-[120px]">
-          <DropdownMenuItem class="flex items-center justify-between" @click="applyHeadingLevel(1)">
-            <span>标题 1</span>
-            <kbd class="text-xs">Ctrl+1</kbd>
-          </DropdownMenuItem>
-          <DropdownMenuItem class="flex items-center justify-between" @click="applyHeadingLevel(2)">
-            <span>标题 2</span>
-            <kbd class="text-xs">Ctrl+2</kbd>
-          </DropdownMenuItem>
-          <DropdownMenuItem class="flex items-center justify-between" @click="applyHeadingLevel(3)">
-            <span>标题 3</span>
-            <kbd class="text-xs">Ctrl+3</kbd>
-          </DropdownMenuItem>
-          <DropdownMenuItem class="flex items-center justify-between" @click="applyHeadingLevel(4)">
-            <span>标题 4</span>
-            <kbd class="text-xs">Ctrl+4</kbd>
-          </DropdownMenuItem>
-          <DropdownMenuItem class="flex items-center justify-between" @click="applyHeadingLevel(5)">
-            <span>标题 5</span>
-            <kbd class="text-xs">Ctrl+5</kbd>
-          </DropdownMenuItem>
-          <DropdownMenuItem class="flex items-center justify-between" @click="applyHeadingLevel(6)">
-            <span>标题 6</span>
-            <kbd class="text-xs">Ctrl+6</kbd>
-          </DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
 
       <!-- 格式化工具 - 电脑端显示 -->
       <Button
@@ -610,80 +841,57 @@ async function copy() {
       >
         <CreditCard class="size-4" />
       </Button>
-    </div>
 
-    <!-- 右侧操作区：手机端第二行显示 -->
-    <div class="space-x-1 mt-1 w-full flex items-center justify-start sm:mt-0 sm:w-auto sm:justify-end">
-      <!-- 一键美化 -->
-      <Button
-        variant="outline"
-        class="px-3"
-        :disabled="isBeautifying"
-        title="使用AI智能格式化Markdown文档"
-        @click="showBeautifyConfirm()"
-      >
-        <Sparkles class="mr-1 size-4" />
-        {{ isBeautifying ? '美化中...' : '一键美化' }}
-      </Button>
+      <!-- 工具 -->
+      <DropdownMenu>
+        <DropdownMenuTrigger as-child>
+          <Button variant="outline" class="px-2">
+            工具库
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="start" class="py-2">
+          <DropdownMenuItem :disabled="isBeautifying" class="py-2.5" @click="showBeautifyConfirm()">
+            <Sparkles class="mr-2 size-4" />
+            {{ isBeautifying ? '美化中...' : '一键格式美化' }}
+          </DropdownMenuItem>
+          <DropdownMenuItem :disabled="isFetching" class="py-2.5" @click="showFetchDialog()">
+            <Wrench class="mr-2 size-4" />
+            {{ isFetching ? '抓取中...' : '公众号文章抓取工具' }}
+          </DropdownMenuItem>
+          <DropdownMenuItem :disabled="isRewriting" class="py-2.5" @click="showRewriteDialog()">
+            <Wand2 class="mr-2 size-4" />
+            {{ isRewriting ? '改写中...' : '文案改写工具' }}
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
 
-      <!-- 文章信息（移动端隐藏） -->
-      <div class="hidden sm:inline-flex">
-        <PostInfo />
-      </div>
-
-      <!-- 右侧菜单栏 -->
-      <Menubar class="menubar">
-        <!-- 主题选择 -->
-        <MenubarMenu>
-          <MenubarTrigger>
-            <Palette class="mr-1 hidden size-4 sm:inline-block" />
-            主题
-          </MenubarTrigger>
-          <MenubarContent align="end" class="w-[200px]">
-            <MenubarRadioGroup :model-value="theme" @update:model-value="themeChanged">
-              <MenubarRadioItem
-                v-for="option in themeOptions"
-                :key="option.value"
-                :value="option.value"
-              >
-                {{ option.label }}
-                <span v-if="option.desc" class="text-muted-foreground ml-1 text-xs">
-                  {{ option.desc }}
-                </span>
-              </MenubarRadioItem>
-            </MenubarRadioGroup>
-          </MenubarContent>
-        </MenubarMenu>
-
-        <!-- 复制菜单 -->
-        <MenubarMenu>
-          <MenubarTrigger>
-            复制
-            <ChevronDownIcon class="ml-1 h-4 w-4" />
-          </MenubarTrigger>
-          <MenubarContent align="end" class="w-[200px]">
-            <MenubarCheckboxItem @click="copyMode = 'txt'; copy()">
-              复制公众号格式
-            </MenubarCheckboxItem>
-            <MenubarCheckboxItem @click="copyMode = 'html'; copy()">
-              复制 HTML 格式
-            </MenubarCheckboxItem>
-            <MenubarCheckboxItem @click="copyMode = 'md'; copy()">
-              复制 MD 格式
-            </MenubarCheckboxItem>
-            <MenubarSeparator />
-            <MenubarLabel class="text-muted-foreground text-xs">
-              当前模式: {{
-                copyMode === 'txt' ? '公众号格式'
-                : copyMode === 'html' ? 'HTML 格式' : 'MD 格式'
-              }}
-            </MenubarLabel>
-          </MenubarContent>
-        </MenubarMenu>
-
-        <!-- 文件菜单 -->
-        <FileDropdown />
+      <!-- 复制菜单 -->
+      <Menubar class="menubar compact-menubar">
+        <FileDropdown :copy-mode="copyMode" :on-copy="handleCopyWithMode" />
       </Menubar>
+
+      <!-- 主题选择 -->
+      <DropdownMenu>
+        <DropdownMenuTrigger as-child>
+          <Button variant="outline" size="icon" title="主题">
+            <Palette class="size-4" />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="start">
+          <DropdownMenuRadioGroup :model-value="theme" @update:model-value="themeChanged">
+            <DropdownMenuRadioItem
+              v-for="option in themeOptions"
+              :key="option.value"
+              :value="option.value"
+            >
+              {{ option.label }}
+              <span v-if="option.desc" class="text-muted-foreground ml-1 text-xs">
+                {{ option.desc }}
+              </span>
+            </DropdownMenuRadioItem>
+          </DropdownMenuRadioGroup>
+        </DropdownMenuContent>
+      </DropdownMenu>
 
       <!-- 设置按钮 -->
       <Button
@@ -694,6 +902,264 @@ async function copy() {
         <Settings class="size-4" />
       </Button>
     </div>
+
+    <!-- 右侧操作区：手机端第二行显示 -->
+    <div class="space-x-1 mt-1 w-full flex items-center justify-start sm:mt-0 sm:w-auto sm:justify-end">
+      <!-- 文章信息（移动端隐藏） -->
+      <div class="hidden sm:inline-flex">
+        <PostInfo />
+      </div>
+    </div>
+
+    <!-- 移动端格式工具栏 -->
+    <transition
+      enter-active-class="toolbar-slide-enter-active"
+      leave-active-class="toolbar-slide-leave-active"
+    >
+      <div
+        v-if="isMobile && isShowMobileToolbar"
+        class="w-full bg-white dark:bg-[#191c20]"
+      >
+        <div class="flex flex-wrap items-center justify-start gap-1">
+          <!-- 简历预设模块 -->
+          <Button
+            variant="outline"
+            size="sm"
+            class="flex-shrink-0 border-blue-200 bg-blue-50 dark:border-blue-800 dark:bg-blue-950 hover:bg-blue-100 dark:hover:bg-blue-900"
+            title="简历预设模块"
+            @click="isOpenPresetPanel = !isOpenPresetPanel"
+          >
+            <LayoutList class="mr-1 size-4" />
+            简历预设模块
+          </Button>
+          <!-- 标题1 -->
+          <Button
+            variant="outline"
+            size="sm"
+            class="flex-shrink-0"
+            @click="applyHeadingLevel(1)"
+          >
+            H1
+          </Button>
+          <!-- 标题2 -->
+          <Button
+            variant="outline"
+            size="sm"
+            class="flex-shrink-0"
+            @click="applyHeadingLevel(2)"
+          >
+            H2
+          </Button>
+          <!-- 标题3 -->
+          <Button
+            variant="outline"
+            size="sm"
+            class="flex-shrink-0"
+            @click="applyHeadingLevel(3)"
+          >
+            H3
+          </Button>
+          <!-- 标题4 -->
+          <Button
+            variant="outline"
+            size="sm"
+            class="flex-shrink-0"
+            @click="applyHeadingLevel(4)"
+          >
+            H4
+          </Button>
+          <!-- 标题5 -->
+          <Button
+            variant="outline"
+            size="sm"
+            class="flex-shrink-0"
+            @click="applyHeadingLevel(5)"
+          >
+            H5
+          </Button>
+          <!-- 加粗 -->
+          <Button
+            variant="outline"
+            size="sm"
+            class="flex-shrink-0"
+            title="加粗"
+            @click="addFormat(`${ctrlKey}-B`)"
+          >
+            <Bold class="size-4" />
+          </Button>
+          <!-- 斜体 -->
+          <Button
+            variant="outline"
+            size="sm"
+            class="flex-shrink-0"
+            title="斜体"
+            @click="addFormat(`${ctrlKey}-I`)"
+          >
+            <Italic class="size-4" />
+          </Button>
+          <!-- 删除线 -->
+          <Button
+            variant="outline"
+            size="sm"
+            class="flex-shrink-0"
+            title="删除线"
+            @click="addFormat(`${ctrlKey}-D`)"
+          >
+            <Strikethrough class="size-4" />
+          </Button>
+          <!-- 无序列表 -->
+          <Button
+            variant="outline"
+            size="sm"
+            class="flex-shrink-0"
+            title="无序列表"
+            @click="addFormat(`${ctrlKey}-U`)"
+          >
+            <List class="size-4" />
+          </Button>
+          <!-- 有序列表 -->
+          <Button
+            variant="outline"
+            size="sm"
+            class="flex-shrink-0"
+            title="有序列表"
+            @click="addFormat(`${ctrlKey}-O`)"
+          >
+            <ListOrdered class="size-4" />
+          </Button>
+          <!-- 引用 -->
+          <Button
+            variant="outline"
+            size="sm"
+            class="flex-shrink-0"
+            title="引用"
+            @click="applyQuote()"
+          >
+            <Quote class="size-4" />
+          </Button>
+          <!-- 分割线 -->
+          <Button
+            variant="outline"
+            size="sm"
+            class="flex-shrink-0"
+            title="分割线"
+            @click="insertHorizontalRule()"
+          >
+            <MinusSquare class="size-4" />
+          </Button>
+          <!-- 图表工具 -->
+          <Button
+            variant="outline"
+            size="sm"
+            class="flex-shrink-0"
+            title="图表工具"
+            @click="insertMermaidChart()"
+          >
+            <ChartPie class="size-4" />
+          </Button>
+          <!-- 行内代码 -->
+          <Button
+            variant="outline"
+            size="sm"
+            class="flex-shrink-0"
+            title="行内代码"
+            @click="addFormat(`${ctrlKey}-E`)"
+          >
+            <Code class="size-4" />
+          </Button>
+          <!-- 超链接 -->
+          <Button
+            variant="outline"
+            size="sm"
+            class="flex-shrink-0"
+            title="超链接"
+            @click="addFormat(`${ctrlKey}-K`)"
+          >
+            <Link class="size-4" />
+          </Button>
+          <!-- 撤销 -->
+          <Button
+            variant="outline"
+            size="sm"
+            class="flex-shrink-0"
+            title="撤销"
+            @click="handleUndo"
+          >
+            <Undo class="size-4" />
+          </Button>
+          <!-- 重做 -->
+          <Button
+            variant="outline"
+            size="sm"
+            class="flex-shrink-0"
+            title="重做"
+            @click="handleRedo"
+          >
+            <Redo class="size-4" />
+          </Button>
+          <!-- 格式化 -->
+          <Button
+            variant="outline"
+            size="sm"
+            class="flex-shrink-0"
+            title="格式化"
+            @click="formatContent()"
+          >
+            <Wand2 class="size-4" />
+          </Button>
+          <!-- 上传图片 -->
+          <Button
+            variant="outline"
+            size="sm"
+            class="flex-shrink-0"
+            title="上传图片"
+            @click="displayStore.toggleShowUploadImgDialog()"
+          >
+            <ImagePlus class="size-4" />
+          </Button>
+          <!-- 表格 -->
+          <Button
+            variant="outline"
+            size="sm"
+            class="flex-shrink-0"
+            title="插入表格"
+            @click="displayStore.toggleShowInsertFormDialog()"
+          >
+            <Table class="size-4" />
+          </Button>
+          <!-- 插入公众号名片 -->
+          <Button
+            variant="outline"
+            size="sm"
+            class="flex-shrink-0"
+            title="插入公众号名片"
+            @click="displayStore.toggleShowInsertMpCardDialog()"
+          >
+            <CreditCard class="size-4" />
+          </Button>
+          <!-- 删除当前行 -->
+          <Button
+            variant="outline"
+            size="sm"
+            class="flex-shrink-0"
+            title="删除当前行"
+            @click="handleDeleteCurrentLine"
+          >
+            <Eraser class="size-4" />
+          </Button>
+          <!-- 清空内容 -->
+          <Button
+            variant="outline"
+            size="sm"
+            class="flex-shrink-0"
+            title="清空内容"
+            @click="handleClearContent"
+          >
+            <Trash2 class="size-4" />
+          </Button>
+        </div>
+      </div>
+    </transition>
   </header>
 
   <!-- 一键美化确认对话框 -->
@@ -810,11 +1276,162 @@ async function copy() {
       </div>
     </div>
   </div>
+
+  <!-- 抓取工具对话框 -->
+  <div
+    v-if="fetchDialogVisible"
+    class="backdrop-blur-sm fixed inset-0 z-50 flex items-center justify-center bg-black/50"
+    @click="fetchDialogVisible = false"
+  >
+    <div
+      class="mx-4 max-w-lg w-[90vw] scale-100 transform rounded-2xl bg-white p-6 shadow-2xl transition-all duration-300 dark:bg-gray-800"
+      @click.stop
+    >
+      <!-- 标题图标 -->
+      <div class="mb-4 flex items-center justify-center">
+        <div class="bg-gradient-to-r to-blue-600 from-green-500 h-12 w-12 flex items-center justify-center rounded-full">
+          <Wrench class="h-6 w-6 text-white" />
+        </div>
+      </div>
+
+      <!-- 标题 -->
+      <h3 class="mb-2 text-center text-xl text-gray-900 font-bold dark:text-gray-100">
+        抓取公众号文章
+      </h3>
+
+      <!-- 描述 -->
+      <p class="mb-4 text-center text-sm text-gray-600 dark:text-gray-400">
+        输入公众号文章链接，自动提取内容到编辑器
+      </p>
+
+      <!-- 输入框 -->
+      <div class="mb-4">
+        <label class="mb-2 block text-sm text-gray-700 font-medium dark:text-gray-300">
+          文章链接
+        </label>
+        <input
+          v-model="fetchUrl"
+          type="url"
+          placeholder="https://mp.weixin.qq.com/s/..."
+          class="dark:placeholder-gray-400 w-full border border-gray-300 rounded-lg px-4 py-2.5 text-gray-900 transition-colors dark:border-gray-600 focus:border-blue-500 dark:bg-gray-700 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          @keyup.enter="fetchArticle()"
+        >
+      </div>
+
+      <!-- 提示信息 -->
+      <div class="mb-6 rounded-lg bg-blue-50 p-3 dark:bg-blue-900/20">
+        <p class="text-sm text-blue-800 dark:text-blue-300">
+          <span class="font-medium">💡 提示：</span>支持微信公众号文章链接，提取后将覆盖当前编辑器内容
+        </p>
+      </div>
+
+      <!-- 按钮组 -->
+      <div class="flex justify-end gap-3">
+        <Button
+          variant="outline"
+          class="flex-1"
+          :disabled="isFetching"
+          @click="fetchDialogVisible = false"
+        >
+          取消
+        </Button>
+        <Button
+          class="bg-gradient-to-r from-green-500 to-blue-600 hover:to-blue-700 hover:from-green-600 flex-1 border-0 text-white"
+          :disabled="isFetching || !fetchUrl.trim()"
+          @click="fetchArticle()"
+        >
+          <Wrench v-if="!isFetching" class="mr-1 h-4 w-4" />
+          <div v-if="isFetching" class="animate-spin mr-1 h-4 w-4 border-2 border-white border-t-transparent rounded-full" />
+          {{ isFetching ? '抓取中...' : '开始抓取' }}
+        </Button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 一键改写对话框 -->
+  <div
+    v-if="rewriteDialogVisible"
+    class="backdrop-blur-sm fixed inset-0 z-50 flex items-center justify-center bg-black/50"
+    @click="rewriteDialogVisible = false"
+  >
+    <div
+      class="mx-4 max-w-lg w-[90vw] scale-100 transform rounded-2xl bg-white p-6 shadow-2xl transition-all duration-300 dark:bg-gray-800"
+      @click.stop
+    >
+      <!-- 标题图标 -->
+      <div class="mb-4 flex items-center justify-center">
+        <div class="bg-gradient-to-r from-purple-500 to-pink-600 h-12 w-12 flex items-center justify-center rounded-full">
+          <Wand2 class="h-6 w-6 text-white" />
+        </div>
+      </div>
+
+      <!-- 标题 -->
+      <h3 class="mb-2 text-center text-xl text-gray-900 font-bold dark:text-gray-100">
+        AI 智能改写
+      </h3>
+
+      <!-- 描述 -->
+      <p class="mb-4 text-center text-sm text-gray-600 dark:text-gray-400">
+        输入改写要求，AI 将根据要求改写当前文档内容
+      </p>
+
+      <!-- 输入框 -->
+      <div class="mb-4">
+        <label class="mb-2 block text-sm text-gray-700 font-medium dark:text-gray-300">
+          改写要求
+        </label>
+        <textarea
+          v-model="rewriteRequirement"
+          placeholder="例如：将这篇文章改写得更专业、更简洁，适合技术博客发布..."
+          rows="4"
+          class="dark:placeholder-gray-400 w-full border border-gray-300 rounded-lg px-4 py-2.5 text-gray-900 transition-colors dark:border-gray-600 focus:border-purple-500 dark:bg-gray-700 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-purple-500"
+        />
+      </div>
+
+      <!-- 提示信息 -->
+      <div class="mb-6 rounded-lg bg-purple-50 p-3 dark:bg-purple-900/20">
+        <p class="text-sm text-purple-800 dark:text-purple-300">
+          <span class="font-medium">💡 提示：</span>改写后的内容将追加到原文后面，不会覆盖原文
+        </p>
+      </div>
+
+      <!-- 按钮组 -->
+      <div class="flex justify-end gap-3">
+        <Button
+          variant="outline"
+          class="flex-1"
+          :disabled="isRewriting"
+          @click="rewriteDialogVisible = false"
+        >
+          取消
+        </Button>
+        <Button
+          class="bg-gradient-to-r from-purple-500 to-pink-600 hover:from-purple-600 hover:to-pink-700 flex-1 border-0 text-white"
+          :disabled="isRewriting || !rewriteRequirement.trim()"
+          @click="rewriteContent()"
+        >
+          <Wand2 v-if="!isRewriting" class="mr-1 h-4 w-4" />
+          <div v-if="isRewriting" class="animate-spin mr-1 h-4 w-4 border-2 border-white border-t-transparent rounded-full" />
+          {{ isRewriting ? '改写中...' : '开始改写' }}
+        </Button>
+      </div>
+    </div>
+  </div>
 </template>
 
 <style lang="less" scoped>
 .menubar {
   user-select: none;
+}
+
+.compact-menubar :deep(.menubar__trigger) {
+  padding-left: 0.5rem !important;
+  padding-right: 0.5rem !important;
+}
+
+.extra-compact :deep(.menubar__trigger) {
+  padding-left: 0.375rem !important;
+  padding-right: 0.375rem !important;
 }
 
 .compact-mobile :deep(.menubar__trigger) {
@@ -832,5 +1449,42 @@ kbd {
   border: 1px solid #a8a8a8;
   padding: 1px 4px;
   border-radius: 2px;
+}
+
+/* 工具栏滑动动画 */
+.toolbar-slide-enter-active,
+.toolbar-slide-leave-active {
+  transition: all 0.3s ease-out;
+  overflow: hidden;
+}
+
+.toolbar-slide-enter-active {
+  animation: slideDown 0.3s ease-out;
+}
+
+.toolbar-slide-leave-active {
+  animation: slideUp 0.3s ease-out;
+}
+
+@keyframes slideDown {
+  from {
+    max-height: 0;
+    opacity: 0;
+  }
+  to {
+    max-height: 200px;
+    opacity: 1;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    max-height: 200px;
+    opacity: 1;
+  }
+  to {
+    max-height: 0;
+    opacity: 0;
+  }
 }
 </style>

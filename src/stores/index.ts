@@ -101,6 +101,12 @@ export const useStore = defineStore(`store`, () => {
 
   const isOpenRightSlider = useStorage(addPrefix(`is_open_right_slider`), false)
   const isOpenPostSlider = useStorage(addPrefix(`is_open_post_slider`), false)
+  const isShowMobileToolbar = ref(false)
+  const isOpenPresetPanel = useStorage(addPrefix(`is_open_preset_panel`), false)
+
+  // AI对话框状态
+  const isShowAIDialog = ref(false)
+  const isShowAIImageDialog = ref(false)
 
   /*******************************
    * 内容列表 posts：默认就带 id
@@ -290,6 +296,16 @@ export const useStore = defineStore(`store`, () => {
       },
     ],
   })
+
+  // 确保第一个tab有默认内容
+  if (!cssContentConfig.value.tabs[0]?.content) {
+    cssContentConfig.value.tabs[0] = {
+      title: `方案1`,
+      name: `方案1`,
+      content: DEFAULT_CSS_CONTENT,
+    }
+  }
+
   onMounted(() => {
     // 清空过往历史记录
     cssContent.value = ``
@@ -740,6 +756,10 @@ export const useStore = defineStore(`store`, () => {
     delPost,
     isOpenPostSlider,
     isOpenRightSlider,
+    isOpenPresetPanel,
+    isShowMobileToolbar,
+    isShowAIDialog,
+    isShowAIImageDialog,
 
     titleList,
     isMobile,
@@ -767,9 +787,14 @@ export const useDisplayStore = defineStore(`display`, () => {
   const toggleShowUploadImgDialog = useToggle(isShowUploadImgDialog)
 
   const aiDialogVisible = ref(false)
+  const aiImageDialogVisible = ref(false)
 
   function toggleAIDialog(value?: boolean) {
     aiDialogVisible.value = value ?? !aiDialogVisible.value
+  }
+
+  function toggleAIImageDialog(value?: boolean) {
+    aiImageDialogVisible.value = value ?? !aiImageDialogVisible.value
   }
 
   return {
@@ -783,6 +808,8 @@ export const useDisplayStore = defineStore(`display`, () => {
     toggleShowUploadImgDialog,
     aiDialogVisible,
     toggleAIDialog,
+    aiImageDialogVisible,
+    toggleAIImageDialog,
   }
 })
 
@@ -802,6 +829,7 @@ export function getAllStoreStates() {
     isUseIndent: store.isUseIndent,
     isOpenRightSlider: store.isOpenRightSlider,
     isOpenPostSlider: store.isOpenPostSlider,
+    isOpenPresetPanel: store.isOpenPresetPanel,
     theme: store.theme,
     fontFamily: store.fontFamily,
     fontSize: store.fontSize,

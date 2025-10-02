@@ -9,7 +9,6 @@ import Components from 'unplugin-vue-components/vite'
 import { defineConfig } from 'vite'
 import { nodePolyfills } from 'vite-plugin-node-polyfills'
 import { VitePluginRadar } from 'vite-plugin-radar'
-import vueDevTools from 'vite-plugin-vue-devtools'
 
 export default defineConfig({
   base: `/`,
@@ -21,7 +20,6 @@ export default defineConfig({
   plugins: [
     vue(),
     UnoCSS(),
-    vueDevTools(),
     nodePolyfills({
       include: [`path`, `util`, `timers`, `stream`, `fs`],
       overrides: {

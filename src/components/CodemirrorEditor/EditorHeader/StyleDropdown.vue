@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import PickColors, { type Format } from 'vue-pick-colors'
+import type { Format } from 'vue-pick-colors'
+import { Menu } from 'lucide-vue-next'
 import {
   codeBlockThemeOptions,
   colorOptions,
@@ -9,6 +10,11 @@ import {
   themeOptions,
 } from '@/config'
 import { useDisplayStore, useStore } from '@/stores'
+
+const { onCopy } = defineProps<{
+  copyMode: string
+  onCopy: (mode: string) => void
+}>()
 
 const store = useStore()
 const { toggleShowCssEditor } = useDisplayStore()
@@ -22,6 +28,8 @@ const {
   legend,
   isMacCodeBlock,
   cssEditor,
+  isOpenPostSlider,
+  isDark,
 } = storeToRefs(store)
 
 const {
@@ -33,7 +41,15 @@ const {
   codeBlockThemeChanged,
   legendChanged,
   macCodeBlockChanged,
+  toggleDark,
+  exportEditorContent2HTML,
+  exportEditorContent2PureHTML,
+  exportEditorContent2MD,
+  downloadAsCardImage,
+  exportEditorContent2PDF,
 } = store
+
+const importMarkdownContent = useImportMarkdownContent()
 
 const colorPicker = ref<HTMLElement & { show: () => void } | null>(null)
 
@@ -56,8 +72,52 @@ const formatOptions = ref<Format[]>([`rgb`, `hex`, `hsl`, `hsv`])
 
 <template>
   <MenubarMenu>
-    <MenubarTrigger> 样式 </MenubarTrigger>
-    <MenubarContent class="w-56" align="start">
+    <MenubarTrigger>
+      <Menu class="size-4" />
+    </MenubarTrigger>
+    <MenubarContent class="w-56 py-2" align="start">
+      <MenubarCheckboxItem class="py-2" :checked="isOpenPostSlider" @click="isOpenPostSlider = !isOpenPostSlider">
+        草稿箱
+      </MenubarCheckboxItem>
+      <MenubarSub>
+        <MenubarSubTrigger class="py-2" inset>
+          导入导出
+        </MenubarSubTrigger>
+        <MenubarSubContent class="py-2">
+          <MenubarItem class="py-2" @click="onCopy('txt')">
+            复制公众号格式
+          </MenubarItem>
+          <MenubarItem class="py-2" @click="onCopy('html')">
+            复制 HTML 格式
+          </MenubarItem>
+          <MenubarItem class="py-2" @click="onCopy('md')">
+            复制 MD 格式
+          </MenubarItem>
+          <MenubarSeparator />
+          <MenubarItem class="py-2" @click="importMarkdownContent()">
+            导入 .md
+          </MenubarItem>
+          <MenubarItem class="py-2" @click="exportEditorContent2MD()">
+            导出 .md
+          </MenubarItem>
+          <MenubarItem class="py-2" @click="exportEditorContent2HTML()">
+            导出 .html
+          </MenubarItem>
+          <MenubarItem class="py-2" @click="exportEditorContent2PureHTML()">
+            导出 .html（无样式）
+          </MenubarItem>
+          <MenubarItem class="py-2" @click="exportEditorContent2PDF()">
+            导出 .pdf
+          </MenubarItem>
+          <MenubarItem class="py-2" @click="downloadAsCardImage()">
+            导出 .png
+          </MenubarItem>
+        </MenubarSubContent>
+      </MenubarSub>
+      <MenubarCheckboxItem class="py-2" :checked="isDark" @click="toggleDark()">
+        暗色模式
+      </MenubarCheckboxItem>
+      <MenubarSeparator />
       <StyleOptionMenu
         title="主题"
         :options="themeOptions"
@@ -96,25 +156,6 @@ const formatOptions = ref<Format[]>([`rgb`, `hex`, `hsl`, `hsv`])
         :change="legendChanged"
       />
       <MenubarSeparator />
-      <MenubarCheckboxItem @click.self.prevent="showPicker">
-        <HoverCard :open-delay="100">
-          <HoverCardTrigger class="w-full flex">
-            自定义主题色
-          </HoverCardTrigger>
-          <HoverCardContent side="right" class="w-min">
-            <div ref="pickColorsContainer">
-              <PickColors
-                v-model:value="primaryColor"
-                show-alpha
-                :format="format" :format-options="formatOptions"
-                :theme="store.isDark ? 'dark' : 'light'"
-                :popup-container="pickColorsContainer!"
-                @change="store.colorChanged"
-              />
-            </div>
-          </HoverCardContent>
-        </HoverCard>
-      </MenubarCheckboxItem>
       <MenubarCheckboxItem @click="customStyle">
         自定义 CSS
       </MenubarCheckboxItem>

@@ -22,7 +22,7 @@ import { fileUpload } from '@/utils/file'
 const store = useStore()
 const displayStore = useDisplayStore()
 
-const { isDark, output, editor } = storeToRefs(store)
+const { isDark, output, editor, isOpenPresetPanel, isShowMobileToolbar } = storeToRefs(store)
 const { editorRefresh } = store
 
 const { toggleShowUploadImgDialog } = displayStore
@@ -49,6 +49,58 @@ const showEditor = ref(true)
 function toggleView() {
   showEditor.value = !showEditor.value
 }
+
+// 动态计算 header 高度，确保不遮蔽编辑区
+// 如果初始时工具栏是展开的，使用更大的初始值
+const headerHeight = ref(isShowMobileToolbar.value ? 220 : 60)
+const editorHeaderRef = useTemplateRef<HTMLElement>(`editorHeaderRef`)
+
+// 更新 header 高度
+function updateHeaderHeight() {
+  if (editorHeaderRef.value) {
+    headerHeight.value = editorHeaderRef.value.offsetHeight
+  }
+}
+
+// 监听工具栏展开状态变化
+watch(isShowMobileToolbar, (newVal) => {
+  if (newVal) {
+    // 展开时，先设置一个较大的预估值，避免遮蔽
+    // 增加到 220px 以容纳更多按钮换行的情况
+    headerHeight.value = 220
+  }
+  else {
+    // 收起时，立即设置较小的预估值
+    headerHeight.value = 60
+  }
+
+  // 使用多次 nextTick 确保 DOM 更新完成
+  nextTick(() => {
+    nextTick(() => {
+      updateHeaderHeight()
+      // 在动画期间持续更新，缩短间隔以更快响应
+      const timer = setInterval(updateHeaderHeight, 16)
+      setTimeout(() => {
+        clearInterval(timer)
+        updateHeaderHeight() // 最终再确认一次
+      }, 500)
+    })
+  })
+})
+
+// 组件挂载后初始化
+onMounted(() => {
+  nextTick(() => {
+    updateHeaderHeight()
+    // 使用 ResizeObserver 监听高度变化
+    const resizeObserver = new ResizeObserver(() => {
+      updateHeaderHeight()
+    })
+    if (editorHeaderRef.value) {
+      resizeObserver.observe(editorHeaderRef.value)
+    }
+  })
+})
 
 const {
   AIPolishBtnRef,
@@ -369,62 +421,6 @@ function createFormTextArea(dom: HTMLTextAreaElement) {
     }
   })
 
-  // 手机端禁用右键上下文菜单，但保留AIPolish功能
-  if (store.isMobile) {
-    const editorElement = textArea.getWrapperElement()
-
-    // 禁用长按弹出的系统上下文菜单
-    editorElement.addEventListener(`contextmenu`, (event) => {
-      event.preventDefault()
-      return false
-    })
-
-    // 为触摸设备添加长按选择支持，确保AIPolish能正常工作
-    let touchTimer: NodeJS.Timeout | null = null
-    let startX = 0
-    let startY = 0
-
-    editorElement.addEventListener(`touchstart`, (event) => {
-      if (event.touches.length === 1) {
-        startX = event.touches[0].clientX
-        startY = event.touches[0].clientY
-
-        // 设置长按定时器
-        touchTimer = setTimeout(() => {
-          // 长按后触发选择，让AIPolish可以检测到选区
-          // 为了让AIPolish定位到右上角，我们模拟的鼠标事件位置不重要
-          const mouseEvent = new MouseEvent(`mouseup`, {
-            clientX: 0,
-            clientY: 0,
-            bubbles: true,
-          })
-          editorElement.dispatchEvent(mouseEvent)
-        }, 500) // 500ms长按
-      }
-    })
-
-    editorElement.addEventListener(`touchmove`, (event) => {
-      if (touchTimer && event.touches.length === 1) {
-        const touch = event.touches[0]
-        const deltaX = Math.abs(touch.clientX - startX)
-        const deltaY = Math.abs(touch.clientY - startY)
-
-        // 如果移动距离太大，取消长按
-        if (deltaX > 10 || deltaY > 10) {
-          clearTimeout(touchTimer)
-          touchTimer = null
-        }
-      }
-    })
-
-    editorElement.addEventListener(`touchend`, () => {
-      if (touchTimer) {
-        clearTimeout(touchTimer)
-        touchTimer = null
-      }
-    })
-  }
-
   return textArea
 }
 
@@ -485,11 +481,15 @@ onUnmounted(() => {
 <template>
   <div class="container flex flex-col">
     <EditorHeader
+      ref="editorHeaderRef"
       @start-copy="startCopy"
       @end-copy="endCopy"
     />
 
-    <main class="container-main flex flex-1 flex-col">
+    <main
+      class="container-main flex flex-1 flex-col transition-[padding] duration-300 ease-out"
+      :style="{ paddingTop: `${headerHeight}px` }"
+    >
       <div
         class="container-main-section border-radius-10 relative flex flex-1 overflow-hidden border-1"
       >
@@ -503,8 +503,6 @@ onUnmounted(() => {
           </ResizablePanel>
           <ResizableHandle />
           <ResizablePanel class="flex">
-            <!-- 预设内容面板 -->
-            <PresetContentPanel />
             <div class="flex flex-1">
               <div
                 v-show="!store.isMobile || (store.isMobile && showEditor)"
@@ -514,6 +512,7 @@ onUnmounted(() => {
                   'order-1 border-l': !store.isEditOnLeft,
                   'border-r': store.isEditOnLeft,
                 }"
+                @click="store.isOpenPresetPanel = false"
               >
                 <SearchTab v-if="editor" ref="searchTabRef" :editor="editor" />
                 <AIFixedBtn
@@ -521,14 +520,12 @@ onUnmounted(() => {
                   :show-editor="showEditor"
                 />
 
-                <EditorContextMenu>
-                  <textarea
-                    id="editor"
-                    ref="editorRef"
-                    type="textarea"
-                    placeholder="Your markdown text here."
-                  />
-                </EditorContextMenu>
+                <textarea
+                  id="editor"
+                  ref="editorRef"
+                  type="textarea"
+                  placeholder="Your markdown text here."
+                />
               </div>
               <div
                 v-show="!store.isMobile || (store.isMobile && !showEditor)"
@@ -575,10 +572,10 @@ onUnmounted(() => {
       </div>
 
       <!-- 移动端浮动按钮组 -->
-      <div v-if="store.isMobile" class="fixed bottom-16 right-6 z-50 flex flex-col gap-2">
+      <div v-if="store.isMobile && !store.isOpenPostSlider" class="fixed right-[1px] top-[40px] z-50 flex flex-col gap-2">
         <!-- 切换编辑/预览按钮 -->
         <button
-          class="flex items-center justify-center rounded-full bg-orange-500 p-3 text-white shadow-lg transition active:scale-95 hover:scale-105 dark:bg-orange-600 hover:bg-orange-600 dark:text-white dark:hover:bg-orange-700"
+          class="backdrop-blur-sm h-12 w-12 flex items-center justify-center rounded-full bg-orange-500/60 text-white shadow-lg transition active:scale-95 hover:scale-105 dark:bg-orange-600/60 hover:bg-orange-500/80 dark:hover:bg-orange-600/80"
           aria-label="切换编辑/预览"
           @click="toggleView"
         >
@@ -629,6 +626,11 @@ onUnmounted(() => {
       </AlertDialog>
     </main>
 
+    <!-- 预设内容面板 - 悬浮层 -->
+    <transition name="slide-from-left">
+      <PresetContentPanel v-if="isOpenPresetPanel" />
+    </transition>
+
     <Footer />
   </div>
 </template>
@@ -640,7 +642,9 @@ onUnmounted(() => {
 <style lang="less" scoped>
 .container {
   height: 100vh;
-  min-width: 100%;
+  width: 100%;
+  max-width: 100vw;
+  overflow-x: hidden;
   padding: 0;
 }
 
@@ -689,7 +693,26 @@ onUnmounted(() => {
 }
 
 .codeMirror-wrapper {
-  overflow-x: auto;
+  overflow-x: hidden;
   height: 100%;
+}
+
+/* 从左侧滑入动画 */
+.slide-from-left-enter-active,
+.slide-from-left-leave-active {
+  transition: transform 0.5s ease-out;
+}
+
+.slide-from-left-enter-from {
+  transform: translateX(-100%);
+}
+
+.slide-from-left-leave-to {
+  transform: translateX(-100%);
+}
+
+.slide-from-left-enter-to,
+.slide-from-left-leave-from {
+  transform: translateX(0);
 }
 </style>
