@@ -602,7 +602,7 @@ async function fetchArticle() {
       },
       body: JSON.stringify({
         url,
-        format: `text`,
+        format: `html`,
       }),
     })
 
@@ -619,8 +619,9 @@ async function fetchArticle() {
       throw new Error(`抓取失败: ${data.message || `未知错误`}`)
     }
 
-    // 从 data.content_text 获取内容
-    const content = data.data?.content_text || data.content || data.text || data.markdown
+    // 根据format参数获取对应的内容字段
+    // format为html时从content_html获取，为text时从content_text获取
+    const content = data.data?.content_html || data.data?.content_text || data.content || data.text || data.markdown
 
     if (!content) {
       console.error(`API响应数据:`, data)
