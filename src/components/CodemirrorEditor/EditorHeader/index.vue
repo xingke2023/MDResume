@@ -590,7 +590,8 @@ async function fetchArticle() {
   isFetching.value = true
 
   try {
-    const apiEndpoint = `http://43.153.64.160:5002/api/extract`
+    // 使用相对路径，会自动使用当前域名
+    const apiEndpoint = `/api/extract`
 
     const response = await fetch(apiEndpoint, {
       method: `POST`,
