@@ -602,7 +602,7 @@ async function fetchArticle() {
       },
       body: JSON.stringify({
         url,
-        format: `html`,
+        format: `text`,
       }),
     })
 
