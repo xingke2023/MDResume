@@ -590,8 +590,7 @@ async function fetchArticle() {
   isFetching.value = true
 
   try {
-    // 使用相对路径，会自动使用当前域名
-    const apiEndpoint = `/api/extract`
+    const apiEndpoint = `https://wechat.easy-write.com/api/extract`
 
     const response = await fetch(apiEndpoint, {
       method: `POST`,
