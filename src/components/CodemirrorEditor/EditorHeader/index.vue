@@ -590,7 +590,10 @@ async function fetchArticle() {
   isFetching.value = true
 
   try {
-    const apiEndpoint = `https://wechat.easy-write.com/api/extract`
+    // 开发环境使用代理，生产环境直接访问
+    const apiEndpoint = import.meta.env.DEV
+      ? `/api/extract`
+      : `https://wechat.easy-write.com/api/extract`
 
     const response = await fetch(apiEndpoint, {
       method: `POST`,

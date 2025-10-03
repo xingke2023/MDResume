@@ -16,6 +16,13 @@ export default defineConfig({
   envPrefix: [`VITE_`, `CF_`],
   server: {
     allowedHosts: [`www.easy-write.com`],
+    proxy: {
+      '/api/extract': {
+        target: `https://wechat.easy-write.com`,
+        changeOrigin: true,
+        secure: false,
+      },
+    },
   },
   plugins: [
     vue(),
