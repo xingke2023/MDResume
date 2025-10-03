@@ -250,6 +250,7 @@ function handleRedo() {
 function handleClearContent() {
   if (!editor.value)
     return
+  // eslint-disable-next-line no-alert
   if (window.confirm(`确定要清空编辑器内容吗？`)) {
     editor.value.setValue(``)
     editor.value.focus()
@@ -589,8 +590,7 @@ async function fetchArticle() {
   isFetching.value = true
 
   try {
-    // TODO: 替换为实际的API接口地址
-    const apiEndpoint = `https://api.example.com/fetch-article` // 稍后替换为真实接口
+    const apiEndpoint = `http://43.153.64.160:5002/api/extract`
 
     const response = await fetch(apiEndpoint, {
       method: `POST`,
@@ -599,6 +599,7 @@ async function fetchArticle() {
       },
       body: JSON.stringify({
         url,
+        format: `text`,
       }),
     })
 
@@ -609,7 +610,14 @@ async function fetchArticle() {
     }
 
     const data = await response.json()
-    const content = data.content || data.text || data.markdown
+
+    // 检查响应是否成功
+    if (!data.success) {
+      throw new Error(`抓取失败: ${data.message || `未知错误`}`)
+    }
+
+    // 从 data.content_text 获取内容
+    const content = data.data?.content_text || data.content || data.text || data.markdown
 
     if (!content) {
       console.error(`API响应数据:`, data)
@@ -737,7 +745,7 @@ function handleCopyWithMode(mode: string) {
     <!-- 左侧操作区：所有工具按钮 -->
     <div class="space-x-1 sm:space-x-2 w-full flex items-center sm:min-w-0 sm:flex-1">
       <!-- 菜单栏 -->
-      <Menubar class="compact-mobile menubar compact-menubar extra-compact">
+      <Menubar class="compact-mobile compact-menubar extra-compact menubar">
         <StyleDropdown :copy-mode="copyMode" :on-copy="handleCopyWithMode" />
       </Menubar>
 

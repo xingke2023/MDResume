@@ -39,13 +39,13 @@ const { editor } = storeToRefs(store)
 const displayStore = useDisplayStore()
 const { toggleAIImageDialog } = displayStore
 
+/* ---------- 弹窗开关 ---------- */
+const dialogVisible = ref(props.open)
+
 function switchToImageGen() {
   dialogVisible.value = false
   setTimeout(() => toggleAIImageDialog(true), 100)
 }
-
-/* ---------- 弹窗开关 ---------- */
-const dialogVisible = ref(props.open)
 watch(() => props.open, val => (dialogVisible.value = val))
 watch(dialogVisible, (val) => {
   emit(`update:open`, val)
