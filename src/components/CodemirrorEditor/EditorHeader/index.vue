@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import {
   Bold,
+  BookOpen,
   ChartPie,
   Code,
   CreditCard,
@@ -481,6 +482,14 @@ function showViralArticleDialog() {
   viralArticleDialogVisible.value = true
 }
 
+// 个人知识库状态
+const knowledgeBaseDialogVisible = ref(false)
+
+// 显示个人知识库对话框
+function showKnowledgeBaseDialog() {
+  knowledgeBaseDialogVisible.value = true
+}
+
 // 显示改写对话框
 function showRewriteDialog() {
   if (!editor.value)
@@ -923,6 +932,10 @@ function handleCopyWithMode(mode: string) {
           <DropdownMenuItem class="py-3" @click="showViralArticleDialog()">
             <Flame class="mr-2 size-4" />
             行业爆文推送
+          </DropdownMenuItem>
+          <DropdownMenuItem class="py-3" @click="showKnowledgeBaseDialog()">
+            <BookOpen class="mr-2 size-4" />
+            个人AI知识库
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
@@ -1607,6 +1620,67 @@ function handleCopyWithMode(mode: string) {
         >
           <Flame class="mr-1 h-4 w-4" />
           开始使用
+        </Button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 个人知识库对话框 -->
+  <div
+    v-if="knowledgeBaseDialogVisible"
+    class="backdrop-blur-sm fixed inset-0 z-50 flex items-center justify-center bg-black/50"
+    @click="knowledgeBaseDialogVisible = false"
+  >
+    <div
+      class="mx-4 max-w-lg w-[90vw] scale-100 transform rounded-2xl bg-white p-6 shadow-2xl transition-all duration-300 dark:bg-gray-800"
+      @click.stop
+    >
+      <!-- 标题图标 -->
+      <div class="mb-4 flex items-center justify-center">
+        <div class="bg-gradient-to-r from-blue-500 to-indigo-600 h-12 w-12 flex items-center justify-center rounded-full">
+          <BookOpen class="h-6 w-6 text-white" />
+        </div>
+      </div>
+
+      <!-- 标题 -->
+      <h3 class="mb-2 text-center text-xl text-gray-900 font-bold dark:text-gray-100">
+        个人知识库
+      </h3>
+
+      <!-- 描述 -->
+      <p class="mb-4 text-center text-sm text-gray-600 dark:text-gray-400">
+        建设中...
+      </p>
+
+      <!-- 内容区域 -->
+      <div class="mb-6 rounded-lg bg-blue-50 p-4 dark:bg-blue-900/20">
+        <p class="text-sm text-blue-800 dark:text-blue-300">
+          <span class="font-medium">📚 功能说明：</span>
+        </p>
+        <ul class="space-y-1 mt-2 text-sm text-blue-700 dark:text-blue-300">
+          <li>• 用于撰写文案的知识积累</li>
+          <li>• 建立个性化查询助手</li>
+          <li>• 管理个人资料和素材库</li>
+          <li>• 智能检索和内容推荐</li>
+        </ul>
+      </div>
+
+      <!-- 按钮组 -->
+      <div class="flex justify-end gap-3">
+        <Button
+          variant="outline"
+          class="flex-1"
+          @click="knowledgeBaseDialogVisible = false"
+        >
+          关闭
+        </Button>
+        <Button
+          class="bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 flex-1 border-0 text-white"
+          disabled
+          @click="knowledgeBaseDialogVisible = false"
+        >
+          <BookOpen class="mr-1 h-4 w-4" />
+          敬请期待
         </Button>
       </div>
     </div>

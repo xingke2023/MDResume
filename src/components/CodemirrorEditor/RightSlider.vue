@@ -48,7 +48,7 @@ const formatOptions = ref<Format[]>([`rgb`, `hex`, `hsl`, `hsv`])
   >
     <div
       v-show="store.isOpenRightSlider"
-      class="fixed inset-0 z-50 flex flex-col bg-white dark:bg-[#191919]"
+      class="fixed inset-0 z-[100] flex flex-col bg-white dark:bg-[#191919]"
     >
       <!-- 顶部栏 -->
       <div class="flex items-center justify-between border-b border-gray-200 bg-white px-4 py-3 dark:border-gray-700 dark:bg-[#191919]">
@@ -66,18 +66,6 @@ const formatOptions = ref<Format[]>([`rgb`, `hex`, `hsl`, `hsv`])
 
       <!-- 设置内容 -->
       <div class="space-y-4 flex-1 overflow-auto p-4">
-        <div class="space-y-2">
-          <h2>主题</h2>
-          <div class="grid grid-cols-3 justify-items-center gap-2">
-            <Button
-              v-for="{ label, value } in themeOptions" :key="value" class="w-full" variant="outline" :class="{
-                'border-black dark:border-white border-2': store.theme === value,
-              }" @click="store.themeChanged(value)"
-            >
-              {{ label }}
-            </Button>
-          </div>
-        </div>
         <div class="space-y-2">
           <h2>字体</h2>
           <div class="grid grid-cols-3 justify-items-center gap-2">

@@ -201,7 +201,7 @@ function handleDragEnd() {
   <!-- 移动端遮罩层 -->
   <div
     v-if="store.isMobile && store.isOpenPostSlider"
-    class="fixed inset-0 z-30 bg-black/50"
+    class="fixed inset-0 z-[90] bg-black/50"
     @click="store.isOpenPostSlider = false"
   />
 
@@ -210,7 +210,7 @@ function handleDragEnd() {
     class="mobile-drawer h-full w-full overflow-hidden"
     :class="{
       // 移动端样式
-      'fixed top-0 left-0 z-35 border-r bg-background shadow-lg': store.isMobile,
+      'fixed top-0 left-0 z-[100] border-r bg-background shadow-lg': store.isMobile,
       'animate': store.isMobile && enableAnimation,
       // 桌面端样式
       'border-2 border-dashed border-[#0000] bg-gray/20 transition-colors': !store.isMobile,
