@@ -5,6 +5,7 @@ import {
   Code,
   CreditCard,
   Eraser,
+  Flame,
   ImagePlus,
   Indent,
   Italic,
@@ -473,6 +474,14 @@ function showIndustryInfoDialog() {
   industryInfoDialogVisible.value = true
 }
 
+// 爆文推送状态
+const viralArticleDialogVisible = ref(false)
+
+// 显示爆文推送对话框
+function showViralArticleDialog() {
+  viralArticleDialogVisible.value = true
+}
+
 // 显示改写对话框
 function showRewriteDialog() {
   if (!editor.value)
@@ -910,7 +919,11 @@ function handleCopyWithMode(mode: string) {
           </DropdownMenuItem>
           <DropdownMenuItem class="py-2.5" @click="showIndustryInfoDialog()">
             <Newspaper class="mr-2 size-4" />
-            一手行业信息推送
+            实时行业热点信息推送
+          </DropdownMenuItem>
+          <DropdownMenuItem class="py-2.5" @click="showViralArticleDialog()">
+            <Flame class="mr-2 size-4" />
+            行业爆文推送
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
@@ -1534,6 +1547,66 @@ function handleCopyWithMode(mode: string) {
           @click="industryInfoDialogVisible = false"
         >
           <Newspaper class="mr-1 h-4 w-4" />
+          开始使用
+        </Button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 爆文推送对话框 -->
+  <div
+    v-if="viralArticleDialogVisible"
+    class="backdrop-blur-sm fixed inset-0 z-50 flex items-center justify-center bg-black/50"
+    @click="viralArticleDialogVisible = false"
+  >
+    <div
+      class="mx-4 max-w-lg w-[90vw] scale-100 transform rounded-2xl bg-white p-6 shadow-2xl transition-all duration-300 dark:bg-gray-800"
+      @click.stop
+    >
+      <!-- 标题图标 -->
+      <div class="mb-4 flex items-center justify-center">
+        <div class="bg-gradient-to-r from-orange-500 to-red-600 h-12 w-12 flex items-center justify-center rounded-full">
+          <Flame class="h-6 w-6 text-white" />
+        </div>
+      </div>
+
+      <!-- 标题 -->
+      <h3 class="mb-2 text-center text-xl text-gray-900 font-bold dark:text-gray-100">
+        行业爆文推送
+      </h3>
+
+      <!-- 描述 -->
+      <p class="mb-4 text-center text-sm text-gray-600 dark:text-gray-400">
+        获取行业内热门爆款文章和案例分析
+      </p>
+
+      <!-- 内容区域 -->
+      <div class="mb-6 rounded-lg bg-orange-50 p-4 dark:bg-orange-900/20">
+        <p class="text-sm text-orange-800 dark:text-orange-300">
+          <span class="font-medium">🔥 功能特点：</span>
+        </p>
+        <ul class="space-y-1 mt-2 text-sm text-orange-700 dark:text-orange-300">
+          <li>• 精选行业高阅读量爆文</li>
+          <li>• 分析爆文成功要素</li>
+          <li>• 追踪热门话题趋势</li>
+          <li>• 提供写作灵感参考</li>
+        </ul>
+      </div>
+
+      <!-- 按钮组 -->
+      <div class="flex justify-end gap-3">
+        <Button
+          variant="outline"
+          class="flex-1"
+          @click="viralArticleDialogVisible = false"
+        >
+          关闭
+        </Button>
+        <Button
+          class="bg-gradient-to-r from-orange-500 to-red-600 hover:from-orange-600 hover:to-red-700 flex-1 border-0 text-white"
+          @click="viralArticleDialogVisible = false"
+        >
+          <Flame class="mr-1 h-4 w-4" />
           开始使用
         </Button>
       </div>
