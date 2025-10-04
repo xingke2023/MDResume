@@ -1,6 +1,7 @@
 import CodeMirror from 'codemirror'
 import { toPng } from 'html-to-image'
 import { v4 as uuid } from 'uuid'
+import { toast } from 'vue-sonner'
 import DEFAULT_CONTENT from '@/assets/example/markdown.md?raw'
 
 import DEFAULT_CSS_CONTENT from '@/assets/example/theme-css.txt?raw'
@@ -622,6 +623,16 @@ export const useStore = defineStore(`store`, () => {
 
   // 导出编辑器内容为 PDF
   const exportEditorContent2PDF = () => {
+    // 检测移动设备
+    const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent)
+
+    if (isMobile) {
+      // 移动端提示
+      toast.info(`移动端浏览器对PDF导出支持有限，建议使用桌面浏览器或先导出为HTML文件`, {
+        duration: 5000,
+      })
+    }
+
     exportPDF(primaryColor.value, posts.value[currentPostIndex.value].title)
     document.querySelector(`#output`)!.innerHTML = output.value
   }

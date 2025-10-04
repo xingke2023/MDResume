@@ -377,6 +377,9 @@ export function exportPDF(primaryColor: string, title: string = `untitled`) {
   const htmlStr = processHtmlContent(primaryColor)
   const safeTitle = sanitizeTitle(title)
 
+  // 检测是否为移动设备
+  const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent)
+
   // 创建新窗口用于打印
   const printWindow = window.open(``, `_blank`)
   if (!printWindow) {
@@ -390,14 +393,10 @@ export function exportPDF(primaryColor: string, title: string = `untitled`) {
     <html>
     <head>
       <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
       <title>${safeTitle}</title>
       <style>
         @page {
-          @top-center {
-            content: "${safeTitle}";
-            font-size: 12px;
-            color: #666;
-          }
           @bottom-left {
             content: "Easy Write";
             font-size: 10px;
@@ -409,9 +408,14 @@ export function exportPDF(primaryColor: string, title: string = `untitled`) {
             color: #999;
           }
         }
-        
+
         @media print {
           body { margin: 0; }
+        }
+
+        body {
+          margin: 0;
+          padding: 20px;
         }
       </style>
     </head>
@@ -425,14 +429,24 @@ export function exportPDF(primaryColor: string, title: string = `untitled`) {
 
   printWindow.document.close()
 
-  // 等待内容加载完成后自动打开打印对话框
-  printWindow.onload = () => {
-    printWindow.print()
-    // 打印完成后关闭窗口
-    printWindow.onafterprint = () => {
-      printWindow.close()
+  // 使用更可靠的方式等待内容加载
+  // 移动端需要更长的加载时间
+  const delay = isMobile ? 1000 : 500
+
+  setTimeout(() => {
+    try {
+      printWindow.print()
+      // 打印完成后关闭窗口（桌面端）
+      if (!isMobile) {
+        printWindow.onafterprint = () => {
+          printWindow.close()
+        }
+      }
     }
-  }
+    catch (e) {
+      console.error(`打印失败:`, e)
+    }
+  }, delay)
 }
 
 export function checkImage(file: File) {

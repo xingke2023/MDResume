@@ -800,14 +800,14 @@ function handleCopyWithMode(mode: string) {
       <Button
         v-if="isMobile"
         variant="outline"
-        size="icon"
-        title="工具"
-        class="text-red-500 -ml-2 dark:text-red-400" :class="[
+        title="编辑器"
+        class="px-2 text-red-500 -ml-2 dark:text-red-400" :class="[
           isShowMobileToolbar ? 'bg-blue-50 dark:bg-blue-950' : '',
         ]"
         @click="isShowMobileToolbar = !isShowMobileToolbar"
       >
-        <Pencil class="size-4" />
+        <Pencil class="mr-1 size-4" />
+        编辑器
       </Button>
 
       <!-- 撤销重做 - 电脑端显示 -->
