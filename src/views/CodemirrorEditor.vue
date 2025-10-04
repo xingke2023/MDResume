@@ -2,7 +2,6 @@
 import type { Editor } from 'codemirror'
 import type { ComponentPublicInstance } from 'vue'
 import { fromTextArea } from 'codemirror'
-import { Eye, Pen } from 'lucide-vue-next'
 import {
   AIPolishButton,
   AIPolishPopover,
@@ -29,21 +28,34 @@ const { toggleShowUploadImgDialog } = displayStore
 
 const backLight = ref(false)
 const isCoping = ref(false)
+const wasInEditorMode = ref(false)
+const showEditor = ref(true)
 
 function startCopy() {
   backLight.value = true
   isCoping.value = true
+
+  // 如果在移动端编辑模式，临时切换到预览模式
+  if (store.isMobile && showEditor.value) {
+    wasInEditorMode.value = true
+    showEditor.value = false
+  }
 }
 
 // 拷贝结束
 function endCopy() {
   backLight.value = false
+
+  // 恢复到编辑模式
+  if (wasInEditorMode.value) {
+    showEditor.value = true
+    wasInEditorMode.value = false
+  }
+
   setTimeout(() => {
     isCoping.value = false
   }, 800)
 }
-
-const showEditor = ref(true)
 
 // 切换编辑/预览视图（仅限移动端）
 function toggleView() {
@@ -576,11 +588,11 @@ onUnmounted(() => {
       <div v-if="store.isMobile && !store.isOpenPostSlider" class="fixed right-[1px] top-[40px] z-50 flex flex-col gap-2">
         <!-- 切换编辑/预览按钮 -->
         <button
-          class="backdrop-blur-sm h-12 w-12 flex items-center justify-center rounded-full bg-orange-500/60 text-white shadow-lg transition active:scale-95 hover:scale-105 dark:bg-orange-600/60 hover:bg-orange-500/80 dark:hover:bg-orange-600/80"
+          class="backdrop-blur-sm h-12 w-12 flex items-center justify-center rounded-full bg-orange-500/60 text-xs text-white font-medium shadow-lg transition active:scale-95 hover:scale-105 dark:bg-orange-600/60 hover:bg-orange-500/80 dark:hover:bg-orange-600/80"
           aria-label="切换编辑/预览"
           @click="toggleView"
         >
-          <component :is="showEditor ? Eye : Pen" class="h-5 w-5" />
+          {{ showEditor ? '预览' : '编辑' }}
         </button>
       </div>
 
