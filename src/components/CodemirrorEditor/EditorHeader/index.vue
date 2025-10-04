@@ -6,12 +6,14 @@ import {
   CreditCard,
   Eraser,
   ImagePlus,
+  Indent,
   Italic,
   LayoutList,
   Link,
   List,
   ListOrdered,
   MinusSquare,
+  Newspaper,
   Palette,
   Pencil,
   Quote,
@@ -230,6 +232,11 @@ pie
   editorInstance.focus()
 }
 
+// 段落首行缩进 - 切换全局缩进样式
+function applyParagraphIndent() {
+  store.useIndentChanged()
+}
+
 // 撤销
 function handleUndo() {
   if (!editor.value)
@@ -355,8 +362,10 @@ async function beautifyMarkdown() {
 
 要求：
 1. 直接输出 Markdown 源码，不要包含 \`\`\`markdown 或任何代码块标记
-2. 根据内容智能分段并合理设置各级标题（#、##、###等）
-3. 适当使用引用、粗体、斜体等格式，较少使用列表
+2. 根据内容智能分段并合理设置各级标题（使用h3 h4 h5 不使用h1 h2）
+3. 适当使用引用、粗体、斜体等格式，
+4. 不要使用无序列表，有序列表
+5. 内容分段落空一行
 4. 保持原文内容不变，只优化格式，确保输出符合标准 Markdown
 5. 确保输出符合标准 Markdown 语法`
 
@@ -449,11 +458,20 @@ ${content}`
 const isFetching = ref(false)
 const fetchDialogVisible = ref(false)
 const fetchUrl = ref(``)
+const fetchUrlInput = ref<HTMLInputElement | null>(null)
 
 // 一键改写状态
 const isRewriting = ref(false)
 const rewriteDialogVisible = ref(false)
 const rewriteRequirement = ref(``)
+
+// 行业信息推送状态
+const industryInfoDialogVisible = ref(false)
+
+// 显示行业信息推送对话框
+function showIndustryInfoDialog() {
+  industryInfoDialogVisible.value = true
+}
 
 // 显示改写对话框
 function showRewriteDialog() {
@@ -563,6 +581,22 @@ async function rewriteContent() {
     isRewriting.value = false
   }
 }
+
+// 监听抓取对话框显示状态，自动聚焦输入框
+watch(fetchDialogVisible, (visible) => {
+  if (visible) {
+    nextTick(() => {
+      setTimeout(() => {
+        const input = fetchUrlInput.value
+        if (input) {
+          input.focus()
+          // 在移动端，尝试触发点击以确保键盘弹出
+          input.click()
+        }
+      }, 200)
+    })
+  }
+})
 
 // 显示抓取工具对话框
 function showFetchDialog() {
@@ -874,6 +908,10 @@ function handleCopyWithMode(mode: string) {
             <Wand2 class="mr-2 size-4" />
             {{ isRewriting ? '改写中...' : '文案改写工具' }}
           </DropdownMenuItem>
+          <DropdownMenuItem class="py-2.5" @click="showIndustryInfoDialog()">
+            <Newspaper class="mr-2 size-4" />
+            一手行业信息推送
+          </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
 
@@ -930,9 +968,9 @@ function handleCopyWithMode(mode: string) {
     >
       <div
         v-if="isMobile && isShowMobileToolbar"
-        class="w-full bg-white dark:bg-[#191c20]"
+        class="w-full bg-white p-3 dark:bg-[#191c20]"
       >
-        <div class="flex flex-wrap items-center justify-start gap-1">
+        <div class="flex flex-wrap items-center justify-start gap-1.5">
           <!-- 简历预设模块 -->
           <Button
             variant="outline"
@@ -1088,6 +1126,17 @@ function handleCopyWithMode(mode: string) {
             @click="addFormat(`${ctrlKey}-K`)"
           >
             <Link class="size-4" />
+          </Button>
+          <!-- 段落首行缩进 -->
+          <Button
+            variant="outline"
+            size="sm"
+            class="flex-shrink-0"
+            :class="{ 'bg-blue-50 dark:bg-blue-950': store.isUseIndent }"
+            title="段落首行缩进"
+            @click="applyParagraphIndent()"
+          >
+            <Indent class="size-4" />
           </Button>
           <!-- 撤销 -->
           <Button
@@ -1322,8 +1371,10 @@ function handleCopyWithMode(mode: string) {
           文章链接
         </label>
         <input
+          ref="fetchUrlInput"
           v-model="fetchUrl"
           type="url"
+          autofocus
           placeholder="https://mp.weixin.qq.com/s/..."
           class="dark:placeholder-gray-400 w-full border border-gray-300 rounded-lg px-4 py-2.5 text-gray-900 transition-colors dark:border-gray-600 focus:border-blue-500 dark:bg-gray-700 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
           @keyup.enter="fetchArticle()"
@@ -1425,6 +1476,65 @@ function handleCopyWithMode(mode: string) {
           <Wand2 v-if="!isRewriting" class="mr-1 h-4 w-4" />
           <div v-if="isRewriting" class="animate-spin mr-1 h-4 w-4 border-2 border-white border-t-transparent rounded-full" />
           {{ isRewriting ? '改写中...' : '开始改写' }}
+        </Button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 行业信息推送对话框 -->
+  <div
+    v-if="industryInfoDialogVisible"
+    class="backdrop-blur-sm fixed inset-0 z-50 flex items-center justify-center bg-black/50"
+    @click="industryInfoDialogVisible = false"
+  >
+    <div
+      class="mx-4 max-w-lg w-[90vw] scale-100 transform rounded-2xl bg-white p-6 shadow-2xl transition-all duration-300 dark:bg-gray-800"
+      @click.stop
+    >
+      <!-- 标题图标 -->
+      <div class="mb-4 flex items-center justify-center">
+        <div class="bg-gradient-to-r from-blue-500 to-cyan-600 h-12 w-12 flex items-center justify-center rounded-full">
+          <Newspaper class="h-6 w-6 text-white" />
+        </div>
+      </div>
+
+      <!-- 标题 -->
+      <h3 class="mb-2 text-center text-xl text-gray-900 font-bold dark:text-gray-100">
+        一手行业信息推送
+      </h3>
+
+      <!-- 描述 -->
+      <p class="mb-4 text-center text-sm text-gray-600 dark:text-gray-400">
+        获取最新的行业资讯和信息推送
+      </p>
+
+      <!-- 内容区域 -->
+      <div class="mb-6 rounded-lg bg-blue-50 p-4 dark:bg-blue-900/20">
+        <p class="text-sm text-blue-800 dark:text-blue-300">
+          <span class="font-medium">📢 功能说明：</span>
+        </p>
+        <ul class="space-y-1 mt-2 text-sm text-blue-700 dark:text-blue-300">
+          <li>• 实时获取行业最新动态</li>
+          <li>• 推送热门资讯和趋势分析</li>
+          <li>• 智能筛选相关内容</li>
+        </ul>
+      </div>
+
+      <!-- 按钮组 -->
+      <div class="flex justify-end gap-3">
+        <Button
+          variant="outline"
+          class="flex-1"
+          @click="industryInfoDialogVisible = false"
+        >
+          关闭
+        </Button>
+        <Button
+          class="bg-gradient-to-r from-blue-500 to-cyan-600 hover:from-blue-600 hover:to-cyan-700 flex-1 border-0 text-white"
+          @click="industryInfoDialogVisible = false"
+        >
+          <Newspaper class="mr-1 h-4 w-4" />
+          开始使用
         </Button>
       </div>
     </div>

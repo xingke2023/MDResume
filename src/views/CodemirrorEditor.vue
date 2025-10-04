@@ -495,13 +495,14 @@ onUnmounted(() => {
       >
         <ResizablePanelGroup direction="horizontal">
           <ResizablePanel
-            :default-size="50"
-            :max-size="store.isOpenPostSlider ? 60 : 0"
-            :min-size="store.isOpenPostSlider ? 10 : 0"
+            v-if="store.isOpenPostSlider"
+            :default-size="30"
+            :max-size="60"
+            :min-size="15"
           >
             <PostSlider />
           </ResizablePanel>
-          <ResizableHandle />
+          <ResizableHandle v-if="store.isOpenPostSlider" />
           <ResizablePanel class="flex">
             <div class="flex flex-1">
               <div
