@@ -257,9 +257,13 @@ async function uploadImage(
 ) {
   try {
     isImgLoading.value = true
+    toast.loading(`正在上传图片...`, { id: `upload-image` })
 
     const base64Content = await toBase64(file)
     const url = await fileUpload(base64Content, file)
+
+    toast.dismiss(`upload-image`)
+
     if (cb) {
       cb(url)
     }
@@ -268,6 +272,7 @@ async function uploadImage(
     }
   }
   catch (err) {
+    toast.dismiss(`upload-image`)
     toast.error((err as any).message)
   }
   finally {
