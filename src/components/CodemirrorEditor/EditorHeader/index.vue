@@ -905,23 +905,23 @@ function handleCopyWithMode(mode: string) {
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="start" class="py-2">
-          <DropdownMenuItem :disabled="isBeautifying" class="py-2.5" @click="showBeautifyConfirm()">
+          <DropdownMenuItem :disabled="isBeautifying" class="py-3" @click="showBeautifyConfirm()">
             <Sparkles class="mr-2 size-4" />
             {{ isBeautifying ? '美化中...' : '一键格式美化' }}
           </DropdownMenuItem>
-          <DropdownMenuItem :disabled="isFetching" class="py-2.5" @click="showFetchDialog()">
+          <DropdownMenuItem :disabled="isFetching" class="py-3" @click="showFetchDialog()">
             <Wrench class="mr-2 size-4" />
             {{ isFetching ? '抓取中...' : '公众号文章抓取工具' }}
           </DropdownMenuItem>
-          <DropdownMenuItem :disabled="isRewriting" class="py-2.5" @click="showRewriteDialog()">
+          <DropdownMenuItem :disabled="isRewriting" class="py-3" @click="showRewriteDialog()">
             <Wand2 class="mr-2 size-4" />
             {{ isRewriting ? '改写中...' : '文案改写工具' }}
           </DropdownMenuItem>
-          <DropdownMenuItem class="py-2.5" @click="showIndustryInfoDialog()">
+          <DropdownMenuItem class="py-3" @click="showIndustryInfoDialog()">
             <Newspaper class="mr-2 size-4" />
             实时行业热点信息推送
           </DropdownMenuItem>
-          <DropdownMenuItem class="py-2.5" @click="showViralArticleDialog()">
+          <DropdownMenuItem class="py-3" @click="showViralArticleDialog()">
             <Flame class="mr-2 size-4" />
             行业爆文推送
           </DropdownMenuItem>
