@@ -720,7 +720,7 @@ function getTimeRemainingClass(index: number): string {
                 <img
                   :src="generatedImages[currentImageIndex]"
                   :alt="`生成的图像 ${currentImageIndex + 1}`"
-                  class="object-contain border-border h-auto max-h-[300px] w-full border rounded-lg shadow-lg transition-transform sm:max-h-[350px] hover:scale-105"
+                  class="border-border object-contain h-auto max-h-[300px] w-full border rounded-lg shadow-lg transition-transform sm:max-h-[350px] hover:scale-105"
                 >
                 <!-- 点击查看大图提示 -->
                 <div class="pointer-events-none absolute inset-0 flex items-center justify-center rounded-lg bg-black/0 opacity-0 transition-opacity group-hover:bg-black/10 group-hover:opacity-100">
@@ -732,7 +732,7 @@ function getTimeRemainingClass(index: number): string {
             </div>
 
             <!-- 图像信息 -->
-            <div class="bg-muted/10 space-y-1 rounded px-2 py-2 sm:px-4">
+            <div class="space-y-1 bg-muted/10 rounded px-2 py-2 sm:px-4">
               <p class="text-muted-foreground text-center text-xs">
                 尺寸: {{ size }}
               </p>

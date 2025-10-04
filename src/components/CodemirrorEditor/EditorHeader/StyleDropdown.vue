@@ -61,7 +61,7 @@ function customStyle() {
 
 <template>
   <MenubarMenu>
-    <MenubarTrigger>
+    <MenubarTrigger class="px-1.5 sm:px-3">
       <Menu class="size-4" />
     </MenubarTrigger>
     <MenubarContent class="w-56 py-2" align="start">

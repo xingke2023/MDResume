@@ -215,7 +215,7 @@ const styleOptions = [
       <input
         v-model="config.endpoint"
         type="url"
-        class="bg-background focus:border-primary focus:ring-primary mt-1 w-full border rounded-md p-2 transition-colors focus:ring-2"
+        class="bg-background focus:ring-primary focus:border-primary mt-1 w-full border rounded-md p-2 transition-colors focus:ring-2"
         placeholder="https://api.openai.com/v1"
         readonly
       >

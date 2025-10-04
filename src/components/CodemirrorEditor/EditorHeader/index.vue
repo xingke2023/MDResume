@@ -15,7 +15,6 @@ import {
   ListOrdered,
   MinusSquare,
   Newspaper,
-  Palette,
   Pencil,
   Quote,
   Redo,
@@ -928,16 +927,11 @@ function handleCopyWithMode(mode: string) {
         </DropdownMenuContent>
       </DropdownMenu>
 
-      <!-- 复制菜单 -->
-      <Menubar class="menubar compact-menubar">
-        <FileDropdown :copy-mode="copyMode" :on-copy="handleCopyWithMode" />
-      </Menubar>
-
       <!-- 主题选择 -->
       <DropdownMenu>
         <DropdownMenuTrigger as-child>
-          <Button variant="outline" size="icon" title="主题">
-            <Palette class="size-4" />
+          <Button variant="outline" class="px-2" title="主题">
+            主题
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="start">
@@ -955,6 +949,11 @@ function handleCopyWithMode(mode: string) {
           </DropdownMenuRadioGroup>
         </DropdownMenuContent>
       </DropdownMenu>
+
+      <!-- 发布菜单 -->
+      <Menubar class="menubar compact-menubar">
+        <FileDropdown :copy-mode="copyMode" :on-copy="handleCopyWithMode" />
+      </Menubar>
 
       <!-- 设置按钮 -->
       <Button
@@ -1631,8 +1630,8 @@ function handleCopyWithMode(mode: string) {
 
 .compact-mobile :deep(.menubar__trigger) {
   @media (max-width: 640px) {
-    padding-left: 0.5rem !important;
-    padding-right: 0.5rem !important;
+    padding-left: 0.375rem !important;
+    padding-right: 0.375rem !important;
     font-size: 0.875rem;
   }
 }

@@ -309,7 +309,7 @@ defineExpose({ visible, runAIAction, replaceText, insertText, show, close, stopA
   <Transition name="fade-scale">
     <div
       v-if="visible"
-      class="border-border bg-card text-card-foreground fixed left-1/2 top-1/2 z-50 max-h-[90dvh] w-[90vw] flex flex-col overflow-hidden border rounded-xl shadow-2xl sm:w-[460px] -translate-x-1/2 -translate-y-1/2 sm:translate-x-0 sm:translate-y-0"
+      class="bg-card border-border text-card-foreground fixed left-1/2 top-1/2 z-50 max-h-[90dvh] w-[90vw] flex flex-col overflow-hidden border rounded-xl shadow-2xl sm:w-[460px] -translate-x-1/2 -translate-y-1/2 sm:translate-x-0 sm:translate-y-0"
       :style="props.isMobile ? {} : { left: `${position.left}px`, top: `${position.top}px`, transformOrigin: 'top left' }"
     >
       <!-- header -->
@@ -341,7 +341,7 @@ defineExpose({ visible, runAIAction, replaceText, insertText, show, close, stopA
       />
 
       <!-- main content -->
-      <section v-else class="custom-scroll space-y-3 flex-1 overflow-y-auto px-4 pb-2 pt-3 sm:px-6">
+      <section v-else class="space-y-3 custom-scroll flex-1 overflow-y-auto px-4 pb-2 pt-3 sm:px-6">
         <!-- original text -->
         <div>
           <div class="mb-1 text-sm font-semibold">

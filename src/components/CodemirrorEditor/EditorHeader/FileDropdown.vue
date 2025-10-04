@@ -42,7 +42,7 @@ function publishToZhihu() {
 
 <template>
   <MenubarMenu>
-    <MenubarTrigger>
+    <MenubarTrigger class="px-1.5">
       发布
     </MenubarTrigger>
     <MenubarContent align="start" class="py-2">
