@@ -34,6 +34,7 @@ import { useDisplayStore, useStore } from '@/stores'
 import useAIConfigStore from '@/stores/AIConfig'
 import { addPrefix, processClipboardContent } from '@/utils'
 import PublishDialog from './PublishDialog.vue'
+import RewriteDialog from './RewriteDialog.vue'
 
 const emit = defineEmits([`startCopy`, `endCopy`])
 
@@ -462,10 +463,9 @@ const fetchDialogVisible = ref(false)
 const fetchUrl = ref(``)
 const fetchUrlInput = ref<HTMLInputElement | null>(null)
 
-// 一键改写状态
-const isRewriting = ref(false)
+// 一键改写状态 - 引用组件
+const rewriteDialogRef = ref<InstanceType<typeof RewriteDialog> | null>(null)
 const rewriteDialogVisible = ref(false)
-const rewriteRequirement = ref(``)
 
 // 行业信息推送状态
 const industryInfoDialogVisible = ref(false)
@@ -711,111 +711,7 @@ async function publishToWechat() {
 
 // 显示改写对话框
 function showRewriteDialog() {
-  if (!editor.value)
-    return
-
-  const content = editor.value.getValue()
-  if (!content.trim()) {
-    toast.error(`编辑器内容为空，无法改写`)
-    return
-  }
-
-  rewriteRequirement.value = ``
-  rewriteDialogVisible.value = true
-}
-
-// 一键改写功能
-async function rewriteContent() {
-  if (!editor.value || isRewriting.value)
-    return
-
-  const content = editor.value.getValue()
-  if (!content.trim()) {
-    toast.error(`编辑器内容为空`)
-    return
-  }
-
-  const requirement = rewriteRequirement.value.trim()
-  if (!requirement) {
-    toast.error(`请输入改写要求`)
-    return
-  }
-
-  isRewriting.value = true
-
-  try {
-    // TODO: 替换为实际的API接口地址
-    const apiEndpoint = `https://api.example.com/rewrite` // 稍后替换为真实接口
-
-    const response = await fetch(apiEndpoint, {
-      method: `POST`,
-      headers: {
-        'Content-Type': `application/json`,
-      },
-      body: JSON.stringify({
-        content,
-        requirement,
-      }),
-    })
-
-    if (!response.ok) {
-      const errorText = await response.text()
-      console.error(`改写接口错误详情:`, errorText)
-      throw new Error(`改写失败 (${response.status}): ${response.statusText}`)
-    }
-
-    const data = await response.json()
-    const rewrittenContent = data.content || data.text || data.markdown || data.result
-
-    if (!rewrittenContent) {
-      console.error(`API响应数据:`, data)
-      throw new Error(`API 返回内容为空`)
-    }
-
-    // 追加到编辑器末尾，添加分隔符
-    const currentContent = editor.value.getValue()
-    const separator = `\n\n---\n\n## 改写版本\n\n`
-    const newContent = currentContent + separator + rewrittenContent
-
-    editor.value.setValue(newContent)
-
-    // 滚动到改写内容位置
-    const lineCount = editor.value.lineCount()
-    editor.value.scrollIntoView({ line: lineCount - 1, ch: 0 })
-
-    toast.success(`改写完成！内容已追加到原文后面`)
-    rewriteDialogVisible.value = false
-  }
-  catch (error) {
-    console.error(`改写失败:`, error)
-
-    // 提供更友好的错误提示
-    let errorMessage = `改写失败`
-    const errorMsg = error instanceof Error ? error.message : String(error)
-    if (errorMsg.includes(`Failed to fetch`) || errorMsg.includes(`CORS`) || errorMsg.includes(`cross-origin`)) {
-      errorMessage = `CORS跨域错误：请确保改写接口支持跨域访问`
-    }
-    else if (errorMsg.includes(`401`)) {
-      errorMessage = `API密钥验证失败，请检查配置`
-    }
-    else if (errorMsg.includes(`429`)) {
-      errorMessage = `API调用频率超限，请稍后重试`
-    }
-    else if (errorMsg.includes(`403`)) {
-      errorMessage = `API访问被拒绝，请检查权限`
-    }
-    else if (errorMsg.includes(`404`)) {
-      errorMessage = `API接口地址错误，请检查配置`
-    }
-    else {
-      errorMessage = `改写失败: ${errorMsg}`
-    }
-
-    toast.error(errorMessage)
-  }
-  finally {
-    isRewriting.value = false
-  }
+  rewriteDialogRef.value?.show()
 }
 
 // 监听抓取对话框显示状态，自动聚焦输入框
@@ -1136,9 +1032,9 @@ function handleCopyWithMode(mode: string) {
             <Wrench class="mr-2 size-4" />
             {{ isFetching ? '抓取中...' : '公众号文章抓取工具' }}
           </DropdownMenuItem>
-          <DropdownMenuItem :disabled="isRewriting" class="py-3" @click="showRewriteDialog()">
+          <DropdownMenuItem class="py-3" @click="showRewriteDialog()">
             <Wand2 class="mr-2 size-4" />
-            {{ isRewriting ? '改写中...' : '文案改写工具' }}
+            全文改写工具
           </DropdownMenuItem>
           <DropdownMenuItem class="py-3" @click="showIndustryInfoDialog()">
             <Newspaper class="mr-2 size-4" />
@@ -1480,7 +1376,7 @@ function handleCopyWithMode(mode: string) {
     >
       <!-- 标题图标 -->
       <div class="mb-4 flex items-center justify-center">
-        <div class="from-blue-500 to-purple-600 bg-gradient-to-r h-12 w-12 flex items-center justify-center rounded-full">
+        <div class="bg-gradient-to-r from-blue-500 to-purple-600 h-12 w-12 flex items-center justify-center rounded-full">
           <Sparkles class="h-6 w-6 text-white" />
         </div>
       </div>
@@ -1658,74 +1554,7 @@ function handleCopyWithMode(mode: string) {
   </div>
 
   <!-- 一键改写对话框 -->
-  <div
-    v-if="rewriteDialogVisible"
-    class="backdrop-blur-sm fixed inset-0 z-50 flex items-center justify-center bg-black/50"
-    @click="rewriteDialogVisible = false"
-  >
-    <div
-      class="mx-4 max-w-lg w-[90vw] scale-100 transform rounded-2xl bg-white p-6 shadow-2xl transition-all duration-300 dark:bg-gray-800"
-      @click.stop
-    >
-      <!-- 标题图标 -->
-      <div class="mb-4 flex items-center justify-center">
-        <div class="bg-gradient-to-r from-purple-500 to-pink-600 h-12 w-12 flex items-center justify-center rounded-full">
-          <Wand2 class="h-6 w-6 text-white" />
-        </div>
-      </div>
-
-      <!-- 标题 -->
-      <h3 class="mb-2 text-center text-xl text-gray-900 font-bold dark:text-gray-100">
-        AI 智能改写
-      </h3>
-
-      <!-- 描述 -->
-      <p class="mb-4 text-center text-sm text-gray-600 dark:text-gray-400">
-        输入改写要求，AI 将根据要求改写当前文档内容
-      </p>
-
-      <!-- 输入框 -->
-      <div class="mb-4">
-        <label class="mb-2 block text-sm text-gray-700 font-medium dark:text-gray-300">
-          改写要求
-        </label>
-        <textarea
-          v-model="rewriteRequirement"
-          placeholder="例如：将这篇文章改写得更专业、更简洁，适合技术博客发布..."
-          rows="4"
-          class="dark:placeholder-gray-400 w-full border border-gray-300 rounded-lg px-4 py-2.5 text-gray-900 transition-colors dark:border-gray-600 focus:border-purple-500 dark:bg-gray-700 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-purple-500"
-        />
-      </div>
-
-      <!-- 提示信息 -->
-      <div class="mb-6 rounded-lg bg-purple-50 p-3 dark:bg-purple-900/20">
-        <p class="text-sm text-purple-800 dark:text-purple-300">
-          <span class="font-medium">💡 提示：</span>改写后的内容将追加到原文后面，不会覆盖原文
-        </p>
-      </div>
-
-      <!-- 按钮组 -->
-      <div class="flex justify-end gap-3">
-        <Button
-          variant="outline"
-          class="flex-1"
-          :disabled="isRewriting"
-          @click="rewriteDialogVisible = false"
-        >
-          取消
-        </Button>
-        <Button
-          class="bg-gradient-to-r from-purple-500 to-pink-600 hover:from-purple-600 hover:to-pink-700 flex-1 border-0 text-white"
-          :disabled="isRewriting || !rewriteRequirement.trim()"
-          @click="rewriteContent()"
-        >
-          <Wand2 v-if="!isRewriting" class="mr-1 h-4 w-4" />
-          <div v-if="isRewriting" class="animate-spin mr-1 h-4 w-4 border-2 border-white border-t-transparent rounded-full" />
-          {{ isRewriting ? '改写中...' : '开始改写' }}
-        </Button>
-      </div>
-    </div>
-  </div>
+  <RewriteDialog ref="rewriteDialogRef" v-model:visible="rewriteDialogVisible" />
 
   <!-- 行业信息推送对话框 -->
   <div
