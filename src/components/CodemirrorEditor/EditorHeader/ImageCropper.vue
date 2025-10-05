@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { ImagePlus } from 'lucide-vue-next'
-import { Button } from '@/components/ui/button'
 
 const props = defineProps<{
   imageUrl: string
@@ -404,18 +403,15 @@ function getThumbnailStyle(ratio: `2.35:1` | `1:1`) {
           1:1
         </div>
       </div>
-    </div>
 
-    <!-- 更换封面按钮 -->
-    <Button
-      v-if="imageUrl"
-      variant="outline"
-      class="w-full"
-      @click="handleSelectImage"
-    >
-      <ImagePlus class="mr-2 size-4" />
-      更换封面图片
-    </Button>
+      <!-- 更换封面链接 -->
+      <span
+        class="cursor-pointer text-xs text-gray-500 underline transition-colors dark:text-gray-400 hover:text-green-600 dark:hover:text-green-500"
+        @click="handleSelectImage"
+      >
+        更换封面
+      </span>
+    </div>
 
     <!-- 占位框 -->
     <div
@@ -426,7 +422,7 @@ function getThumbnailStyle(ratio: `2.35:1` | `1:1`) {
     >
       <ImagePlus class="mb-2 size-12 text-gray-400 dark:text-gray-500" />
       <p class="text-sm text-gray-500 dark:text-gray-400">
-        点击选择封面图片
+        点击选择封面
       </p>
       <p class="text-xs text-gray-400 dark:text-gray-500">
         建议比例 2.35:1 (如: 900x383 像素)

@@ -14,7 +14,6 @@ import {
   Link,
   List,
   ListOrdered,
-  MessageCircle,
   MinusSquare,
   Newspaper,
   Pencil,
@@ -34,7 +33,7 @@ import { ctrlKey, themeOptions } from '@/config'
 import { useDisplayStore, useStore } from '@/stores'
 import useAIConfigStore from '@/stores/AIConfig'
 import { addPrefix, processClipboardContent } from '@/utils'
-import ImageCropper from './ImageCropper.vue'
+import PublishDialog from './PublishDialog.vue'
 
 const emit = defineEmits([`startCopy`, `endCopy`])
 
@@ -507,11 +506,6 @@ const publishForm = ref({
   pic_crop_1_1: ``,
 })
 
-// 点击选择封面图片
-function selectCoverImage() {
-  coverImageInput.value?.click()
-}
-
 // 更新裁剪参数
 function updateCropParameters(crop235: string, crop1: string) {
   if (crop235) {
@@ -520,6 +514,11 @@ function updateCropParameters(crop235: string, crop1: string) {
   if (crop1) {
     publishForm.value.pic_crop_1_1 = crop1
   }
+}
+
+// 点击选择封面图片
+function selectCoverImage() {
+  coverImageInput.value?.click()
 }
 
 // 处理图片上传
@@ -1133,10 +1132,6 @@ function handleCopyWithMode(mode: string) {
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="start" class="py-2">
-          <DropdownMenuItem :disabled="isBeautifying" class="py-3" @click="showBeautifyConfirm()">
-            <Sparkles class="mr-2 size-4" />
-            {{ isBeautifying ? '美化中...' : '一键格式美化' }}
-          </DropdownMenuItem>
           <DropdownMenuItem :disabled="isFetching" class="py-3" @click="showFetchDialog()">
             <Wrench class="mr-2 size-4" />
             {{ isFetching ? '抓取中...' : '公众号文章抓取工具' }}
@@ -1156,6 +1151,10 @@ function handleCopyWithMode(mode: string) {
           <DropdownMenuItem class="py-3" @click="showKnowledgeBaseDialog()">
             <BookOpen class="mr-2 size-4" />
             个人AI知识库
+          </DropdownMenuItem>
+          <DropdownMenuItem :disabled="isBeautifying" class="py-3" @click="showBeautifyConfirm()">
+            <Sparkles class="mr-2 size-4" />
+            {{ isBeautifying ? '美化中...' : '一键格式美化' }}
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
@@ -1221,11 +1220,11 @@ function handleCopyWithMode(mode: string) {
             variant="outline"
             size="sm"
             class="flex-shrink-0 border-blue-200 bg-blue-50 dark:border-blue-800 dark:bg-blue-950 hover:bg-blue-100 dark:hover:bg-blue-900"
-            title="简历预设模块"
+            title="预设模块"
             @click="isOpenPresetPanel = !isOpenPresetPanel"
           >
             <LayoutList class="mr-1 size-4" />
-            简历预设模块
+            预设模块
           </Button>
           <!-- 标题1 -->
           <Button
@@ -1461,7 +1460,8 @@ function handleCopyWithMode(mode: string) {
             title="清空内容"
             @click="handleClearContent"
           >
-            <Trash2 class="size-4" />
+            <Trash2 class="mr-1 size-4" />
+            清空
           </Button>
         </div>
       </div>
@@ -1906,123 +1906,24 @@ function handleCopyWithMode(mode: string) {
     </div>
   </div>
 
-  <!-- 发布到公众号对话框 -->
-  <div
-    v-if="publishDialogVisible"
-    class="backdrop-blur-sm fixed inset-0 z-[110] flex items-center justify-center overflow-y-auto bg-black/50 p-4"
-    @click="publishDialogVisible = false"
+  <!-- 隐藏的文件选择输入框 -->
+  <input
+    ref="coverImageInput"
+    type="file"
+    accept="image/*"
+    class="hidden"
+    @change="handleCoverImageChange"
   >
-    <div
-      class="my-8 max-w-2xl w-full scale-100 transform rounded-2xl bg-white shadow-2xl transition-all duration-300 dark:bg-gray-800"
-      @click.stop
-    >
-      <!-- 顶部固定标题区域 -->
-      <div class="px-6 pt-6">
-        <!-- 标题 -->
-        <h3 class="mb-4 text-center text-xl text-gray-900 font-bold dark:text-gray-100">
-          发布到公众号
-        </h3>
-      </div>
 
-      <!-- 可滚动表单区域 -->
-      <div class="max-h-[calc(90vh-240px)] overflow-y-auto px-6 py-4">
-        <!-- 表单 -->
-        <div class="space-y-4">
-          <!-- 封面图片 -->
-          <div>
-            <label class="mb-2 block text-sm text-gray-700 font-medium dark:text-gray-300">
-              封面图片
-            </label>
-
-            <!-- 隐藏的文件选择输入框 -->
-            <input
-              ref="coverImageInput"
-              type="file"
-              accept="image/*"
-              class="hidden"
-              @change="handleCoverImageChange"
-            >
-
-            <!-- 图片裁剪组件 -->
-            <ImageCropper
-              :image-url="publishForm.imageUrl"
-              @select-image="selectCoverImage"
-              @update-crop="updateCropParameters"
-            />
-          </div>
-
-          <!-- 标题 -->
-          <div>
-            <label class="mb-2 block text-sm text-gray-700 font-medium dark:text-gray-300">
-              文章标题 <span class="text-red-500">*</span>
-            </label>
-            <input
-              v-model="publishForm.title"
-              type="text"
-              placeholder="请输入文章标题"
-              class="dark:placeholder-gray-400 w-full border border-gray-300 rounded-lg px-4 py-2.5 text-gray-900 transition-colors dark:border-gray-600 focus:border-green-500 dark:bg-gray-700 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-green-500"
-            >
-          </div>
-
-          <!-- 作者 -->
-          <div>
-            <label class="mb-2 block text-sm text-gray-700 font-medium dark:text-gray-300">
-              作者
-            </label>
-            <input
-              v-model="publishForm.author"
-              type="text"
-              placeholder="请输入作者名称"
-              class="dark:placeholder-gray-400 w-full border border-gray-300 rounded-lg px-4 py-2.5 text-gray-900 transition-colors dark:border-gray-600 focus:border-green-500 dark:bg-gray-700 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-green-500"
-            >
-          </div>
-
-          <!-- 摘要 -->
-          <div>
-            <label class="mb-2 block text-sm text-gray-700 font-medium dark:text-gray-300">
-              文章摘要
-            </label>
-            <textarea
-              v-model="publishForm.digest"
-              rows="3"
-              placeholder="请输入文章摘要（选填）"
-              class="dark:placeholder-gray-400 w-full border border-gray-300 rounded-lg px-4 py-2.5 text-gray-900 transition-colors dark:border-gray-600 focus:border-green-500 dark:bg-gray-700 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-green-500"
-            />
-          </div>
-
-          <!-- 提示信息 -->
-          <div class="rounded-lg bg-green-50 p-3 dark:bg-green-900/20">
-            <p class="text-sm text-green-800 dark:text-green-300">
-              <span class="font-medium">💡 提示：</span>系统已自动从文章中提取标题、封面和摘要，您可以根据需要修改
-            </p>
-          </div>
-        </div>
-      </div>
-
-      <!-- 底部固定按钮区域 -->
-      <div class="border-t border-gray-200 px-6 py-4 dark:border-gray-700">
-        <div class="flex justify-end gap-3">
-          <Button
-            variant="outline"
-            class="flex-1"
-            :disabled="isPublishing"
-            @click="publishDialogVisible = false"
-          >
-            取消
-          </Button>
-          <Button
-            class="bg-gradient-to-r from-green-500 to-blue-600 hover:from-green-600 hover:to-blue-700 flex-1 border-0 text-white"
-            :disabled="isPublishing || !publishForm.title.trim()"
-            @click="publishToWechat()"
-          >
-            <MessageCircle v-if="!isPublishing" class="mr-1 h-4 w-4" />
-            <div v-if="isPublishing" class="animate-spin mr-1 h-4 w-4 border-2 border-white border-t-transparent rounded-full" />
-            {{ isPublishing ? '发布中...' : '确认发布' }}
-          </Button>
-        </div>
-      </div>
-    </div>
-  </div>
+  <!-- 发布到公众号对话框 -->
+  <PublishDialog
+    v-model:visible="publishDialogVisible"
+    :is-publishing="isPublishing"
+    :publish-form="publishForm"
+    @publish="publishToWechat"
+    @select-image="selectCoverImage"
+    @update-crop="updateCropParameters"
+  />
 </template>
 
 <style lang="less" scoped>

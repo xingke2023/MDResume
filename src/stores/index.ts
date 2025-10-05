@@ -534,6 +534,12 @@ export const useStore = defineStore(`store`, () => {
       ),
     })
     theme.value = newTheme
+
+    // 手机端切换主题时，如果是编辑状态，切换到预览状态
+    if (isMobile.value) {
+      // 触发切换到预览状态的事件
+      window.dispatchEvent(new CustomEvent(`theme-changed-mobile`))
+    }
   })
 
   const fontChanged = withAfterRefresh((fonts) => {

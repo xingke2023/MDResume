@@ -60,7 +60,26 @@ function endCopy() {
 // 切换编辑/预览视图（仅限移动端）
 function toggleView() {
   showEditor.value = !showEditor.value
+
+  // 如果切换到编辑模式，且格式工具栏未展开，则自动展开
+  if (showEditor.value && !isShowMobileToolbar.value) {
+    isShowMobileToolbar.value = true
+  }
 }
+
+// 监听主题切换事件（手机端）
+onMounted(() => {
+  const handleThemeChange = () => {
+    if (store.isMobile && showEditor.value) {
+      showEditor.value = false
+    }
+  }
+  window.addEventListener(`theme-changed-mobile`, handleThemeChange)
+
+  onUnmounted(() => {
+    window.removeEventListener(`theme-changed-mobile`, handleThemeChange)
+  })
+})
 
 // 动态计算 header 高度，确保不遮蔽编辑区
 // 如果初始时工具栏是展开的，使用更大的初始值

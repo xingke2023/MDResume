@@ -41,7 +41,7 @@ function publishToZhihu() {
     <MenubarContent align="start" class="py-2">
       <MenubarItem class="py-3" @click="onShowPublishDialog()">
         <MessageCircle class="mr-2 size-4" />
-        发布到公众号草稿箱
+        发布到公众号(草稿箱)
       </MenubarItem>
       <MenubarItem class="py-3" @click="publishToXiaohongshu()">
         <Share2 class="mr-2 size-4" />
