@@ -307,6 +307,7 @@ async function getMpToken(appID: string, appsecret: string, proxyOrigin: string)
   if (data) {
     const token = JSON.parse(data)
     if (token.expire && token.expire > new Date().getTime()) {
+      console.log(`使用缓存的 access_token`)
       return token.access_token
     }
   }
@@ -322,31 +323,37 @@ async function getMpToken(appID: string, appsecret: string, proxyOrigin: string)
   if (proxyOrigin) {
     url = `${proxyOrigin}/cgi-bin/stable_token`
   }
+  console.log(`获取 access_token，URL:`, url)
   const res = await fetch<any, MpResponse>(url, requestOptions)
+  console.log(`access_token 响应:`, res)
+
+  if (res.errcode && res.errcode !== 0) {
+    throw new Error(`获取 access_token 失败: ${res.errmsg || `错误码 ${res.errcode}`}`)
+  }
+
   if (res.access_token) {
     const tokenInfo = {
       ...res,
       expire: new Date().getTime() + res.expires_in * 1000,
     }
     localStorage.setItem(`mpToken:${appID}`, JSON.stringify(tokenInfo))
+    console.log(`access_token 获取成功`)
     return res.access_token
   }
-  return ``
+  throw new Error(`获取 access_token 失败: 未返回有效的 token`)
 }
 // Cloudflare Pages 环境
 const isCfPage = import.meta.env.CF_PAGES === `1`
 async function mpFileUpload(file: File) {
-  let { appID, appsecret, proxyOrigin } = JSON.parse(
-    localStorage.getItem(`mpConfig`)!,
-  )
+  const config = JSON.parse(localStorage.getItem(`mpConfig`)!)
+  const { appID, appsecret } = config
+  let proxyOrigin = config.proxyOrigin || ``
+
   // 未填写代理域名且是cfpages环境
   if (!proxyOrigin && isCfPage) {
     proxyOrigin = window.location.origin
   }
   const access_token = await getMpToken(appID, appsecret, proxyOrigin)
-  if (!access_token) {
-    throw new Error(`获取 access_token 失败`)
-  }
 
   const formdata = new FormData()
   formdata.append(`media`, file, file.name)
@@ -366,7 +373,13 @@ async function mpFileUpload(file: File) {
     url = url.replace(`https://api.weixin.qq.com`, proxyOrigin)
   }
 
-  const res = await fetch<any, { url: string }>(url, requestOptions)
+  console.log(`上传图片到微信，URL:`, url)
+  const res = await fetch<any, { url: string, errcode?: number, errmsg?: string }>(url, requestOptions)
+  console.log(`上传响应:`, res)
+
+  if (res.errcode && res.errcode !== 0) {
+    throw new Error(`上传失败: ${res.errmsg || `错误码 ${res.errcode}`}`)
+  }
 
   if (!res.url) {
     throw new Error(`上传失败，未获取到URL`)

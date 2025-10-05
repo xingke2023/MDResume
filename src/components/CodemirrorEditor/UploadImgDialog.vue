@@ -156,40 +156,14 @@ function telegramSubmit(values: any) {
 }
 
 // 公众号
-// 当前是否为网页（http/https 协议）
-const isWebsite = window.location.protocol.startsWith(`http`)
-
-// Cloudflare Pages 环境
-const isCfPage = import.meta.env.CF_PAGES === `1`
-
-// 插件模式运行（如 chrome-extension://）
-const isPluginMode = !isWebsite
-
-// 是否需要填写 proxyOrigin（只在 非插件 且 非CF页面 时需要）
-const isProxyRequired = computed(() => {
-  return !isPluginMode && !isCfPage
-})
-
-const mpPlaceholder = computed(() => {
-  if (isProxyRequired.value) {
-    return `如：http://proxy.example.com`
-  }
-  return `可不填`
-})
-const mpSchema = computed(() =>
-  toTypedSchema(yup.object({
-    proxyOrigin: isProxyRequired.value
-      ? yup.string().required(`代理域名不能为空`)
-      : yup.string().optional(),
-    appID: yup.string().required(`AppID 不能为空`),
-    appsecret: yup.string().required(`AppSecret 不能为空`),
-  })),
-)
+const mpSchema = toTypedSchema(yup.object({
+  appID: yup.string().required(`AppID 不能为空`),
+  appsecret: yup.string().required(`AppSecret 不能为空`),
+}))
 
 const mpConfig = ref(localStorage.getItem(`mpConfig`)
   ? JSON.parse(localStorage.getItem(`mpConfig`)!)
   : {
-      proxyOrigin: ``,
       appID: ``,
       appsecret: ``,
     })
@@ -848,21 +822,6 @@ function onDrop(e: DragEvent) {
 
         <TabsContent value="mp" class="w-full flex flex-col items-start">
           <Form :validation-schema="mpSchema" :initial-values="mpConfig" class="w-full text-left" @submit="mpSubmit">
-            <!-- 只有在需要代理时才显示 proxyOrigin 字段 -->
-            <Field
-              v-if="isProxyRequired"
-              v-slot="{ field, errorMessage }"
-              name="proxyOrigin"
-            >
-              <FormItem label="代理域名" required :error="errorMessage">
-                <Input
-                  v-bind="field"
-                  v-model="field.value"
-                  :placeholder="mpPlaceholder"
-                />
-              </FormItem>
-            </Field>
-
             <Field v-slot="{ field, errorMessage }" name="appID">
               <FormItem label="appID" required :error="errorMessage">
                 <Input
