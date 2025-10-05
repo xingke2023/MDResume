@@ -608,7 +608,7 @@ onUnmounted(() => {
       <div v-if="store.isMobile && !store.isOpenPostSlider" class="fixed right-[1px] top-[40px] z-50 flex flex-col gap-2">
         <!-- 切换编辑/预览按钮 -->
         <button
-          class="backdrop-blur-sm h-12 w-12 flex items-center justify-center rounded-full bg-orange-500/60 text-xs text-white font-medium shadow-lg transition active:scale-95 hover:scale-105 dark:bg-orange-600/60 hover:bg-orange-500/80 dark:hover:bg-orange-600/80"
+          class="backdrop-blur-sm h-12 w-12 flex items-center justify-center rounded-full bg-green-600 text-xs text-white font-medium shadow-lg transition active:scale-95 hover:scale-105 dark:bg-green-700 hover:bg-green-700 dark:hover:bg-green-800"
           aria-label="切换编辑/预览"
           @click="toggleView"
         >

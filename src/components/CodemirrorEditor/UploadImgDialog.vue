@@ -265,60 +265,30 @@ function cloudinarySubmit(formValues: any) {
 
 const options = [
   {
+    value: `formCustom`,
+    label: `公众号`,
+  },
+  {
     value: `default`,
-    label: `默认`,
-  },
-  {
-    value: `github`,
-    label: `GitHub`,
-  },
-  {
-    value: `aliOSS`,
-    label: `阿里云`,
-  },
-  {
-    value: `txCOS`,
-    label: `腾讯云`,
-  },
-  {
-    value: `qiniu`,
-    label: `七牛云`,
-  },
-  {
-    value: `minio`,
-    label: `MinIO`,
+    label: `其他平台`,
   },
   {
     value: `mp`,
-    label: `公众号图床`,
-  },
-  {
-    value: `r2`,
-    label: `Cloudflare R2`,
-  },
-  {
-    value: `upyun`,
-    label: `又拍云`,
-  },
-  { value: `telegram`, label: `Telegram` },
-  {
-    value: `cloudinary`,
-    label: `Cloudinary`,
-  },
-
-  {
-    value: `formCustom`,
-    label: `自定义代码`,
+    label: `公众号配置`,
   },
 ]
 
-const imgHost = ref(`default`)
+const imgHost = ref(`formCustom`)
 
 const activeName = ref(`upload`)
 
 onBeforeMount(() => {
   if (localStorage.getItem(`imgHost`)) {
     imgHost.value = localStorage.getItem(`imgHost`)!
+  }
+  else {
+    // 默认使用自定义代码
+    localStorage.setItem(`imgHost`, `formCustom`)
   }
 })
 
@@ -336,13 +306,17 @@ function beforeImageUpload(file: File) {
   }
   // check image host
   let imgHost = localStorage.getItem(`imgHost`)
-  imgHost = imgHost || `default`
+  imgHost = imgHost || `formCustom`
   localStorage.setItem(`imgHost`, imgHost)
 
   const config = localStorage.getItem(`${imgHost}Config`)
-  const isValidHost = imgHost === `default` || config
+  const isValidHost = imgHost === `default` || imgHost === `formCustom` || config
   if (!isValidHost) {
-    toast.error(`请先配置 ${imgHost} 图床参数`)
+    const labels: Record<string, string> = {
+      mp: `公众号`,
+      formCustom: `自定义代码`,
+    }
+    toast.error(`请先配置 ${labels[imgHost] || imgHost} 参数`)
     return false
   }
   return true
@@ -377,14 +351,14 @@ function onDrop(e: DragEvent) {
   <Dialog v-model:open="displayStore.isShowUploadImgDialog">
     <DialogContent class="max-h-[90vh] max-w-[95vw] overflow-y-auto sm:max-w-max" @pointer-down-outside="ev => ev.preventDefault()">
       <DialogHeader>
-        <DialogTitle>本地上传</DialogTitle>
+        <DialogTitle>本地图片上传</DialogTitle>
       </DialogHeader>
       <Tabs v-model="activeName" class="w-full items-start sm:w-max">
         <TabsList class="h-auto w-full flex-wrap justify-start sm:flex-nowrap">
           <TabsTrigger value="upload" class="flex-shrink-0">
             选择上传
           </TabsTrigger>
-          <TabsTrigger v-for="item in options.filter(item => item.value !== 'default')" :key="item.value" :value="item.value" class="flex-shrink-0">
+          <TabsTrigger v-for="item in options.filter(item => item.value !== 'default' && item.value !== 'formCustom')" :key="item.value" :value="item.value" class="flex-shrink-0">
             {{ item.label }}
           </TabsTrigger>
         </TabsList>
@@ -400,7 +374,7 @@ function onDrop(e: DragEvent) {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem
-                  v-for="item in options"
+                  v-for="item in options.filter(item => item.value !== 'mp')"
                   :key="item.value"
                   :label="item.label"
                   :value="item.value"

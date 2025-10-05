@@ -1,68 +1,38 @@
 <script setup lang='ts'>
-import CodeMirror from 'codemirror'
-import { useStore } from '@/stores'
 import { removeLeft } from '@/utils'
 
-const store = useStore()
-
-const code = useLocalStorage(`formCustomConfig`, removeLeft(`
-  const {file, util, okCb, errCb} = CUSTOM_ARG
+// 固定的自定义上传代码
+const fixedCode = removeLeft(`
+  const { file, util, okCb, errCb } = CUSTOM_ARG
   const param = new FormData()
-  param.append('file', file)
-  util.axios.post('${window.location.origin}/upload', param, {
-    headers: { 'Content-Type': 'multipart/form-data' }
+  param.append('media', file)
+  util.axios.post('https://wechat.easy-write.com/api/media/upload-image', param, {
+    headers: {
+      'Content-Type': 'multipart/form-data',
+      'X-API-Key': '0dbe66d87befa7a9d5d7c1bdbc631a9b7dc5ce88be9a20e41c26790060802647'
+    }
   }).then(res => {
-    okCb(res.url)
+    okCb(res.data.url)
   }).catch(err => {
     errCb(err)
   })
-`).trim())
+`).trim()
 
-const formCustomTextarea = useTemplateRef<HTMLTextAreaElement>(`formCustomTextarea`)
-
-const editor = ref< CodeMirror.EditorFromTextArea | null>(null)
-
+// 自动保存固定代码到 localStorage
 onMounted(() => {
-  editor.value = markRaw(CodeMirror.fromTextArea(formCustomTextarea.value!, {
-    mode: `javascript`,
-    theme: store.isDark ? `darcula` : `xq-light`,
-    lineNumbers: true,
-  }))
-
-  // 嵌套使用 nextTick 才能确保生效，具体原因未知
-  nextTick(() => {
-    nextTick(() => {
-      editor.value?.setValue(code.value)
-    })
-  })
+  localStorage.setItem(`formCustomConfig`, fixedCode)
 })
-
-function formCustomSave() {
-  const str = editor.value!.getValue()
-  localStorage.setItem(`formCustomConfig`, str)
-  toast.success(`保存成功`)
-}
 </script>
 
 <template>
   <div class="space-y-4">
-    <div class="h-60 border">
-      <textarea
-        ref="formCustomTextarea"
-        placeholder="Your custom code here."
-      />
+    <div class="bg-muted/50 border rounded-lg p-4">
+      <p class="text-muted-foreground text-sm">
+        自定义上传已配置为使用微信图床服务
+      </p>
+      <p class="text-muted-foreground mt-2 text-xs">
+        图片将自动上传到微信图床，无需额外配置
+      </p>
     </div>
-    <Button
-      variant="link"
-      class="p-0"
-      as="a"
-      href="https://github.com/doocs/md/blob/main/docs/custom-upload.md"
-      target="_blank"
-    >
-      参数详情？
-    </Button>
-    <Button class="block" @click="formCustomSave">
-      保存配置
-    </Button>
   </div>
 </template>
