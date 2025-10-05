@@ -483,14 +483,73 @@ function nextImage() {
   }
 }
 
+/* ---------- 上传图片到微信图床 ---------- */
+async function uploadToWechat(imageUrl: string): Promise<string> {
+  try {
+    // 将图片 URL 转换为 Blob
+    const response = await fetch(imageUrl)
+    const blob = await response.blob()
+
+    // 检查文件大小（5MB限制）
+    const maxSize = 5 * 1024 * 1024
+    if (blob.size > maxSize) {
+      const sizeMB = (blob.size / 1024 / 1024).toFixed(2)
+      throw new Error(`图片大小为 ${sizeMB}MB，超过限制 5MB，请使用更小的尺寸`)
+    }
+
+    // 创建 File 对象
+    const file = new File([blob], `ai-generated.png`, { type: `image/png` })
+
+    // 上传到微信图床
+    const formData = new FormData()
+    formData.append(`media`, file)
+
+    const uploadResponse = await fetch(`https://wechat.easy-write.com/api/media/upload-image`, {
+      method: `POST`,
+      headers: {
+        'X-API-Key': `0dbe66d87befa7a9d5d7c1bdbc631a9b7dc5ce88be9a20e41c26790060802647`,
+      },
+      body: formData,
+    })
+
+    if (!uploadResponse.ok) {
+      if (uploadResponse.status === 413) {
+        throw new Error(`图片超过服务器限制（5MB），请使用更小的尺寸`)
+      }
+      throw new Error(`上传失败: ${uploadResponse.status}`)
+    }
+
+    const data = await uploadResponse.json()
+
+    if (!data.data || !data.data.url) {
+      throw new Error(`上传成功但未返回图片URL`)
+    }
+
+    return data.data.url
+  }
+  catch (error) {
+    console.error(`上传到微信图床失败:`, error)
+    throw error
+  }
+}
+
 /* ---------- 插入图像到光标位置 ---------- */
-function insertImageToCursor(imageUrl: string) {
+async function insertImageToCursor(imageUrl: string) {
   if (!editor.value) {
     console.warn(`编辑器未初始化`)
+    toast.error(`编辑器未初始化`)
     return
   }
 
   try {
+    // 显示上传中提示
+    toast.loading(`正在处理图片插入...`, { id: `upload-ai-image` })
+
+    // 上传到微信图床
+    const wechatImageUrl = await uploadToWechat(imageUrl)
+
+    toast.dismiss(`upload-ai-image`)
+
     // 获取当前图片对应的prompt
     const imagePrompt = imagePrompts.value[currentImageIndex.value] || ``
     console.log(`🔗 插入图片，使用关联的prompt:`, imagePrompt)
@@ -500,8 +559,8 @@ function insertImageToCursor(imageUrl: string) {
       ? imagePrompt.trim().substring(0, 30).replace(/\n/g, ` `)
       : `AI生成的图像`
 
-    // 生成Markdown图片语法
-    const markdownImage = `![${altText}](${imageUrl})`
+    // 使用微信图床的URL生成Markdown图片语法
+    const markdownImage = `![${altText}](${wechatImageUrl})`
 
     // 获取当前光标位置并插入
     const cursor = editor.value.getCursor()
@@ -517,9 +576,13 @@ function insertImageToCursor(imageUrl: string) {
     // 关闭弹窗
     dialogVisible.value = false
 
-    console.log(`✅ 图像已成功插入到光标位置`)
+    toast.success(`图片已上传并插入`)
+    console.log(`✅ 图像已成功上传到微信图床并插入到光标位置`)
   }
   catch (error) {
+    toast.dismiss(`upload-ai-image`)
+    const errorMsg = (error as Error).message || `插入图片失败`
+    toast.error(errorMsg)
     console.error(`❌ 插入图像到光标位置失败:`, error)
   }
 }
@@ -720,7 +783,7 @@ function getTimeRemainingClass(index: number): string {
                 <img
                   :src="generatedImages[currentImageIndex]"
                   :alt="`生成的图像 ${currentImageIndex + 1}`"
-                  class="border-border object-contain h-auto max-h-[300px] w-full border rounded-lg shadow-lg transition-transform sm:max-h-[350px] hover:scale-105"
+                  class="object-contain border-border h-auto max-h-[300px] w-full border rounded-lg shadow-lg transition-transform sm:max-h-[350px] hover:scale-105"
                 >
                 <!-- 点击查看大图提示 -->
                 <div class="pointer-events-none absolute inset-0 flex items-center justify-center rounded-lg bg-black/0 opacity-0 transition-opacity group-hover:bg-black/10 group-hover:opacity-100">
