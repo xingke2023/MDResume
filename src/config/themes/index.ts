@@ -26,9 +26,9 @@ export const themeMap = {
 
 export const themeOptions: IConfigOption<keyof typeof themeMap>[] = [
   {
-    label: `Rainbow`,
-    value: `rainbow`,
-    desc: `彩虹风格主题`,
+    label: `优雅`,
+    value: `grace`,
+    desc: ``,
   },
   {
     label: `经典`,
@@ -36,9 +36,14 @@ export const themeOptions: IConfigOption<keyof typeof themeMap>[] = [
     desc: ``,
   },
   {
-    label: `优雅`,
-    value: `grace`,
-    desc: `@brzhang`,
+    label: `Indigo`,
+    value: `mwebIndigo`,
+    desc: `蓝紫配色网格背景`,
+  },
+  {
+    label: `Rainbow`,
+    value: `rainbow`,
+    desc: `彩虹风格主题`,
   },
   {
     label: `简洁`,
@@ -49,11 +54,6 @@ export const themeOptions: IConfigOption<keyof typeof themeMap>[] = [
     label: `MWeb 简洁`,
     value: `mwebClean`,
     desc: `简洁阅读风格`,
-  },
-  {
-    label: `MWeb Indigo`,
-    value: `mwebIndigo`,
-    desc: `蓝紫配色网格背景`,
   },
   {
     label: `Notion Like`,
