@@ -864,7 +864,7 @@ async function fetchArticle() {
     // 开发环境使用代理，生产环境直接访问
     const apiEndpoint = import.meta.env.DEV
       ? `/api/extract`
-      : `https://wechat.easy-write.com/api/extract`
+      : `https://wechat.easy-write.com/extract/api/extract`
 
     const response = await fetch(apiEndpoint, {
       method: `POST`,

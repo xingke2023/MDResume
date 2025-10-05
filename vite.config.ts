@@ -18,7 +18,7 @@ export default defineConfig({
     allowedHosts: [`www.easy-write.com`],
     proxy: {
       '/api/extract': {
-        target: `https://wechat.easy-write.com`,
+        target: `https://wechat.easy-write.com/extract`,
         changeOrigin: true,
         secure: false,
       },
