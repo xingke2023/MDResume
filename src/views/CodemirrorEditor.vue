@@ -241,9 +241,24 @@ function uploaded(imageUrl: string) {
     return
   }
   toggleShowUploadImgDialog(false)
+
+  // 询问是否设置宽度（百分比）
+  // eslint-disable-next-line no-alert
+  const widthInput = prompt(`设置图片宽度\n输入百分比数字（1-100）：`, `100%`)
+
   // 上传成功，获取光标
   const cursor = editor.value!.getCursor()
-  const markdownImage = `![](${imageUrl})`
+  let markdownImage = `![](${imageUrl})`
+
+  // 如果用户输入了宽度，使用扩展语法
+  if (widthInput && widthInput.trim()) {
+    // 移除百分号并解析数字
+    const widthNum = Number.parseInt(widthInput.trim().replace(`%`, ``))
+    if (!Number.isNaN(widthNum) && widthNum > 0 && widthNum <= 100) {
+      markdownImage = `![](${imageUrl}{width=${widthNum}%})`
+    }
+  }
+
   // 将 Markdown 形式的 URL 插入编辑框光标所在位置
   toRaw(store.editor!).replaceSelection(`\n${markdownImage}\n`, cursor as any)
   toast.success(`图片上传成功`)

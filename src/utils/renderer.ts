@@ -317,7 +317,16 @@ export function initRenderer(opts: IOpts): RendererAPI {
     image({ href, title, text }: Tokens.Image): string {
       const subText = styledContent(`figcaption`, transform(opts.legend!, text, title))
       const figureStyles = styles(`figure`)
-      const imgStyles = styles(`image`)
+      let imgStyles = styles(`image`)
+
+      // 支持 {width=xxx} 语法
+      const widthMatch = href.match(/^(.+?)\{width=(\d+%?)\}$/)
+      if (widthMatch) {
+        href = widthMatch[1]
+        const width = widthMatch[2]
+        imgStyles = imgStyles.replace(/style="([^"]*)"/, `style="$1;width:${width}"`)
+      }
+
       return `<figure ${figureStyles}><img ${imgStyles} src="${href}" title="${title}" alt="${text}"/>${subText}</figure>`
     },
 

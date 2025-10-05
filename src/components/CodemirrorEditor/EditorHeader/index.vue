@@ -14,6 +14,7 @@ import {
   Link,
   List,
   ListOrdered,
+  MessageCircle,
   MinusSquare,
   Newspaper,
   Pencil,
@@ -33,6 +34,7 @@ import { ctrlKey, themeOptions } from '@/config'
 import { useDisplayStore, useStore } from '@/stores'
 import useAIConfigStore from '@/stores/AIConfig'
 import { addPrefix, processClipboardContent } from '@/utils'
+import ImageCropper from './ImageCropper.vue'
 
 const emit = defineEmits([`startCopy`, `endCopy`])
 
@@ -488,6 +490,224 @@ const knowledgeBaseDialogVisible = ref(false)
 // 显示个人知识库对话框
 function showKnowledgeBaseDialog() {
   knowledgeBaseDialogVisible.value = true
+}
+
+// 发布到公众号状态
+const publishDialogVisible = ref(false)
+const isPublishing = ref(false)
+const coverImageInput = ref<HTMLInputElement | null>(null)
+
+// 表单数据
+const publishForm = ref({
+  title: ``,
+  imageUrl: ``,
+  author: `佚名`,
+  digest: ``,
+  pic_crop_235_1: ``,
+  pic_crop_1_1: ``,
+})
+
+// 点击选择封面图片
+function selectCoverImage() {
+  coverImageInput.value?.click()
+}
+
+// 更新裁剪参数
+function updateCropParameters(crop235: string, crop1: string) {
+  if (crop235) {
+    publishForm.value.pic_crop_235_1 = crop235
+  }
+  if (crop1) {
+    publishForm.value.pic_crop_1_1 = crop1
+  }
+}
+
+// 处理图片上传
+async function handleCoverImageChange(event: Event) {
+  const input = event.target as HTMLInputElement
+  const file = input.files?.[0]
+
+  if (!file) {
+    return
+  }
+
+  // 验证文件类型
+  if (!file.type.startsWith(`image/`)) {
+    toast.error(`请选择图片文件`)
+    return
+  }
+
+  // 验证文件大小（限制10MB）
+  if (file.size > 10 * 1024 * 1024) {
+    toast.error(`图片大小不能超过10MB`)
+    return
+  }
+
+  try {
+    // 转换为 Base64
+    const reader = new FileReader()
+    reader.onload = (e) => {
+      const base64 = e.target?.result as string
+      publishForm.value.imageUrl = base64
+      toast.success(`封面图片已选择`)
+    }
+    reader.onerror = () => {
+      toast.error(`读取图片失败`)
+    }
+    reader.readAsDataURL(file)
+  }
+  catch (error) {
+    console.error(`上传封面图片失败:`, error)
+    toast.error(`上传封面图片失败`)
+  }
+  finally {
+    // 清空input，允许重复选择同一文件
+    input.value = ``
+  }
+}
+
+// 显示发布对话框
+function showPublishDialog() {
+  const content = editor.value?.getValue()
+  if (!content || !content.trim()) {
+    toast.error(`编辑器内容为空，无法发布`)
+    return
+  }
+
+  // 获取文章标题（从第一个标题或使用默认标题）
+  const titleMatch = content.match(/^# (.*)$/m)
+  publishForm.value.title = titleMatch ? titleMatch[1].trim() : `未命名文章`
+
+  // 生成摘要（取正文除了标题外前50个汉字加标点符号）
+  // 先移除所有标题行
+  const contentWithoutTitles = content.replace(/^#{1,6}[ \t].+$/gm, ``).trim()
+  // 移除Markdown语法标记，但保留汉字和标点符号
+  const plainText = contentWithoutTitles
+    .replace(/!\[.*?\]\(.*?\)/g, ``) // 移除图片
+    .replace(/\[([^\]]+)\]\([^)]+\)/g, `$1`) // 移除链接但保留文字
+    .replace(/`{1,3}[^`]*`{1,3}/g, ``) // 移除代码
+    .replace(/[*_~]/g, ``) // 移除格式符号
+    .replace(/^[>\-+*]\s+/gm, ``) // 移除列表和引用标记
+    .replace(/\n+/g, ``) // 移除换行
+    .trim()
+
+  // 提取前50个汉字加标点符号
+  const chineseAndPunctuation = plainText.match(/[\u4E00-\u9FA5\u3000-\u303F\uFF00-\uFFEF]/g) || []
+  publishForm.value.digest = chineseAndPunctuation.slice(0, 50).join(``)
+
+  // 提取文章中的第一张图片作为封面
+  const imageMatch = content.match(/!\[.*?\]\((https?:\/\/[^\s)]+)\)/)
+  if (imageMatch) {
+    // 去掉URL中的 {width=100%} 等参数
+    publishForm.value.imageUrl = imageMatch[1].replace(/\{[^}]*\}/g, ``).trim()
+  }
+  else {
+    publishForm.value.imageUrl = ``
+  }
+
+  publishDialogVisible.value = true
+}
+
+// 发布到公众号
+async function publishToWechat() {
+  if (isPublishing.value)
+    return
+
+  const mdContent = editor.value?.getValue()
+  if (!mdContent || !mdContent.trim()) {
+    toast.error(`编辑器内容为空，无法发布`)
+    return
+  }
+
+  // 验证必填字段
+  if (!publishForm.value.title.trim()) {
+    toast.error(`请填写文章标题`)
+    return
+  }
+
+  if (!publishForm.value.imageUrl.trim()) {
+    toast.error(`封面图片不能为空`)
+    return
+  }
+
+  isPublishing.value = true
+
+  try {
+    // API配置
+    const API_URL = `https://wechat.easy-write.com`
+    const API_KEY = `0dbe66d87befa7a9d5d7c1bdbc631a9b7dc5ce88be9a20e41c26790060802647`
+
+    // 获取处理后的HTML内容（与"复制公众号格式"相同的处理）
+    // 先处理剪贴板内容
+    processClipboardContent(primaryColor.value)
+    const clipboardDiv = document.getElementById(`output`)!
+    const htmlContent = clipboardDiv.innerHTML
+
+    // 准备数据
+    const data = {
+      title: publishForm.value.title,
+      content: htmlContent,
+      imageUrl: publishForm.value.imageUrl,
+      author: publishForm.value.author,
+      digest: publishForm.value.digest,
+      titleMode: `smart`,
+      pic_crop_235_1: publishForm.value.pic_crop_235_1,
+      pic_crop_1_1: publishForm.value.pic_crop_1_1,
+    }
+
+    // 发送请求
+    const response = await fetch(`${API_URL}/api/draft/create`, {
+      method: `POST`,
+      headers: {
+        'Content-Type': `application/json`,
+        'X-API-Key': API_KEY,
+      },
+      body: JSON.stringify(data),
+    })
+
+    if (!response.ok) {
+      // 尝试解析错误响应中的message
+      const errorText = await response.text()
+      console.error(`API错误响应 (${response.status}):`, errorText)
+
+      try {
+        const errorResult = JSON.parse(errorText)
+        throw new Error(errorResult.message || errorResult.error || `请求失败 (${response.status}): ${response.statusText}`)
+      }
+      catch {
+        // JSON解析失败，直接使用文本内容
+        throw new Error(errorText || `请求失败 (${response.status}): ${response.statusText}`)
+      }
+    }
+
+    const result = await response.json()
+
+    if (result.success) {
+      toast.success(`✅ 公众号草稿创建成功！请转到公众号助手或者登录公众号查看`, {
+        description: `公众号MediaID: ${result.data.mediaId}`,
+        duration: 10000,
+      })
+      publishDialogVisible.value = false
+    }
+    else {
+      // 打印失败响应
+      console.error(`API失败响应:`, result)
+      throw new Error(result.message || `公众号创建草稿失败`)
+    }
+  }
+  catch (error) {
+    console.error(`发布到公众号失败:`, error)
+
+    const errorMsg = error instanceof Error ? error.message : String(error)
+
+    // 直接显示API返回的错误信息，如果是特殊错误则覆盖
+    const errorMessage = errorMsg
+
+    toast.error(errorMessage)
+  }
+  finally {
+    isPublishing.value = false
+  }
 }
 
 // 显示改写对话框
@@ -965,7 +1185,7 @@ function handleCopyWithMode(mode: string) {
 
       <!-- 发布菜单 -->
       <Menubar class="menubar compact-menubar">
-        <FileDropdown :copy-mode="copyMode" :on-copy="handleCopyWithMode" />
+        <FileDropdown :copy-mode="copyMode" :on-copy="handleCopyWithMode" :on-show-publish-dialog="showPublishDialog" />
       </Menubar>
 
       <!-- 设置按钮 -->
@@ -1682,6 +1902,124 @@ function handleCopyWithMode(mode: string) {
           <BookOpen class="mr-1 h-4 w-4" />
           敬请期待
         </Button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 发布到公众号对话框 -->
+  <div
+    v-if="publishDialogVisible"
+    class="backdrop-blur-sm fixed inset-0 z-[110] flex items-center justify-center overflow-y-auto bg-black/50 p-4"
+    @click="publishDialogVisible = false"
+  >
+    <div
+      class="my-8 max-w-2xl w-full scale-100 transform rounded-2xl bg-white shadow-2xl transition-all duration-300 dark:bg-gray-800"
+      @click.stop
+    >
+      <!-- 顶部固定标题区域 -->
+      <div class="px-6 pt-6">
+        <!-- 标题 -->
+        <h3 class="mb-4 text-center text-xl text-gray-900 font-bold dark:text-gray-100">
+          发布到公众号
+        </h3>
+      </div>
+
+      <!-- 可滚动表单区域 -->
+      <div class="max-h-[calc(90vh-240px)] overflow-y-auto px-6 py-4">
+        <!-- 表单 -->
+        <div class="space-y-4">
+          <!-- 封面图片 -->
+          <div>
+            <label class="mb-2 block text-sm text-gray-700 font-medium dark:text-gray-300">
+              封面图片
+            </label>
+
+            <!-- 隐藏的文件选择输入框 -->
+            <input
+              ref="coverImageInput"
+              type="file"
+              accept="image/*"
+              class="hidden"
+              @change="handleCoverImageChange"
+            >
+
+            <!-- 图片裁剪组件 -->
+            <ImageCropper
+              :image-url="publishForm.imageUrl"
+              @select-image="selectCoverImage"
+              @update-crop="updateCropParameters"
+            />
+          </div>
+
+          <!-- 标题 -->
+          <div>
+            <label class="mb-2 block text-sm text-gray-700 font-medium dark:text-gray-300">
+              文章标题 <span class="text-red-500">*</span>
+            </label>
+            <input
+              v-model="publishForm.title"
+              type="text"
+              placeholder="请输入文章标题"
+              class="dark:placeholder-gray-400 w-full border border-gray-300 rounded-lg px-4 py-2.5 text-gray-900 transition-colors dark:border-gray-600 focus:border-green-500 dark:bg-gray-700 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-green-500"
+            >
+          </div>
+
+          <!-- 作者 -->
+          <div>
+            <label class="mb-2 block text-sm text-gray-700 font-medium dark:text-gray-300">
+              作者
+            </label>
+            <input
+              v-model="publishForm.author"
+              type="text"
+              placeholder="请输入作者名称"
+              class="dark:placeholder-gray-400 w-full border border-gray-300 rounded-lg px-4 py-2.5 text-gray-900 transition-colors dark:border-gray-600 focus:border-green-500 dark:bg-gray-700 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-green-500"
+            >
+          </div>
+
+          <!-- 摘要 -->
+          <div>
+            <label class="mb-2 block text-sm text-gray-700 font-medium dark:text-gray-300">
+              文章摘要
+            </label>
+            <textarea
+              v-model="publishForm.digest"
+              rows="3"
+              placeholder="请输入文章摘要（选填）"
+              class="dark:placeholder-gray-400 w-full border border-gray-300 rounded-lg px-4 py-2.5 text-gray-900 transition-colors dark:border-gray-600 focus:border-green-500 dark:bg-gray-700 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-green-500"
+            />
+          </div>
+
+          <!-- 提示信息 -->
+          <div class="rounded-lg bg-green-50 p-3 dark:bg-green-900/20">
+            <p class="text-sm text-green-800 dark:text-green-300">
+              <span class="font-medium">💡 提示：</span>系统已自动从文章中提取标题、封面和摘要，您可以根据需要修改
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- 底部固定按钮区域 -->
+      <div class="border-t border-gray-200 px-6 py-4 dark:border-gray-700">
+        <div class="flex justify-end gap-3">
+          <Button
+            variant="outline"
+            class="flex-1"
+            :disabled="isPublishing"
+            @click="publishDialogVisible = false"
+          >
+            取消
+          </Button>
+          <Button
+            class="bg-gradient-to-r from-green-500 to-blue-600 hover:from-green-600 hover:to-blue-700 flex-1 border-0 text-white"
+            :disabled="isPublishing || !publishForm.title.trim()"
+            @click="publishToWechat()"
+          >
+            <MessageCircle v-if="!isPublishing" class="mr-1 h-4 w-4" />
+            <div v-if="isPublishing" class="animate-spin mr-1 h-4 w-4 border-2 border-white border-t-transparent rounded-full" />
+            {{ isPublishing ? '发布中...' : '确认发布' }}
+          </Button>
+        </div>
       </div>
     </div>
   </div>

@@ -3,9 +3,10 @@ import { Code2, Copy, FileText, MessageCircle, Share2 } from 'lucide-vue-next'
 import { toast } from 'vue-sonner'
 import { useStore } from '@/stores'
 
-const { onCopy } = defineProps<{
+const { onCopy, onShowPublishDialog } = defineProps<{
   copyMode: string
   onCopy: (mode: string) => void
+  onShowPublishDialog: () => void
 }>()
 
 const store = useStore()
@@ -14,14 +15,6 @@ const {
   exportEditorContent2PDF,
   exportEditorContent2HTML,
 } = store
-
-// 发布到公众号
-function publishToWechat() {
-  toast.info(`发布到公众号功能开发中...`, {
-    description: `即将支持一键发布到微信公众号`,
-    duration: 3000,
-  })
-}
 
 // 发布到小红书
 function publishToXiaohongshu() {
@@ -46,7 +39,7 @@ function publishToZhihu() {
       发布
     </MenubarTrigger>
     <MenubarContent align="start" class="py-2">
-      <MenubarItem class="py-3" @click="publishToWechat()">
+      <MenubarItem class="py-3" @click="onShowPublishDialog()">
         <MessageCircle class="mr-2 size-4" />
         发布到公众号草稿箱
       </MenubarItem>
