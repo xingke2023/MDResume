@@ -1154,7 +1154,7 @@ function handleCopyWithMode(mode: string) {
           </DropdownMenuItem>
           <DropdownMenuItem :disabled="isBeautifying" class="py-3" @click="showBeautifyConfirm()">
             <Sparkles class="mr-2 size-4" />
-            {{ isBeautifying ? '美化中...' : '一键格式美化' }}
+            {{ isBeautifying ? '美化中...' : '一键排版' }}
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
@@ -1487,7 +1487,7 @@ function handleCopyWithMode(mode: string) {
 
       <!-- 标题 -->
       <h3 class="mb-2 text-center text-xl text-gray-900 font-bold dark:text-gray-100">
-        一键美化确认
+        一键排版
       </h3>
 
       <!-- 提示内容 -->
@@ -1496,6 +1496,7 @@ function handleCopyWithMode(mode: string) {
           ⚠️ 重要提醒：此操作将会完全替换当前编辑器内容
         </p>
         <div class="space-y-1 rounded-lg bg-gray-50 p-3 dark:bg-gray-700/50">
+          <p>• <strong>使用场景：</strong>适合对纯文字流水账进行排版</p>
           <p>• <strong>格式美化：</strong>自动调整标题层级、段落结构</p>
           <p>• <strong>内容保持：</strong>保留原文核心含义，仅优化格式</p>
           <p>• <strong>一键撤销：</strong>如不满意结果，可使用 Ctrl+Z 快速恢复</p>
@@ -1519,7 +1520,7 @@ function handleCopyWithMode(mode: string) {
           @click="beautifyMarkdown()"
         >
           <Sparkles class="mr-1 h-4 w-4" />
-          开始美化
+          开始一键排版
         </Button>
       </div>
     </div>

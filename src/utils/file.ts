@@ -582,9 +582,27 @@ async function cloudinaryUpload(file: File): Promise<string> {
 // -----------------------------------------------------------------------
 
 async function formCustomUpload(content: string, file: File) {
+  // 默认使用微信图床代码
+  const defaultCode = `
+  const { file, util, okCb, errCb } = CUSTOM_ARG
+  const param = new FormData()
+  param.append('media', file)
+  util.axios.post('https://wechat.easy-write.com/api/media/upload-image', param, {
+    headers: {
+      'Content-Type': 'multipart/form-data',
+      'X-API-Key': '0dbe66d87befa7a9d5d7c1bdbc631a9b7dc5ce88be9a20e41c26790060802647'
+    }
+  }).then(res => {
+    okCb(res.data.url)
+  }).catch(err => {
+    errCb(err)
+  })
+  `.trim()
+
+  const customCode = localStorage.getItem(`formCustomConfig`) || defaultCode
   const str = `
     async (CUSTOM_ARG) => {
-      ${localStorage.getItem(`formCustomConfig`)}
+      ${customCode}
     }
   `
   return new Promise<string>((resolve, reject) => {
