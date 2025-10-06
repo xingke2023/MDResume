@@ -29,7 +29,7 @@ const { toggleShowUploadImgDialog } = displayStore
 const backLight = ref(false)
 const isCoping = ref(false)
 const wasInEditorMode = ref(false)
-const showEditor = ref(false) // 默认显示预览模式
+const showEditor = ref(true) // 初始化时渲染编辑区
 
 function startCopy() {
   backLight.value = true
@@ -69,6 +69,13 @@ function toggleView() {
 
 // 监听主题切换事件（手机端）
 onMounted(() => {
+  // 移动端首次进入时，在编辑器初始化完成后切换到预览模式
+  if (store.isMobile) {
+    nextTick(() => {
+      showEditor.value = false
+    })
+  }
+
   const handleThemeChange = () => {
     if (store.isMobile && showEditor.value) {
       showEditor.value = false
