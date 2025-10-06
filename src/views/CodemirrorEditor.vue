@@ -29,7 +29,7 @@ const { toggleShowUploadImgDialog } = displayStore
 const backLight = ref(false)
 const isCoping = ref(false)
 const wasInEditorMode = ref(false)
-const showEditor = ref(true)
+const showEditor = ref(false) // 默认显示预览模式
 
 function startCopy() {
   backLight.value = true

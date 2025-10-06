@@ -680,7 +680,7 @@ function getTimeRemainingClass(index: number): string {
 <template>
   <Dialog v-model:open="dialogVisible">
     <DialogContent
-      class="bg-card text-card-foreground max-h-[90vh] w-[95vw] flex flex-col overflow-y-auto sm:max-h-[85vh] sm:max-w-4xl"
+      class="bg-card text-card-foreground z-[70] max-h-[90vh] w-[95vw] flex flex-col overflow-y-auto sm:max-h-[85vh] sm:max-w-4xl"
       :style="{ height: 'auto' }"
     >
       <!-- ============ 头部 ============ -->
@@ -783,7 +783,7 @@ function getTimeRemainingClass(index: number): string {
                 <img
                   :src="generatedImages[currentImageIndex]"
                   :alt="`生成的图像 ${currentImageIndex + 1}`"
-                  class="border-border object-contain h-auto max-h-[300px] w-full border rounded-lg shadow-lg transition-transform sm:max-h-[350px] hover:scale-105"
+                  class="object-contain border-border h-auto max-h-[300px] w-full border rounded-lg shadow-lg transition-transform sm:max-h-[350px] hover:scale-105"
                 >
                 <!-- 点击查看大图提示 -->
                 <div class="pointer-events-none absolute inset-0 flex items-center justify-center rounded-lg bg-black/0 opacity-0 transition-opacity group-hover:bg-black/10 group-hover:opacity-100">

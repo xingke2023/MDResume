@@ -150,7 +150,7 @@ function updateDigest(value: string) {
             取消
           </Button>
           <Button
-            class="bg-gradient-to-r from-green-500 to-blue-600 hover:from-green-600 hover:to-blue-700 flex-1 border-0 text-white"
+            class="from-green-500 to-blue-600 bg-gradient-to-r hover:from-green-600 hover:to-blue-700 flex-1 border-0 text-white"
             :disabled="props.isPublishing || !props.publishForm.title.trim()"
             @click="handlePublish"
           >

@@ -203,7 +203,7 @@ defineExpose({
     >
       <!-- 标题图标 -->
       <div class="mb-4 flex items-center justify-center">
-        <div class="from-purple-500 to-pink-600 bg-gradient-to-r h-12 w-12 flex items-center justify-center rounded-full">
+        <div class="bg-gradient-to-r from-purple-500 to-pink-600 h-12 w-12 flex items-center justify-center rounded-full">
           <Wand2 class="h-6 w-6 text-white" />
         </div>
       </div>

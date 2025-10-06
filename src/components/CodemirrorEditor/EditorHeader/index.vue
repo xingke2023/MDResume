@@ -493,6 +493,7 @@ function showKnowledgeBaseDialog() {
 
 // 发布到公众号状态
 const publishDialogVisible = ref(false)
+const showMpConfigDialog = ref(false)
 const isPublishing = ref(false)
 const coverImageInput = ref<HTMLInputElement | null>(null)
 
@@ -504,6 +505,12 @@ const publishForm = ref({
   digest: ``,
   pic_crop_235_1: ``,
   pic_crop_1_1: ``,
+})
+
+// 公众号配置表单
+const mpConfigForm = ref({
+  appID: ``,
+  appsecret: ``,
 })
 
 // 更新裁剪参数
@@ -565,11 +572,51 @@ async function handleCoverImageChange(event: Event) {
   }
 }
 
+// 保存公众号配置
+function saveMpConfig() {
+  if (!mpConfigForm.value.appID.trim() || !mpConfigForm.value.appsecret.trim()) {
+    toast.error(`AppID 和 AppSecret 不能为空`)
+    return
+  }
+
+  localStorage.setItem(`mpConfig`, JSON.stringify(mpConfigForm.value))
+  toast.success(`公众号配置保存成功`)
+  showMpConfigDialog.value = false
+
+  // 保存后自动打开发布对话框
+  showPublishDialog()
+}
+
 // 显示发布对话框
 function showPublishDialog() {
   const content = editor.value?.getValue()
   if (!content || !content.trim()) {
     toast.error(`编辑器内容为空，无法发布`)
+    return
+  }
+
+  // 检查公众号配置是否已设置
+  const mpConfig = localStorage.getItem(`mpConfig`)
+  if (!mpConfig) {
+    // 未设置配置，显示设置页面，清空表单
+    mpConfigForm.value = { appID: ``, appsecret: `` }
+    showMpConfigDialog.value = true
+    return
+  }
+
+  try {
+    const config = JSON.parse(mpConfig)
+    if (!config.appID || !config.appsecret) {
+      // 配置不完整，显示设置页面，加载已有配置
+      mpConfigForm.value = config
+      showMpConfigDialog.value = true
+      return
+    }
+  }
+  catch {
+    // 配置解析失败，显示设置页面
+    mpConfigForm.value = { appID: ``, appsecret: `` }
+    showMpConfigDialog.value = true
     return
   }
 
@@ -632,6 +679,19 @@ async function publishToWechat() {
   isPublishing.value = true
 
   try {
+    // 获取公众号配置
+    const mpConfigStr = localStorage.getItem(`mpConfig`)
+    if (!mpConfigStr) {
+      toast.error(`请先配置公众号信息`)
+      return
+    }
+
+    const mpConfig = JSON.parse(mpConfigStr)
+    if (!mpConfig.appID || !mpConfig.appsecret) {
+      toast.error(`公众号配置不完整，请重新配置`)
+      return
+    }
+
     // API配置
     const API_URL = `https://wechat.easy-write.com`
     const API_KEY = `0dbe66d87befa7a9d5d7c1bdbc631a9b7dc5ce88be9a20e41c26790060802647`
@@ -652,10 +712,12 @@ async function publishToWechat() {
       titleMode: `smart`,
       pic_crop_235_1: publishForm.value.pic_crop_235_1,
       pic_crop_1_1: publishForm.value.pic_crop_1_1,
+      appID: mpConfig.appID,
+      appsecret: mpConfig.appsecret,
     }
 
     // 发送请求
-    const response = await fetch(`${API_URL}/api/draft/create`, {
+    const response = await fetch(`${API_URL}/api/draft/create-with-credentials`, {
       method: `POST`,
       headers: {
         'Content-Type': `application/json`,
@@ -682,8 +744,8 @@ async function publishToWechat() {
     const result = await response.json()
 
     if (result.success) {
-      toast.success(`✅ 公众号草稿创建成功！请转到公众号助手或者登录公众号查看`, {
-        description: `公众号MediaID: ${result.data.mediaId}`,
+      toast.success(`✅ 恭喜您！公众号草稿创建成功！请转到公众号助手或者登录公众号平台https://mp.weixin.qq.com/查看`, {
+        description: `文章标题：${publishForm.value.title}\n\n`,
         duration: 10000,
       })
       publishDialogVisible.value = false
@@ -699,10 +761,21 @@ async function publishToWechat() {
 
     const errorMsg = error instanceof Error ? error.message : String(error)
 
-    // 直接显示API返回的错误信息，如果是特殊错误则覆盖
-    const errorMessage = errorMsg
+    // 检查是否是IP白名单错误
+    if (errorMsg.includes(`not in whitelist`) || errorMsg.includes(`invalid ip`)) {
+      // 提取IP地址
+      const ipMatch = errorMsg.match(/(\d+\.\d+\.\d+\.\d+)/)
+      const ip = ipMatch ? ipMatch[1] : ``
 
-    toast.error(errorMessage)
+      toast.error(`IP白名单错误：请将以下IP添加到公众号白名单中`, {
+        description: ip ? `需要添加的IP: ${ip}\n\n操作步骤：\n1. 登录微信公众平台(https://mp.weixin.qq.com/)\n2. 设置与开发 → 开发接口管理 → 基本配置 → IP白名单 → 查看(修改)\n3. 添加上述IP地址` : `请登录微信公众平台添加服务器IP到白名单`,
+        duration: 15000,
+      })
+    }
+    else {
+      // 其他错误直接显示
+      toast.error(errorMsg)
+    }
   }
   finally {
     isPublishing.value = false
@@ -1744,6 +1817,90 @@ function handleCopyWithMode(mode: string) {
     class="hidden"
     @change="handleCoverImageChange"
   >
+
+  <!-- 公众号配置对话框 -->
+  <div
+    v-if="showMpConfigDialog"
+    class="backdrop-blur-sm fixed inset-0 z-[110] flex items-center justify-center overflow-y-auto bg-black/50 p-4"
+    @click="showMpConfigDialog = false"
+  >
+    <div
+      class="max-w-md w-full scale-100 transform rounded-2xl bg-white shadow-2xl transition-all duration-300 dark:bg-gray-800"
+      @click.stop
+    >
+      <!-- 标题 -->
+      <div class="border-b border-gray-200 px-6 py-4 dark:border-gray-700">
+        <h3 class="text-center text-xl text-gray-900 font-bold dark:text-gray-100">
+          配置公众号信息
+        </h3>
+      </div>
+
+      <!-- 表单 -->
+      <div class="px-6 py-6">
+        <div class="space-y-4">
+          <!-- 提示信息 -->
+          <div class="rounded-lg bg-blue-50 p-3 dark:bg-blue-900/20">
+            <p class="text-sm text-blue-800 dark:text-blue-300">
+              <span class="font-medium">💡 提示：</span>请输入您的微信公众号 AppID 和 AppSecret，用于发布文章到公众号
+            </p>
+          </div>
+
+          <!-- AppID -->
+          <div>
+            <label class="mb-2 block text-sm text-gray-700 font-medium dark:text-gray-300">
+              AppID <span class="text-red-500">*</span>
+            </label>
+            <input
+              v-model="mpConfigForm.appID"
+              type="text"
+              placeholder="请输入公众号 AppID"
+              class="dark:placeholder-gray-400 w-full border border-gray-300 rounded-lg px-4 py-2.5 text-gray-900 transition-colors dark:border-gray-600 focus:border-green-500 dark:bg-gray-700 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-green-500"
+            >
+          </div>
+
+          <!-- AppSecret -->
+          <div>
+            <label class="mb-2 block text-sm text-gray-700 font-medium dark:text-gray-300">
+              AppSecret <span class="text-red-500">*</span>
+            </label>
+            <input
+              v-model="mpConfigForm.appsecret"
+              type="password"
+              placeholder="请输入公众号 AppSecret"
+              class="dark:placeholder-gray-400 w-full border border-gray-300 rounded-lg px-4 py-2.5 text-gray-900 transition-colors dark:border-gray-600 focus:border-green-500 dark:bg-gray-700 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-green-500"
+            >
+          </div>
+
+          <!-- 帮助信息 -->
+          <div class="rounded-lg bg-gray-50 p-3 dark:bg-gray-700/50">
+            <p class="text-xs text-gray-600 dark:text-gray-400">
+              <span class="font-medium">如何获取：</span><br>1、登录微信公众平台 https://mp.weixin.qq.com/ <br>设置与开发 → 开发接口管理 → 基本配置 → 开发者ID(AppID) 和 开发者密钥(AppSecret) <br>2、需要将43.153.64.160加入IP白名单<br>3、必须是已认证的公众号
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- 按钮组 -->
+      <div class="border-t border-gray-200 px-6 py-4 dark:border-gray-700">
+        <div class="flex justify-end gap-3">
+          <Button
+            variant="outline"
+            class="flex-1"
+            @click="showMpConfigDialog = false"
+          >
+            取消
+          </Button>
+          <Button
+            class="from-green-500 to-blue-600 bg-gradient-to-r hover:from-green-600 hover:to-blue-700 flex-1 border-0 text-white"
+            :disabled="!mpConfigForm.appID.trim() || !mpConfigForm.appsecret.trim()"
+            @click="saveMpConfig"
+          >
+            保存配置
+          </Button>
+        </div>
+      </div>
+    </div>
+  </div>
 
   <!-- 发布到公众号对话框 -->
   <PublishDialog
