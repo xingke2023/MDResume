@@ -218,15 +218,14 @@ const styleOptions = [
       </Select>
     </div>
 
-    <!-- 端点配置 -->
-    <div>
+    <!-- 端点配置 - 人工智能写作隐藏 -->
+    <div v-if="config.type !== 'aiwriting'">
       <Label class="mb-1 block text-sm font-medium">API 端点</Label>
       <input
         v-model="config.endpoint"
         type="url"
         class="bg-background focus:ring-primary focus:border-primary mt-1 w-full border rounded-md p-2 transition-colors focus:ring-2"
         placeholder="https://api.openai.com/v1"
-        :readonly="config.type !== 'aiwriting'"
       >
     </div>
 
@@ -343,7 +342,7 @@ const styleOptions = [
         <p class="font-medium">
           人工智能写作服务
         </p>
-        <p>请输入您的自定义 API 端点地址。无需配置 API Key。</p>
+        <p>使用默认的 API 端点，无需配置 API Key 和端点地址。</p>
       </div>
     </div>
 

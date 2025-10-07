@@ -50,7 +50,7 @@ export const imageServiceOptions: ImageServiceOption[] = [
   {
     value: `aiwriting`,
     label: `人工智能写作`,
-    endpoint: `https://wechat.easy-write.com/extract/extract/api/generate_image`,
+    endpoint: `https://wechat.easy-write.com/extract/api/generate_image`,
     models: [`custom`],
   },
 ]

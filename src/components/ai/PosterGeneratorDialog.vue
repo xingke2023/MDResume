@@ -4,13 +4,12 @@ import {
   Download,
   Image as ImageIcon,
   Loader2,
-  MessageCircle,
   RefreshCcw,
-  Settings,
   Trash2,
 } from 'lucide-vue-next'
 import { storeToRefs } from 'pinia'
 import { onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { toast } from 'vue-sonner'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
@@ -19,10 +18,9 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import { Textarea } from '@/components/ui/textarea'
-import { useDisplayStore, useStore } from '@/stores'
+import { useStore } from '@/stores'
 import useAIImageConfigStore from '@/stores/AIImageConfig'
 import { copyPlain } from '@/utils/clipboard'
-import AIImageConfig from './AIImageConfig.vue'
 
 /* ---------- 组件属性 ---------- */
 const props = defineProps<{ open: boolean }>()
@@ -31,8 +29,10 @@ const emit = defineEmits([`update:open`])
 /* ---------- 编辑器引用 ---------- */
 const store = useStore()
 const { editor } = storeToRefs(store)
-const displayStore = useDisplayStore()
-const { toggleAIDialog } = displayStore
+
+/* ---------- AI 配置 ---------- */
+const AIImageConfigStore = useAIImageConfigStore()
+const { endpoint } = storeToRefs(AIImageConfigStore)
 
 /* ---------- 弹窗开关 ---------- */
 const dialogVisible = ref(props.open)
@@ -41,12 +41,17 @@ watch(() => props.open, (val) => {
   // 每次打开面板时检查并清理过期图片
   if (val) {
     cleanExpiredImages()
+    // 强制设置服务商为人工智能写作
+    if (AIImageConfigStore.type !== `aiwriting`) {
+      AIImageConfigStore.type = `aiwriting`
+      AIImageConfigStore.endpoint = `https://wechat.easy-write.com/extract/api/generate_image`
+      AIImageConfigStore.model = ``
+    }
   }
 })
 watch(dialogVisible, val => emit(`update:open`, val))
 
 /* ---------- 状态管理 ---------- */
-const configVisible = ref(false)
 const loading = ref(false)
 const loadingProgress = ref(0) // 加载进度 (0-100)
 const prompt = ref<string>(``)
@@ -57,10 +62,68 @@ const imageTimestamps = ref<number[]>([]) // 存储每张图片的生成时间�
 const abortController = ref<AbortController | null>(null)
 const currentImageIndex = ref(0)
 const timeUpdateInterval = ref<NodeJS.Timeout | null>(null)
+const selectedStyle = ref<string>(``)
 
-/* ---------- AI 配置 ---------- */
-const AIImageConfigStore = useAIImageConfigStore()
-const { apiKey, endpoint, model, type, size, quality, style } = storeToRefs(AIImageConfigStore)
+/* ---------- 预设风格模板 ---------- */
+interface StyleTemplate {
+  id: string
+  name: string
+  emoji: string
+  description: string
+  template: string
+  placeholder: string
+}
+
+const styleTemplates: StyleTemplate[] = [
+  {
+    id: `cartoon`,
+    name: `卡通风格`,
+    emoji: `🎨`,
+    description: `可爱活泼的卡通插画风格`,
+    template: `卡通风格海报，可爱活泼，色彩鲜艳，{content}，扁平化设计，矢量插画风格`,
+    placeholder: `输入海报主题，如：夏日促销活动`,
+  },
+  {
+    id: `realistic`,
+    name: `写实风格`,
+    emoji: `📷`,
+    description: `高清真实的摄影级效果`,
+    template: `写实风格海报，高清摄影，真实质感，{content}，专业摄影级别，光影细腻`,
+    placeholder: `输入海报主题，如：咖啡店开业`,
+  },
+  {
+    id: `minimalist`,
+    name: `极简风格`,
+    emoji: `⚪`,
+    description: `简约现代的设计风格`,
+    template: `极简风格海报，简约现代，留白设计，{content}，几何元素，高级感`,
+    placeholder: `输入海报主题，如：产品发布会`,
+  },
+  {
+    id: `vintage`,
+    name: `复古风格`,
+    emoji: `📻`,
+    description: `怀旧复古的艺术风格`,
+    template: `复古风格海报，怀旧质感，复古色调，{content}，老式海报设计，年代感`,
+    placeholder: `输入海报主题，如：音乐节活动`,
+  },
+  {
+    id: `tech`,
+    name: `科技风格`,
+    emoji: `🚀`,
+    description: `未来感十足的科技风`,
+    template: `科技风格海报，未来感，科技元素，{content}，蓝色调，数字化设计，科幻感`,
+    placeholder: `输入海报主题，如：AI新品发布`,
+  },
+  {
+    id: `chinese`,
+    name: `中国风`,
+    emoji: `🏮`,
+    description: `传统典雅的中式风格`,
+    template: `中国风海报，传统元素，水墨画风格，{content}，典雅大气，中式美学`,
+    placeholder: `输入海报主题，如：茶文化展览`,
+  },
+]
 
 /* ---------- 过期检查函数 ---------- */
 function isImageExpired(timestamp: number): boolean {
@@ -70,9 +133,9 @@ function isImageExpired(timestamp: number): boolean {
 }
 
 function cleanExpiredImages() {
-  const savedImages = localStorage.getItem(`ai_generated_images`)
-  const savedPrompts = localStorage.getItem(`ai_image_prompts`)
-  const savedTimestamps = localStorage.getItem(`ai_image_timestamps`)
+  const savedImages = localStorage.getItem(`poster_generated_images`)
+  const savedPrompts = localStorage.getItem(`poster_image_prompts`)
+  const savedTimestamps = localStorage.getItem(`poster_image_timestamps`)
 
   if (!savedImages) {
     return
@@ -88,9 +151,9 @@ function cleanExpiredImages() {
     generatedImages.value = []
     imagePrompts.value = []
     imageTimestamps.value = []
-    localStorage.removeItem(`ai_generated_images`)
-    localStorage.removeItem(`ai_image_prompts`)
-    localStorage.removeItem(`ai_image_timestamps`)
+    localStorage.removeItem(`poster_generated_images`)
+    localStorage.removeItem(`poster_image_prompts`)
+    localStorage.removeItem(`poster_image_timestamps`)
     return
   }
 
@@ -115,14 +178,14 @@ function cleanExpiredImages() {
   if (validImages.length < images.length) {
     console.log(`🧹 清除了 ${images.length - validImages.length} 张过期图片`)
     if (validImages.length > 0) {
-      localStorage.setItem(`ai_generated_images`, JSON.stringify(validImages))
-      localStorage.setItem(`ai_image_prompts`, JSON.stringify(validPrompts))
-      localStorage.setItem(`ai_image_timestamps`, JSON.stringify(validTimestamps))
+      localStorage.setItem(`poster_generated_images`, JSON.stringify(validImages))
+      localStorage.setItem(`poster_image_prompts`, JSON.stringify(validPrompts))
+      localStorage.setItem(`poster_image_timestamps`, JSON.stringify(validTimestamps))
     }
     else {
-      localStorage.removeItem(`ai_generated_images`)
-      localStorage.removeItem(`ai_image_prompts`)
-      localStorage.removeItem(`ai_image_timestamps`)
+      localStorage.removeItem(`poster_generated_images`)
+      localStorage.removeItem(`poster_image_prompts`)
+      localStorage.removeItem(`poster_image_timestamps`)
     }
   }
 
@@ -147,9 +210,9 @@ onMounted(() => {
     generatedImages.value = []
     imagePrompts.value = []
     imageTimestamps.value = []
-    localStorage.removeItem(`ai_generated_images`)
-    localStorage.removeItem(`ai_image_prompts`)
-    localStorage.removeItem(`ai_image_timestamps`)
+    localStorage.removeItem(`poster_generated_images`)
+    localStorage.removeItem(`poster_image_prompts`)
+    localStorage.removeItem(`poster_image_timestamps`)
   }
   else {
     // 补齐较短的数组
@@ -181,21 +244,8 @@ onBeforeUnmount(() => {
 })
 
 /* ---------- 事件处理 ---------- */
-function handleConfigSaved() {
-  configVisible.value = false
-}
-
-function switchToChat() {
-  // 先关闭当前文生图对话框
-  emit(`update:open`, false)
-  // 然后打开聊天对话框
-  setTimeout(() => {
-    toggleAIDialog(true)
-  }, 100)
-}
-
 function handleKeydown(e: KeyboardEvent) {
-  if (e.isComposing || e.keyCode === 229)
+  if (e.isComposing)
     return
 
   if (e.key === `Enter` && !e.shiftKey) {
@@ -268,13 +318,36 @@ async function pollTaskStatus(taskId: string): Promise<string | null> {
   throw new Error(`任务超时，请稍后重试`)
 }
 
+/* ---------- 选择风格 ---------- */
+function selectStyle(styleId: string) {
+  selectedStyle.value = styleId
+  // 清空输入框，等待用户输入主题
+  prompt.value = ``
+}
+
+/* ---------- 构建完整提示词 ---------- */
+function buildFullPrompt(userInput: string): string {
+  if (!selectedStyle.value) {
+    return userInput
+  }
+
+  const style = styleTemplates.find(s => s.id === selectedStyle.value)
+  if (!style) {
+    return userInput
+  }
+
+  // 将用户输入替换到模板中
+  return style.template.replace(`{content}`, userInput)
+}
+
 /* ---------- 生成图像 ---------- */
 async function generateImage() {
   if (!prompt.value.trim() || loading.value)
     return
 
-  // 保存当前提示词用于重新生成
-  const currentPrompt = prompt.value.trim()
+  // 构建完整的提示词
+  const userInput = prompt.value.trim()
+  const currentPrompt = buildFullPrompt(userInput)
   lastUsedPrompt.value = currentPrompt
 
   loading.value = true
@@ -282,37 +355,15 @@ async function generateImage() {
   abortController.value = new AbortController()
 
   const headers: Record<string, string> = { 'Content-Type': `application/json` }
-  if (apiKey.value && type.value !== `default` && type.value !== `aiwriting`)
-    headers.Authorization = `Bearer ${apiKey.value}`
 
   try {
-    const url = new URL(endpoint.value)
+    const url = endpoint.value
 
-    // 人工智能写作服务不修改路径，其他服务添加标准路径
-    if (type.value !== `aiwriting`) {
-      if (!url.pathname.includes(`/images/`) && !url.pathname.endsWith(`/images/generations`)) {
-        url.pathname = url.pathname.replace(/\/?$/, `/images/generations`)
-      }
-    }
-
-    const payload: any = {
+    const payload = {
       prompt: currentPrompt,
     }
 
-    // 只为非人工智能写作服务添加标准参数
-    if (type.value !== `aiwriting`) {
-      payload.model = model.value
-      payload.size = size.value
-      payload.n = 1
-
-      // 只对 DALL-E 模型添加额外参数
-      if (model.value.includes(`dall-e`)) {
-        payload.quality = quality.value
-        payload.style = style.value
-      }
-    }
-
-    const res = await window.fetch(url.toString(), {
+    const res = await window.fetch(url, {
       method: `POST`,
       headers,
       body: JSON.stringify(payload),
@@ -326,87 +377,49 @@ async function generateImage() {
 
     const data = await res.json()
 
-    // 处理人工智能写作服务的响应
-    if (type.value === `aiwriting`) {
-      if (!data.success) {
-        throw new Error(data.message || `任务提交失败`)
-      }
-
-      const taskId = data.task_id
-      if (!taskId) {
-        throw new Error(`未收到任务ID`)
-      }
-
-      // 轮询查询任务状态
-      const imageUrl = await pollTaskStatus(taskId)
-
-      if (imageUrl) {
-        const currentTimestamp = Date.now()
-
-        generatedImages.value.unshift(imageUrl)
-        imagePrompts.value.unshift(currentPrompt)
-        imageTimestamps.value.unshift(currentTimestamp)
-        currentImageIndex.value = 0
-
-        // 限制存储的图片数量
-        if (generatedImages.value.length > 20) {
-          generatedImages.value = generatedImages.value.slice(0, 20)
-          imagePrompts.value = imagePrompts.value.slice(0, 20)
-          imageTimestamps.value = imageTimestamps.value.slice(0, 20)
-        }
-
-        localStorage.setItem(`ai_generated_images`, JSON.stringify(generatedImages.value))
-        localStorage.setItem(`ai_image_prompts`, JSON.stringify(imagePrompts.value))
-        localStorage.setItem(`ai_image_timestamps`, JSON.stringify(imageTimestamps.value))
-
-        prompt.value = ``
-      }
+    if (!data.success) {
+      throw new Error(data.message || `任务提交失败`)
     }
-    else {
-      // 处理标准 OpenAI 格式的响应
-      if (data.data && data.data.length > 0) {
-        const imageUrl = data.data[0].url || data.data[0].b64_json
 
-        if (imageUrl) {
-          // 如果是 base64 格式，转换为 data URL
-          const finalUrl = imageUrl.startsWith(`data:`) || imageUrl.startsWith(`http`)
-            ? imageUrl
-            : `data:image/png;base64,${imageUrl}`
+    const taskId = data.task_id
+    if (!taskId) {
+      throw new Error(`未收到任务ID`)
+    }
 
-          const currentTimestamp = Date.now()
+    // 轮询查询任务状态
+    const imageUrl = await pollTaskStatus(taskId)
 
-          generatedImages.value.unshift(finalUrl)
-          imagePrompts.value.unshift(currentPrompt) // 保存对应的prompt
-          imageTimestamps.value.unshift(currentTimestamp) // 保存生成时间戳
-          currentImageIndex.value = 0
+    if (imageUrl) {
+      const currentTimestamp = Date.now()
 
-          // 限制存储的图片数量，避免占用过多存储空间
-          if (generatedImages.value.length > 20) {
-            generatedImages.value = generatedImages.value.slice(0, 20)
-            imagePrompts.value = imagePrompts.value.slice(0, 20)
-            imageTimestamps.value = imageTimestamps.value.slice(0, 20)
-          }
+      generatedImages.value.unshift(imageUrl)
+      imagePrompts.value.unshift(currentPrompt)
+      imageTimestamps.value.unshift(currentTimestamp)
+      currentImageIndex.value = 0
 
-          localStorage.setItem(`ai_generated_images`, JSON.stringify(generatedImages.value))
-          localStorage.setItem(`ai_image_prompts`, JSON.stringify(imagePrompts.value))
-          localStorage.setItem(`ai_image_timestamps`, JSON.stringify(imageTimestamps.value))
-
-          // 清空输入框
-          prompt.value = ``
-        }
+      // 限制存储的图片数量
+      if (generatedImages.value.length > 20) {
+        generatedImages.value = generatedImages.value.slice(0, 20)
+        imagePrompts.value = imagePrompts.value.slice(0, 20)
+        imageTimestamps.value = imageTimestamps.value.slice(0, 20)
       }
-      else {
-        throw new Error(`未收到有效的图像数据`)
-      }
+
+      localStorage.setItem(`poster_generated_images`, JSON.stringify(generatedImages.value))
+      localStorage.setItem(`poster_image_prompts`, JSON.stringify(imagePrompts.value))
+      localStorage.setItem(`poster_image_timestamps`, JSON.stringify(imageTimestamps.value))
+
+      prompt.value = ``
+      toast.success(`海报生成成功！`)
     }
   }
   catch (e) {
     if ((e as Error).name === `AbortError`) {
       console.log(`图像生成请求中止`)
+      toast.info(`生成已取消`)
     }
     else {
       console.error(`图像生成失败:`, e)
-      // 可以在这里添加错误提示
+      toast.error(`生成失败: ${(e as Error).message}`)
     }
   }
   finally {
@@ -430,9 +443,10 @@ function clearImages() {
   imagePrompts.value = []
   imageTimestamps.value = []
   currentImageIndex.value = 0
-  localStorage.removeItem(`ai_generated_images`)
-  localStorage.removeItem(`ai_image_prompts`)
-  localStorage.removeItem(`ai_image_timestamps`)
+  localStorage.removeItem(`poster_generated_images`)
+  localStorage.removeItem(`poster_image_prompts`)
+  localStorage.removeItem(`poster_image_timestamps`)
+  toast.success(`已清空所有海报`)
 }
 
 /* ---------- 下载图像 ---------- */
@@ -445,54 +459,23 @@ async function downloadImage(imageUrl: string, index: number) {
     const promptPart = relatedPrompt
       ? relatedPrompt.substring(0, 20).replace(/[^\w\s-]/g, ``).replace(/\s+/g, `-`)
       : `no-prompt`
-    const filename = `ai-image-${index + 1}-${promptPart}.png`
+    const filename = `poster-${index + 1}-${promptPart}.png`
 
-    // 人工智能写作服务的图片有 CORS 限制，直接使用 URL 下载
-    if (type.value === `aiwriting`) {
-      // 创建临时链接直接下载
-      const a = document.createElement(`a`)
-      a.href = imageUrl
-      a.download = filename
-      a.target = `_blank` // 在新标签页打开，如果下载失败会显示图片
-      document.body.appendChild(a)
-      a.click()
-      document.body.removeChild(a)
+    // 创建临时链接直接下载
+    const a = document.createElement(`a`)
+    a.href = imageUrl
+    a.download = filename
+    a.target = `_blank` // 在新标签页打开，如果下载失败会显示图片
+    document.body.appendChild(a)
+    a.click()
+    document.body.removeChild(a)
 
-      console.log(`✅ 图片下载链接已触发`)
-      if (typeof toast !== `undefined`) {
-        toast.success(`已触发下载，如果未自动下载请右键图片另存为`)
-      }
-    }
-    else {
-      // 其他服务商使用 fetch 方式下载
-      const response = await fetch(imageUrl)
-      console.log(`📥 Fetch 响应状态:`, response.status)
-
-      if (!response.ok) {
-        throw new Error(`HTTP 错误: ${response.status}`)
-      }
-
-      const blob = await response.blob()
-      console.log(`📥 Blob 大小:`, blob.size, `类型:`, blob.type)
-
-      const url = window.URL.createObjectURL(blob)
-      const a = document.createElement(`a`)
-      a.href = url
-      a.download = filename
-
-      document.body.appendChild(a)
-      a.click()
-      document.body.removeChild(a)
-      window.URL.revokeObjectURL(url)
-
-      console.log(`✅ 图片下载成功`)
-    }
+    console.log(`✅ 图片下载链接已触发`)
+    toast.success(`已触发下载，如果未自动下载请右键图片另存为`)
   }
   catch (error) {
     console.error(`❌ 下载图像失败:`, error)
-    if (typeof toast !== `undefined`) {
-      toast.error(`下载失败: ${(error as Error).message}`)
-    }
+    toast.error(`下载失败: ${(error as Error).message}`)
   }
 }
 
@@ -501,15 +484,11 @@ async function copyImageUrl(imageUrl: string) {
   try {
     await copyPlain(imageUrl)
     console.log(`✅ 图片链接已复制到剪贴板`)
-    if (typeof toast !== `undefined`) {
-      toast.success(`图片链接已复制到剪贴板`)
-    }
+    toast.success(`图片链接已复制到剪贴板`)
   }
   catch (error) {
     console.error(`❌ 复制失败:`, error)
-    if (typeof toast !== `undefined`) {
-      toast.error(`复制失败，请重试`)
-    }
+    toast.error(`复制失败，请重试`)
   }
 }
 
@@ -524,6 +503,7 @@ function regenerateImage() {
   }
   else {
     console.warn(`⚠️ 没有找到当前图片的prompt`)
+    toast.warning(`没有找到提示词`)
   }
 }
 
@@ -537,37 +517,15 @@ async function regenerateWithPrompt(promptText: string) {
   abortController.value = new AbortController()
 
   const headers: Record<string, string> = { 'Content-Type': `application/json` }
-  if (apiKey.value && type.value !== `default` && type.value !== `aiwriting`)
-    headers.Authorization = `Bearer ${apiKey.value}`
 
   try {
-    const url = new URL(endpoint.value)
+    const url = endpoint.value
 
-    // 人工智能写作服务不修改路径，其他服务添加标准路径
-    if (type.value !== `aiwriting`) {
-      if (!url.pathname.includes(`/images/`) && !url.pathname.endsWith(`/images/generations`)) {
-        url.pathname = url.pathname.replace(/\/?$/, `/images/generations`)
-      }
-    }
-
-    const payload: any = {
+    const payload = {
       prompt: promptText.trim(),
     }
 
-    // 只为非人工智能写作服务添加标准参数
-    if (type.value !== `aiwriting`) {
-      payload.model = model.value
-      payload.size = size.value
-      payload.n = 1
-
-      // 只对 DALL-E 模型添加额外参数
-      if (model.value.includes(`dall-e`)) {
-        payload.quality = quality.value
-        payload.style = style.value
-      }
-    }
-
-    const res = await window.fetch(url.toString(), {
+    const res = await window.fetch(url, {
       method: `POST`,
       headers,
       body: JSON.stringify(payload),
@@ -581,81 +539,48 @@ async function regenerateWithPrompt(promptText: string) {
 
     const data = await res.json()
 
-    // 处理人工智能写作服务的响应
-    if (type.value === `aiwriting`) {
-      if (!data.success) {
-        throw new Error(data.message || `任务提交失败`)
-      }
-
-      const taskId = data.task_id
-      if (!taskId) {
-        throw new Error(`未收到任务ID`)
-      }
-
-      // 轮询查询任务状态
-      const imageUrl = await pollTaskStatus(taskId)
-
-      if (imageUrl) {
-        const currentTimestamp = Date.now()
-
-        generatedImages.value.unshift(imageUrl)
-        imagePrompts.value.unshift(promptText.trim())
-        imageTimestamps.value.unshift(currentTimestamp)
-        currentImageIndex.value = 0
-
-        // 限制存储的图片数量
-        if (generatedImages.value.length > 20) {
-          generatedImages.value = generatedImages.value.slice(0, 20)
-          imagePrompts.value = imagePrompts.value.slice(0, 20)
-          imageTimestamps.value = imageTimestamps.value.slice(0, 20)
-        }
-
-        localStorage.setItem(`ai_generated_images`, JSON.stringify(generatedImages.value))
-        localStorage.setItem(`ai_image_prompts`, JSON.stringify(imagePrompts.value))
-        localStorage.setItem(`ai_image_timestamps`, JSON.stringify(imageTimestamps.value))
-      }
+    if (!data.success) {
+      throw new Error(data.message || `任务提交失败`)
     }
-    else {
-      // 处理标准 OpenAI 格式的响应
-      if (data.data && data.data.length > 0) {
-        const imageUrl = data.data[0].url || data.data[0].b64_json
 
-        if (imageUrl) {
-          // 如果是 base64 格式，转换为 data URL
-          const finalUrl = imageUrl.startsWith(`data:`) || imageUrl.startsWith(`http`)
-            ? imageUrl
-            : `data:image/png;base64,${imageUrl}`
+    const taskId = data.task_id
+    if (!taskId) {
+      throw new Error(`未收到任务ID`)
+    }
 
-          const currentTimestamp = Date.now()
+    // 轮询查询任务状态
+    const imageUrl = await pollTaskStatus(taskId)
 
-          generatedImages.value.unshift(finalUrl)
-          imagePrompts.value.unshift(promptText.trim()) // 保存对应的prompt
-          imageTimestamps.value.unshift(currentTimestamp) // 保存生成时间戳
-          currentImageIndex.value = 0
+    if (imageUrl) {
+      const currentTimestamp = Date.now()
 
-          // 限制存储的图片数量，避免占用过多存储空间
-          if (generatedImages.value.length > 20) {
-            generatedImages.value = generatedImages.value.slice(0, 20)
-            imagePrompts.value = imagePrompts.value.slice(0, 20)
-            imageTimestamps.value = imageTimestamps.value.slice(0, 20)
-          }
+      generatedImages.value.unshift(imageUrl)
+      imagePrompts.value.unshift(promptText.trim())
+      imageTimestamps.value.unshift(currentTimestamp)
+      currentImageIndex.value = 0
 
-          localStorage.setItem(`ai_generated_images`, JSON.stringify(generatedImages.value))
-          localStorage.setItem(`ai_image_prompts`, JSON.stringify(imagePrompts.value))
-          localStorage.setItem(`ai_image_timestamps`, JSON.stringify(imageTimestamps.value))
-        }
+      // 限制存储的图片数量
+      if (generatedImages.value.length > 20) {
+        generatedImages.value = generatedImages.value.slice(0, 20)
+        imagePrompts.value = imagePrompts.value.slice(0, 20)
+        imageTimestamps.value = imageTimestamps.value.slice(0, 20)
       }
-      else {
-        throw new Error(`未收到有效的图像数据`)
-      }
+
+      localStorage.setItem(`poster_generated_images`, JSON.stringify(generatedImages.value))
+      localStorage.setItem(`poster_image_prompts`, JSON.stringify(imagePrompts.value))
+      localStorage.setItem(`poster_image_timestamps`, JSON.stringify(imageTimestamps.value))
+
+      toast.success(`重新生成成功！`)
     }
   }
   catch (e) {
     if ((e as Error).name === `AbortError`) {
       console.log(`图像生成请求中止`)
+      toast.info(`生成已取消`)
     }
     else {
       console.error(`图像生成失败:`, e)
+      toast.error(`重新生成失败: ${(e as Error).message}`)
     }
   }
   finally {
@@ -716,65 +641,6 @@ async function uploadImageViaProxy(imageUrl: string): Promise<string> {
   }
 }
 
-/* ---------- 上传图片到微信图床 ---------- */
-async function uploadToWechat(imageUrl: string): Promise<string> {
-  try {
-    console.log(`📤 开始上传图片到微信图床:`, imageUrl)
-
-    // 将图片 URL 转换为 Blob
-    const response = await fetch(imageUrl)
-    console.log(`📤 Fetch 响应状态:`, response.status)
-
-    if (!response.ok) {
-      throw new Error(`获取图片失败: HTTP ${response.status}`)
-    }
-
-    const blob = await response.blob()
-    console.log(`📤 Blob 大小:`, blob.size, `类型:`, blob.type)
-
-    // 检查文件大小（5MB限制）
-    const maxSize = 5 * 1024 * 1024
-    if (blob.size > maxSize) {
-      const sizeMB = (blob.size / 1024 / 1024).toFixed(2)
-      throw new Error(`图片大小为 ${sizeMB}MB，超过限制 5MB，请使用更小的尺寸`)
-    }
-
-    // 创建 File 对象
-    const file = new File([blob], `ai-generated.png`, { type: `image/png` })
-
-    // 上传到微信图床
-    const formData = new FormData()
-    formData.append(`media`, file)
-
-    const uploadResponse = await fetch(`https://wechat.easy-write.com/api/media/upload-image`, {
-      method: `POST`,
-      headers: {
-        'X-API-Key': `0dbe66d87befa7a9d5d7c1bdbc631a9b7dc5ce88be9a20e41c26790060802647`,
-      },
-      body: formData,
-    })
-
-    if (!uploadResponse.ok) {
-      if (uploadResponse.status === 413) {
-        throw new Error(`图片超过服务器限制（5MB），请使用更小的尺寸`)
-      }
-      throw new Error(`上传失败: ${uploadResponse.status}`)
-    }
-
-    const data = await uploadResponse.json()
-
-    if (!data.data || !data.data.url) {
-      throw new Error(`上传成功但未返回图片URL`)
-    }
-
-    return data.data.url
-  }
-  catch (error) {
-    console.error(`上传到微信图床失败:`, error)
-    throw error
-  }
-}
-
 /* ---------- 插入图像到光标位置 ---------- */
 async function insertImageToCursor(imageUrl: string) {
   if (!editor.value) {
@@ -785,21 +651,12 @@ async function insertImageToCursor(imageUrl: string) {
 
   try {
     // 显示上传中提示
-    toast.loading(`正在处理图片插入...`, { id: `upload-ai-image` })
+    toast.loading(`正在处理图片插入...`, { id: `upload-poster-image` })
 
-    let finalImageUrl = imageUrl
+    // 使用后端代理上传图片
+    const finalImageUrl = await uploadImageViaProxy(imageUrl)
 
-    // 人工智能写作服务的图片需要通过代理上传到微信图床
-    if (type.value === `aiwriting`) {
-      // 使用后端代理上传图片
-      finalImageUrl = await uploadImageViaProxy(imageUrl)
-    }
-    else {
-      // 其他服务商直接上传到微信图床
-      finalImageUrl = await uploadToWechat(imageUrl)
-    }
-
-    toast.dismiss(`upload-ai-image`)
+    toast.dismiss(`upload-poster-image`)
 
     // 获取当前图片对应的prompt
     const imagePrompt = imagePrompts.value[currentImageIndex.value] || ``
@@ -808,7 +665,7 @@ async function insertImageToCursor(imageUrl: string) {
     // 生成简洁的alt文本
     const altText = imagePrompt.trim()
       ? imagePrompt.trim().substring(0, 30).replace(/\n/g, ` `)
-      : `AI生成的图像`
+      : `AI生成的海报`
 
     // 使用微信图床的URL生成Markdown图片语法
     const markdownImage = `![${altText}](${finalImageUrl})`
@@ -827,11 +684,11 @@ async function insertImageToCursor(imageUrl: string) {
     // 关闭弹窗
     dialogVisible.value = false
 
-    toast.success(`图片已上传并插入`)
+    toast.success(`海报已上传并插入`)
     console.log(`✅ 图像已成功上传到微信图床并插入到光标位置`)
   }
   catch (error) {
-    toast.dismiss(`upload-ai-image`)
+    toast.dismiss(`upload-poster-image`)
     const errorMsg = (error as Error).message || `插入图片失败`
     toast.error(errorMsg)
     console.error(`❌ 插入图像到光标位置失败:`, error)
@@ -935,34 +792,18 @@ function getTimeRemainingClass(index: number): string {
       :style="{ height: 'auto' }"
     >
       <!-- ============ 头部 ============ -->
-      <DialogHeader class="space-y-1 flex flex-col items-start">
+      <DialogHeader class="space-y-3 flex flex-col items-start">
         <div class="space-x-1 flex items-center">
-          <DialogTitle>AI 文生图</DialogTitle>
+          <DialogTitle class="flex items-center gap-2">
+            <span>海报制作</span>
+            <span class="bg-gradient-to-r from-orange-500 to-red-500 rounded-full px-2 py-0.5 text-xs text-white font-semibold">
+              NEW
+            </span>
+          </DialogTitle>
 
           <Button
-            :title="configVisible ? 'AI 文生图' : '配置参数'"
-            :aria-label="configVisible ? 'AI 文生图' : '配置参数'"
-            variant="ghost"
-            size="icon"
-            @click="configVisible = !configVisible"
-          >
-            <ImageIcon v-if="configVisible" class="h-4 w-4" />
-            <Settings v-else class="h-4 w-4" />
-          </Button>
-
-          <Button
-            title="AI 对话"
-            aria-label="AI 对话"
-            variant="ghost"
-            size="icon"
-            @click="switchToChat()"
-          >
-            <MessageCircle class="h-4 w-4" />
-          </Button>
-
-          <Button
-            title="清空图像"
-            aria-label="清空图像"
+            title="清空海报"
+            aria-label="清空海报"
             variant="ghost"
             size="icon"
             @click="clearImages"
@@ -970,22 +811,98 @@ function getTimeRemainingClass(index: number): string {
             <Trash2 class="h-4 w-4" />
           </Button>
         </div>
-        <p class="text-muted-foreground text-sm">
-          使用 AI 根据文字描述生成图像
-        </p>
-      </DialogHeader>
 
-      <!-- ============ 参数配置面板 ============ -->
-      <div
-        v-if="configVisible"
-        class="mb-4 max-h-[60vh] w-full flex-shrink-0 overflow-y-auto border rounded-md p-4"
-      >
-        <AIImageConfig @saved="handleConfigSaved" />
-      </div>
+        <!-- 精美介绍 -->
+        <div class="bg-gradient-to-br from-pink-50 via-purple-50 to-blue-50 dark:from-pink-950/40 dark:via-purple-950/40 dark:to-blue-950/40 w-full border-2 border-pink-300 rounded-lg p-4 dark:border-pink-700">
+          <div class="space-y-3">
+            <div class="flex items-center gap-2">
+              <span class="text-2xl">🎨</span>
+              <p class="bg-gradient-to-r to-blue-600 from-pink-600 via-purple-600 bg-clip-text dark:from-pink-400 dark:via-purple-400 dark:to-blue-400 text-base text-transparent font-bold">
+                全新推出！专业级 AI 海报生成工具
+              </p>
+            </div>
+            <p class="text-sm text-gray-800 leading-relaxed dark:text-gray-200">
+              我们最新推出的 AI 海报制作功能，采用先进的图像生成技术，能够根据您的文字描述快速创作出<span class="text-purple-700 font-semibold dark:text-purple-300">精美的海报作品</span>。
+            </p>
+            <div class="grid grid-cols-2 mt-3 gap-2">
+              <div class="flex items-start gap-1.5">
+                <span class="mt-0.5 text-sm text-green-600 dark:text-green-400">✓</span>
+                <span class="text-xs text-gray-700 dark:text-gray-300">高质量图像输出</span>
+              </div>
+              <div class="flex items-start gap-1.5">
+                <span class="mt-0.5 text-sm text-green-600 dark:text-green-400">✓</span>
+                <span class="text-xs text-gray-700 dark:text-gray-300">智能理解描述</span>
+              </div>
+              <div class="flex items-start gap-1.5">
+                <span class="mt-0.5 text-sm text-green-600 dark:text-green-400">✓</span>
+                <span class="text-xs text-gray-700 dark:text-gray-300">专业设计风格</span>
+              </div>
+              <div class="flex items-start gap-1.5">
+                <span class="mt-0.5 text-sm text-green-600 dark:text-green-400">✓</span>
+                <span class="text-xs text-gray-700 dark:text-gray-300">一键插入编辑器</span>
+              </div>
+            </div>
+
+            <!-- 温馨提示 -->
+            <div class="mt-2 border-t border-gray-200 pt-2 dark:border-gray-700">
+              <div class="flex items-start gap-1.5 rounded bg-gray-50 p-1.5 dark:bg-gray-800/50">
+                <span class="text-xs text-gray-500 dark:text-gray-400">💡</span>
+                <p class="text-xs text-gray-500 leading-relaxed dark:text-gray-400">
+                  使用人数多生成速度会慢,描述越详细效果越好
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 风格选择 -->
+        <div class="space-y-3 w-full">
+          <div class="flex items-center gap-2">
+            <span class="text-sm text-gray-700 font-semibold dark:text-gray-300">🎭 选择海报风格</span>
+            <span v-if="selectedStyle" class="text-xs text-purple-600 dark:text-purple-400">
+              (已选：{{ styleTemplates.find(s => s.id === selectedStyle)?.name }})
+            </span>
+          </div>
+          <div class="grid grid-cols-2 gap-2 sm:grid-cols-3">
+            <button
+              v-for="style in styleTemplates"
+              :key="style.id"
+              type="button"
+              class="group relative overflow-hidden border-2 rounded-lg p-3 text-left transition-all duration-200"
+              :class="[
+                selectedStyle === style.id
+                  ? 'border-purple-500 bg-purple-50 dark:border-purple-400 dark:bg-purple-950/30'
+                  : 'border-gray-200 bg-white hover:border-purple-300 dark:border-gray-700 dark:bg-gray-800 dark:hover:border-purple-600',
+              ]"
+              @click="selectStyle(style.id)"
+            >
+              <!-- 选中标记 -->
+              <div
+                v-if="selectedStyle === style.id"
+                class="absolute right-1 top-1 h-5 w-5 flex items-center justify-center rounded-full bg-purple-500 text-white"
+              >
+                <span class="text-xs">✓</span>
+              </div>
+
+              <div class="flex items-start gap-2">
+                <span class="text-2xl">{{ style.emoji }}</span>
+                <div class="min-w-0 flex-1">
+                  <p class="text-sm text-gray-800 font-semibold dark:text-gray-200">
+                    {{ style.name }}
+                  </p>
+                  <p class="truncate text-xs text-gray-500 dark:text-gray-400">
+                    {{ style.description }}
+                  </p>
+                </div>
+              </div>
+            </button>
+          </div>
+        </div>
+      </DialogHeader>
 
       <!-- ============ 图像展示区域 ============ -->
       <div
-        v-if="!configVisible && (loading || generatedImages.length > 0)"
+        v-if="loading || generatedImages.length > 0"
         class="space-y-4 flex flex-shrink-0 flex-col"
       >
         <!-- 图像显示 -->
@@ -994,9 +911,9 @@ function getTimeRemainingClass(index: number): string {
             <Loader2 class="animate-spin text-primary h-8 w-8" />
             <div class="flex flex-col items-center gap-2">
               <p class="text-muted-foreground text-sm">
-                正在生成图像...
+                正在生成海报...
               </p>
-              <p v-if="type === 'aiwriting' && loadingProgress > 0" class="text-primary text-lg font-semibold">
+              <p v-if="loadingProgress > 0" class="text-primary text-lg font-semibold">
                 {{ loadingProgress }}%
               </p>
             </div>
@@ -1038,7 +955,7 @@ function getTimeRemainingClass(index: number): string {
               <div class="group relative max-w-sm w-full cursor-pointer" @click="viewFullImage(generatedImages[currentImageIndex])">
                 <img
                   :src="generatedImages[currentImageIndex]"
-                  :alt="`生成的图像 ${currentImageIndex + 1}`"
+                  :alt="`生成的海报 ${currentImageIndex + 1}`"
                   class="border-border object-contain h-auto max-h-[300px] w-full border rounded-lg shadow-lg transition-transform sm:max-h-[350px] hover:scale-105"
                 >
                 <!-- 点击查看大图提示 -->
@@ -1052,9 +969,6 @@ function getTimeRemainingClass(index: number): string {
 
             <!-- 图像信息 -->
             <div class="space-y-1 bg-muted/10 rounded px-2 py-2 sm:px-4">
-              <p class="text-muted-foreground text-center text-xs">
-                尺寸: {{ size }}
-              </p>
               <!-- 提示词 -->
               <div class="text-muted-foreground break-words text-center text-xs">
                 <span class="font-medium">提示词:</span>
@@ -1113,13 +1027,13 @@ function getTimeRemainingClass(index: number): string {
       </div>
 
       <!-- ============ 输入框 ============ -->
-      <div v-if="!configVisible" class="relative mt-auto flex-shrink-0">
+      <div class="relative mt-auto flex-shrink-0">
         <div
           class="bg-background border-border flex flex-col items-baseline gap-2 border rounded-xl px-3 py-2 pr-12 shadow-inner"
         >
           <Textarea
             v-model="prompt"
-            placeholder="描述你想要生成的图像... (Enter 生成，Shift+Enter 换行)"
+            :placeholder="selectedStyle ? styleTemplates.find(s => s.id === selectedStyle)?.placeholder || '描述你想要生成的海报...' : '请先选择一种海报风格，然后输入主题'"
             rows="2"
             class="custom-scroll min-h-16 w-full resize-none border-none bg-transparent p-0 focus-visible:outline-hidden focus:outline-hidden focus-visible:ring-0 focus:ring-0 focus-visible:ring-offset-0 focus:ring-offset-0 focus-visible:ring-transparent focus:ring-transparent"
             @keydown="handleKeydown"
@@ -1127,8 +1041,9 @@ function getTimeRemainingClass(index: number): string {
 
           <!-- 生成按钮 -->
           <Button
-            :disabled="!prompt.trim() && !loading"
+            :disabled="!selectedStyle || (!prompt.trim() && !loading)"
             size="icon"
+            :title="!selectedStyle ? '请先选择风格' : (loading ? '取消' : '生成')"
             :class="[
               // eslint-disable-next-line vue/prefer-separate-static-class
               'absolute bottom-3 right-3 rounded-full disabled:opacity-40',

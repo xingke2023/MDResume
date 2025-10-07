@@ -1,5 +1,32 @@
 <script setup lang="ts">
-import { Menu } from 'lucide-vue-next'
+import {
+  Bold,
+  BookOpen,
+  ChartPie,
+  Code,
+  CreditCard,
+  Eraser,
+  Flame,
+  ImagePlus,
+  Indent,
+  Italic,
+  LayoutList,
+  Link,
+  List,
+  ListOrdered,
+  Menu,
+  MinusSquare,
+  Newspaper,
+  Quote,
+  Redo,
+  Sparkles,
+  Strikethrough,
+  Table,
+  Trash2,
+  Undo,
+  Wand2,
+  Wrench,
+} from 'lucide-vue-next'
 import {
   codeBlockThemeOptions,
   colorOptions,
@@ -68,6 +95,98 @@ function customStyle() {
       <MenubarCheckboxItem class="py-2" :checked="isOpenPostSlider" @click="isOpenPostSlider = !isOpenPostSlider">
         草稿箱
       </MenubarCheckboxItem>
+      <MenubarSub>
+        <MenubarSubTrigger class="py-2" inset>
+          编辑器
+        </MenubarSubTrigger>
+        <MenubarSubContent class="py-2">
+          <MenubarItem class="py-2">
+            <Undo class="mr-2 size-4" />
+            撤销
+          </MenubarItem>
+          <MenubarItem class="py-2">
+            <Redo class="mr-2 size-4" />
+            重做
+          </MenubarItem>
+          <MenubarSeparator />
+          <MenubarItem class="py-2">
+            <Wand2 class="mr-2 size-4" />
+            格式化
+          </MenubarItem>
+          <MenubarItem class="py-2">
+            <Bold class="mr-2 size-4" />
+            加粗
+          </MenubarItem>
+          <MenubarItem class="py-2">
+            <Italic class="mr-2 size-4" />
+            斜体
+          </MenubarItem>
+          <MenubarItem class="py-2">
+            <Strikethrough class="mr-2 size-4" />
+            删除线
+          </MenubarItem>
+          <MenubarItem class="py-2">
+            <Code class="mr-2 size-4" />
+            行内代码
+          </MenubarItem>
+          <MenubarSeparator />
+          <MenubarItem class="py-2">
+            <List class="mr-2 size-4" />
+            无序列表
+          </MenubarItem>
+          <MenubarItem class="py-2">
+            <ListOrdered class="mr-2 size-4" />
+            有序列表
+          </MenubarItem>
+          <MenubarItem class="py-2">
+            <Quote class="mr-2 size-4" />
+            引用
+          </MenubarItem>
+          <MenubarSeparator />
+          <MenubarItem class="py-2">
+            <Link class="mr-2 size-4" />
+            超链接
+          </MenubarItem>
+          <MenubarItem class="py-2">
+            <ImagePlus class="mr-2 size-4" />
+            上传图片
+          </MenubarItem>
+          <MenubarItem class="py-2">
+            <Table class="mr-2 size-4" />
+            插入表格
+          </MenubarItem>
+          <MenubarItem class="py-2">
+            <CreditCard class="mr-2 size-4" />
+            插入公众号名片
+          </MenubarItem>
+          <MenubarSeparator />
+          <MenubarItem class="py-2">
+            <MinusSquare class="mr-2 size-4" />
+            分割线
+          </MenubarItem>
+          <MenubarItem class="py-2">
+            <ChartPie class="mr-2 size-4" />
+            图表工具
+          </MenubarItem>
+          <MenubarItem class="py-2">
+            <Indent class="mr-2 size-4" />
+            段落首行缩进
+          </MenubarItem>
+          <MenubarSeparator />
+          <MenubarItem class="py-2">
+            <LayoutList class="mr-2 size-4" />
+            预设模块
+          </MenubarItem>
+          <MenubarItem class="py-2">
+            <Eraser class="mr-2 size-4" />
+            删除当前行
+          </MenubarItem>
+          <MenubarItem class="py-2">
+            <Trash2 class="mr-2 size-4" />
+            清空内容
+          </MenubarItem>
+        </MenubarSubContent>
+      </MenubarSub>
       <MenubarSub>
         <MenubarSubTrigger class="py-2" inset>
           导入导出

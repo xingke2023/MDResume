@@ -14,6 +14,7 @@ import {
   X,
 } from 'lucide-vue-next'
 import { nextTick, ref } from 'vue'
+import PosterGeneratorDialog from '@/components/ai/PosterGeneratorDialog.vue'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
@@ -28,7 +29,6 @@ import useAIConfigStore from '@/stores/AIConfig'
 import type { QuickCommandRuntime } from '@/stores/useQuickCommands'
 import { useQuickCommands } from '@/stores/useQuickCommands'
 import { copyPlain } from '@/utils/clipboard'
-import PosterGeneratorDialog from '@/components/ai/PosterGeneratorDialog.vue'
 
 /* ---------- 组件属性 ---------- */
 const props = defineProps<{ open: boolean }>()
@@ -678,7 +678,7 @@ async function sendMessage() {
         </div>
 
         <!-- ============ 菜单按钮 ============ -->
-        <div class="flex w-full items-center gap-2">
+        <div class="w-full flex items-center gap-2">
           <Button
             size="sm"
             class="h-8 flex-1 text-xs font-medium transition-all"
@@ -689,14 +689,14 @@ async function sendMessage() {
           </Button>
           <Button
             size="sm"
-            class="h-8 flex-1 border border-purple-200 bg-white text-xs font-medium text-purple-600 transition-all hover:bg-purple-50 dark:border-purple-800 dark:bg-gray-900 dark:text-purple-400 dark:hover:bg-purple-900/30"
+            class="h-8 flex-1 border border-purple-200 bg-white text-xs text-purple-600 font-medium transition-all dark:border-purple-800 dark:bg-gray-900 hover:bg-purple-50 dark:text-purple-400 dark:hover:bg-purple-900/30"
             @click="switchToAIImage"
           >
-            AI文生图
+            AI作图
           </Button>
           <Button
             size="sm"
-            class="h-8 flex-1 border border-green-200 bg-white text-xs font-medium text-green-600 transition-all hover:bg-green-50 dark:border-green-800 dark:bg-gray-900 dark:text-green-400 dark:hover:bg-green-900/30"
+            class="h-8 flex-1 border border-green-200 bg-white text-xs text-green-600 font-medium transition-all dark:border-green-800 dark:bg-gray-900 hover:bg-green-50 dark:text-green-400 dark:hover:bg-green-900/30"
             @click="switchToPoster"
           >
             海报制作
@@ -755,7 +755,7 @@ async function sendMessage() {
       <!-- ============ 上下文选择按钮 ============ -->
       <div v-if="!configVisible" class="mb-3 flex flex-wrap items-center gap-2">
         <!-- 选择上下文标签 -->
-        <span class="text-sm text-gray-700 font-medium dark:text-gray-300">上下文引用:</span>
+        <span class="text-sm text-gray-700 font-medium dark:text-gray-300">引用:</span>
         <Button
           size="sm"
           variant="outline"
