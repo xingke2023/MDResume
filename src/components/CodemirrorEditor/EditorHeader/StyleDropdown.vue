@@ -74,7 +74,7 @@ function customStyle() {
         <MenubarSubTrigger class="py-2" inset>
           编辑器
         </MenubarSubTrigger>
-        <MenubarSubContent class="py-2">
+        <MenubarSubContent class="w-40 py-2">
           <MenubarItem class="py-2">
             <Undo class="mr-2 size-4" />
             撤销
@@ -166,7 +166,7 @@ function customStyle() {
         <MenubarSubTrigger class="py-2" inset>
           导入导出
         </MenubarSubTrigger>
-        <MenubarSubContent class="py-2">
+        <MenubarSubContent class="w-48 py-2">
           <MenubarItem class="py-2" @click="onCopy('txt')">
             复制公众号格式
           </MenubarItem>
