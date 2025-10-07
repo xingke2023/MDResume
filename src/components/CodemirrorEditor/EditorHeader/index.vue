@@ -9,7 +9,6 @@ import {
   Eraser,
   ImagePlus,
   Indent,
-  Italic,
   Link,
   List,
   ListOrdered,
