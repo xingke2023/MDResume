@@ -2,7 +2,7 @@
 import { Calendar } from 'lucide-vue-next'
 import { Button } from '@/components/ui/button'
 
-const props = defineProps<{
+defineProps<{
   visible: boolean
 }>()
 
