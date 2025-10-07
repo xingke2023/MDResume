@@ -710,7 +710,7 @@ async function sendMessage() {
       <!-- ============ 快捷指令 ============ -->
       <div
         v-if="!configVisible"
-        class="mb-1 flex flex-wrap gap-2 overflow-x-auto pb-1"
+        class="mb-1 mt-3 flex flex-wrap gap-2 overflow-x-auto pb-1"
       >
         <template v-if="quickCmdStore.commands.length">
           <Button
@@ -718,7 +718,7 @@ async function sendMessage() {
             :key="cmd.id"
             variant="secondary"
             size="sm"
-            class="text-xs"
+            class="h-6 px-2 py-0.5 text-xs"
             @click="applyQuickCommand(cmd)"
           >
             {{ cmd.label }}
@@ -733,11 +733,12 @@ async function sendMessage() {
         </template>
         <Button
           variant="ghost"
-          size="icon"
+          size="sm"
+          class="h-6 w-6 p-0"
           title="管理指令"
           @click="cmdMgrOpen = true"
         >
-          <Plus class="h-4 w-4" />
+          <Plus class="h-3.5 w-3.5" />
         </Button>
 
         <!-- 指令管理弹窗 -->
@@ -754,57 +755,57 @@ async function sendMessage() {
       <!-- ============ 上下文选择按钮 ============ -->
       <div v-if="!configVisible" class="mb-3 flex flex-wrap items-center gap-2">
         <!-- 选择上下文标签 -->
-        <span class="text-sm text-gray-700 font-medium dark:text-gray-300">引用:</span>
+        <span class="ml-1 text-xs text-gray-700 font-medium dark:text-gray-300">引文:</span>
         <Button
           size="sm"
           variant="outline"
-          class="h-8 flex items-center gap-1 rounded-md px-3 font-medium transition-colors duration-150"
+          class="h-5 flex items-center gap-0.5 rounded px-2 py-0.5 text-xs transition-colors duration-150"
           :style="quotedContent.trim() ? { backgroundColor: '#000000', color: '#ffffff', borderColor: '#000000' } : {}"
           aria-label="选取的上下文"
           :disabled="!quotedContent.trim()"
           @click="quotedContent.trim() && clearQuotedContent()"
         >
-          <Check v-if="quotedContent.trim()" class="h-4 w-4" />
-          <span class="text-xs">鼠标选取</span>
+          <Check v-if="quotedContent.trim()" class="h-2.5 w-2.5" />
+          <span>鼠标选取</span>
         </Button>
 
         <!-- 引用光标前作为上下文按钮 -->
         <Button
           size="sm"
           variant="outline"
-          class="h-8 flex items-center gap-1 rounded-md px-3 font-medium transition-colors duration-150"
+          class="h-5 flex items-center gap-0.5 rounded px-2 py-0.5 text-xs transition-colors duration-150"
           :style="isQuoteCursorBefore ? { backgroundColor: '#000000', color: '#ffffff', borderColor: '#000000' } : {}"
           aria-label="引用光标前作为上下文"
           @click="() => { console.log('点击光标前，当前状态:', isQuoteCursorBefore); quoteCursorBefore(); nextTick(() => console.log('点击光标前后，新状态:', isQuoteCursorBefore)); }"
         >
-          <Check v-if="isQuoteCursorBefore" class="h-4 w-4" />
-          <span class="text-xs">光标前全文</span>
+          <Check v-if="isQuoteCursorBefore" class="h-2.5 w-2.5" />
+          <span>光标前全文</span>
         </Button>
 
         <!-- 写光标中间部分按钮 -->
         <Button
           size="sm"
           variant="outline"
-          class="h-8 flex items-center gap-1 rounded-md px-3 font-medium transition-colors duration-150"
+          class="h-5 flex items-center gap-0.5 rounded px-2 py-0.5 text-xs transition-colors duration-150"
           :style="isQuoteCursorMiddle ? { backgroundColor: '#000000', color: '#ffffff', borderColor: '#000000' } : {}"
           aria-label="写光标中间部分"
           @click="() => { console.log('点击光标中间，当前状态:', isQuoteCursorMiddle); quoteCursorMiddle(); nextTick(() => console.log('点击光标中间后，新状态:', isQuoteCursorMiddle)); }"
         >
-          <Check v-if="isQuoteCursorMiddle" class="h-4 w-4" />
-          <span class="text-xs">写光标中间</span>
+          <Check v-if="isQuoteCursorMiddle" class="h-2.5 w-2.5" />
+          <span>光标前后</span>
         </Button>
 
         <!-- 引用全文按钮 -->
         <Button
           size="sm"
           variant="outline"
-          class="h-8 flex items-center gap-1 rounded-md px-3 font-medium transition-colors duration-150"
+          class="h-5 flex items-center gap-0.5 rounded px-2 py-0.5 text-xs transition-colors duration-150"
           :style="isQuoteAllContent ? { backgroundColor: '#000000', color: '#ffffff', borderColor: '#000000' } : {}"
           aria-label="引用全文作为上下文"
           @click="() => { console.log('点击全文，当前状态:', isQuoteAllContent); quoteAllContent(); nextTick(() => console.log('点击全文后，新状态:', isQuoteAllContent)); }"
         >
-          <Check v-if="isQuoteAllContent" class="h-4 w-4" />
-          <span class="text-xs">全文</span>
+          <Check v-if="isQuoteAllContent" class="h-2.5 w-2.5" />
+          <span>全文</span>
         </Button>
       </div>
 
