@@ -1,6 +1,9 @@
 <script setup lang="ts">
+import { ref } from 'vue'
 import { Sparkles } from 'lucide-vue-next'
 import { Button } from '@/components/ui/button'
+import { Label } from '@/components/ui/label'
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 
 defineProps<{
   confirmVisible: boolean
@@ -10,8 +13,29 @@ defineProps<{
 const emit = defineEmits<{
   'update:confirmVisible': [value: boolean]
   'update:loadingVisible': [value: boolean]
-  'confirm': []
+  'confirm': [mode: string]
 }>()
+
+// 排版模式
+const selectedMode = ref('simple')
+
+const modes = [
+  {
+    value: 'simple',
+    label: '简易模式',
+    description: '基础排版，适合日常快速整理',
+  },
+  {
+    value: 'standard',
+    label: '标准模式',
+    description: '完整排版，标题层级、段落优化',
+  },
+  {
+    value: 'professional',
+    label: '专业模式',
+    description: '深度优化，适合正式发布内容',
+  },
+]
 
 function closeConfirm() {
   emit('update:confirmVisible', false)
@@ -22,7 +46,7 @@ function closeLoading() {
 }
 
 function handleConfirm() {
-  emit('confirm')
+  emit('confirm', selectedMode.value)
 }
 </script>
 
@@ -45,9 +69,53 @@ function handleConfirm() {
       </div>
 
       <!-- 标题 -->
-      <h3 class="mb-2 text-center text-xl text-gray-900 font-bold dark:text-gray-100">
+      <h3 class="mb-4 text-center text-xl text-gray-900 font-bold dark:text-gray-100">
         全文一键排版
       </h3>
+
+      <!-- 模式选择 -->
+      <div class="mb-6">
+        <Label class="mb-3 block text-sm text-gray-700 font-medium dark:text-gray-300">
+          选择排版模式
+        </Label>
+        <RadioGroup v-model="selectedMode" class="space-y-3">
+          <div
+            v-for="mode in modes"
+            :key="mode.value"
+            class="flex items-start space-x-3 rounded-lg border border-gray-200 p-3 transition-colors dark:border-gray-700"
+            :class="[
+              selectedMode === mode.value
+                ? 'border-blue-500 bg-blue-50 dark:border-blue-600 dark:bg-blue-950/30'
+                : 'hover:bg-gray-50 dark:hover:bg-gray-800/50'
+            ]"
+          >
+            <RadioGroupItem :id="mode.value" :value="mode.value" class="mt-0.5" />
+            <div class="flex-1">
+              <Label
+                :for="mode.value"
+                class="cursor-pointer text-sm font-medium"
+                :class="[
+                  selectedMode === mode.value
+                    ? 'text-blue-700 dark:text-blue-300'
+                    : 'text-gray-900 dark:text-gray-100'
+                ]"
+              >
+                {{ mode.label }}
+              </Label>
+              <p
+                class="text-xs"
+                :class="[
+                  selectedMode === mode.value
+                    ? 'text-blue-600 dark:text-blue-400'
+                    : 'text-gray-500 dark:text-gray-400'
+                ]"
+              >
+                {{ mode.description }}
+              </p>
+            </div>
+          </div>
+        </RadioGroup>
+      </div>
 
       <!-- 提示内容 -->
       <div class="space-y-2 mb-6 text-sm text-gray-600 leading-relaxed dark:text-gray-300">

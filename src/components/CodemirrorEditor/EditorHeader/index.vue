@@ -325,8 +325,42 @@ function showBeautifyConfirm() {
   beautifyConfirmVisible.value = true
 }
 
+// 不同排版模式的 prompt
+const beautifyPrompts = {
+  simple: `请将原文的格式调整为良好的 Markdown，一定不要改变原文内容，增加减少原文文字都不可以。
+
+要求：
+1. 直接输出 Markdown 源码，不要包含 \`\`\`markdown 或任何代码块标记
+2. 简单分段，内容分段落空一行
+3. 保持原文内容不变，只做基础格式整理
+4. 确保输出符合标准 Markdown 语法`,
+
+  standard: `请将原文的格式调整为良好的 Markdown，一定不要改变原文内容，增加减少原文文字都不可以。
+
+要求：
+1. 直接输出 Markdown 源码，不要包含 \`\`\`markdown 或任何代码块标记
+2. 根据内容智能分段并合理设置各级标题（使用h3 h4 h5 不使用h1 h2）
+3. 适当使用引用、粗体、斜体等格式
+4. 不要使用无序列表，有序列表
+5. 内容分段落空一行
+6. 保持原文内容不变，只优化格式，确保输出符合标准 Markdown
+7. 确保输出符合标准 Markdown 语法`,
+
+  professional: `请将原文的格式调整为专业级的 Markdown，一定不要改变原文内容，增加减少原文文字都不可以。
+
+要求：
+1. 直接输出 Markdown 源码，不要包含 \`\`\`markdown 或任何代码块标记
+2. 深度分析内容结构，设置清晰的标题层级（使用h3 h4 h5 不使用h1 h2）
+3. 充分使用 Markdown 格式：引用、粗体、斜体、代码块等
+4. 合理使用列表（有序列表、无序列表）组织要点
+5. 优化段落结构，确保逻辑清晰，内容分段落空一行
+6. 添加适当的分隔线增强可读性
+7. 保持原文内容不变，深度优化排版格式
+8. 确保输出符合标准 Markdown 语法，适合正式发布`,
+}
+
 // 一键美化功能
-async function beautifyMarkdown() {
+async function beautifyMarkdown(mode: string = 'simple') {
   beautifyConfirmVisible.value = false
 
   if (!editor.value || isBeautifying.value)
@@ -364,16 +398,8 @@ async function beautifyMarkdown() {
       return
     }
 
-    const systemPrompt = `请将原文的格式调整为良好的 Markdown，一定不要改变原文内容，增加减少原文文字都不可以。
-
-要求：
-1. 直接输出 Markdown 源码，不要包含 \`\`\`markdown 或任何代码块标记
-2. 根据内容智能分段并合理设置各级标题（使用h3 h4 h5 不使用h1 h2）
-3. 适当使用引用、粗体、斜体等格式，
-4. 不要使用无序列表，有序列表
-5. 内容分段落空一行
-4. 保持原文内容不变，只优化格式，确保输出符合标准 Markdown
-5. 确保输出符合标准 Markdown 语法`
+    // 根据模式选择对应的 prompt
+    const systemPrompt = beautifyPrompts[mode as keyof typeof beautifyPrompts] || beautifyPrompts.simple
 
     const userPrompt = `将原文的格式调整为良好的 Markdown，一定不要改变原文内容，增加减少原文文字都不可以：\n\n原文是：\n
 
