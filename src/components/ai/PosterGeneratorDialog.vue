@@ -62,7 +62,7 @@ const imageTimestamps = ref<number[]>([]) // 存储每张图片的生成时间�
 const abortController = ref<AbortController | null>(null)
 const currentImageIndex = ref(0)
 const timeUpdateInterval = ref<NodeJS.Timeout | null>(null)
-const selectedStyle = ref<string>(``)
+const selectedStyle = ref<string>(`cartoon`)
 
 /* ---------- 预设风格模板 ---------- */
 interface StyleTemplate {
@@ -821,37 +821,8 @@ function getTimeRemainingClass(index: number): string {
                 全新推出！专业级 AI 海报生成工具
               </p>
             </div>
-            <p class="text-sm text-gray-800 leading-relaxed dark:text-gray-200">
-              我们最新推出的 AI 海报制作功能，采用先进的图像生成技术，能够根据您的文字描述快速创作出<span class="text-purple-700 font-semibold dark:text-purple-300">精美的海报作品</span>。
-            </p>
-            <div class="grid grid-cols-2 mt-3 gap-2">
-              <div class="flex items-start gap-1.5">
-                <span class="mt-0.5 text-sm text-green-600 dark:text-green-400">✓</span>
-                <span class="text-xs text-gray-700 dark:text-gray-300">高质量图像输出</span>
-              </div>
-              <div class="flex items-start gap-1.5">
-                <span class="mt-0.5 text-sm text-green-600 dark:text-green-400">✓</span>
-                <span class="text-xs text-gray-700 dark:text-gray-300">智能理解描述</span>
-              </div>
-              <div class="flex items-start gap-1.5">
-                <span class="mt-0.5 text-sm text-green-600 dark:text-green-400">✓</span>
-                <span class="text-xs text-gray-700 dark:text-gray-300">专业设计风格</span>
-              </div>
-              <div class="flex items-start gap-1.5">
-                <span class="mt-0.5 text-sm text-green-600 dark:text-green-400">✓</span>
-                <span class="text-xs text-gray-700 dark:text-gray-300">一键插入编辑器</span>
-              </div>
-            </div>
 
             <!-- 温馨提示 -->
-            <div class="mt-2 border-t border-gray-200 pt-2 dark:border-gray-700">
-              <div class="flex items-start gap-1.5 rounded bg-gray-50 p-1.5 dark:bg-gray-800/50">
-                <span class="text-xs text-gray-500 dark:text-gray-400">💡</span>
-                <p class="text-xs text-gray-500 leading-relaxed dark:text-gray-400">
-                  使用人数多生成速度会慢,描述越详细效果越好
-                </p>
-              </div>
-            </div>
           </div>
         </div>
 
@@ -868,7 +839,7 @@ function getTimeRemainingClass(index: number): string {
               v-for="style in styleTemplates"
               :key="style.id"
               type="button"
-              class="group relative overflow-hidden border-2 rounded-lg p-3 text-left transition-all duration-200"
+              class="group relative overflow-hidden border-2 rounded-lg p-2 text-left transition-all duration-200"
               :class="[
                 selectedStyle === style.id
                   ? 'border-purple-500 bg-purple-50 dark:border-purple-400 dark:bg-purple-950/30'
@@ -884,14 +855,11 @@ function getTimeRemainingClass(index: number): string {
                 <span class="text-xs">✓</span>
               </div>
 
-              <div class="flex items-start gap-2">
-                <span class="text-2xl">{{ style.emoji }}</span>
+              <div class="flex items-center gap-2">
+                <span class="text-xl">{{ style.emoji }}</span>
                 <div class="min-w-0 flex-1">
                   <p class="text-sm text-gray-800 font-semibold dark:text-gray-200">
                     {{ style.name }}
-                  </p>
-                  <p class="truncate text-xs text-gray-500 dark:text-gray-400">
-                    {{ style.description }}
                   </p>
                 </div>
               </div>

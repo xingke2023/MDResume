@@ -1,6 +1,26 @@
 <script setup lang="ts">
 import {
+  Bold,
+  ChartPie,
+  Code,
+  CreditCard,
+  Eraser,
+  ImagePlus,
+  Indent,
+  Italic,
+  LayoutList,
+  Link,
+  List,
+  ListOrdered,
   Menu,
+  MinusSquare,
+  Quote,
+  Redo,
+  Strikethrough,
+  Table,
+  Trash2,
+  Undo,
+  Wand2,
 } from 'lucide-vue-next'
 import {
   codeBlockThemeOptions,
@@ -66,10 +86,56 @@ function customStyle() {
     <MenubarTrigger class="px-1.5 sm:px-3">
       <Menu class="size-4" />
     </MenubarTrigger>
-    <MenubarContent class="w-32 py-2" align="start">
+    <MenubarContent class="w-40 py-2" align="start">
       <MenubarCheckboxItem class="py-2" :checked="isOpenPostSlider" @click="isOpenPostSlider = !isOpenPostSlider">
         草稿箱
       </MenubarCheckboxItem>
+      <MenubarSub>
+        <MenubarSubTrigger class="py-2" inset>
+          导入导出
+        </MenubarSubTrigger>
+        <MenubarSubContent class="z-[60] w-40 py-2">
+          <MenubarItem class="py-2" @click="onCopy('txt')">
+            复制公众号格式
+          </MenubarItem>
+          <MenubarItem class="py-2" @click="onCopy('html')">
+            复制 HTML 格式
+          </MenubarItem>
+          <MenubarItem class="py-2" @click="onCopy('md')">
+            复制 MD 格式
+          </MenubarItem>
+          <MenubarSeparator />
+          <MenubarItem class="py-2" @click="importMarkdownContent()">
+            导入 .md
+          </MenubarItem>
+          <MenubarItem class="py-2" @click="exportEditorContent2MD()">
+            导出 .md
+          </MenubarItem>
+          <MenubarItem class="py-2" @click="exportEditorContent2HTML()">
+            导出 .html
+          </MenubarItem>
+          <MenubarItem class="py-2" @click="exportEditorContent2PureHTML()">
+            导出 .html（无样式）
+          </MenubarItem>
+          <MenubarItem class="py-2" @click="exportEditorContent2PDF()">
+            导出 .pdf
+          </MenubarItem>
+          <MenubarItem class="py-2" @click="downloadAsCardImage()">
+            导出 .png
+          </MenubarItem>
+        </MenubarSubContent>
+      </MenubarSub>
+      <MenubarCheckboxItem class="py-2" :checked="isDark" @click="toggleDark()">
+        暗色模式
+      </MenubarCheckboxItem>
+      <MenubarSeparator />
+      <StyleOptionMenu
+        title="主题"
+        :options="themeOptions"
+        :current="theme"
+        :change="themeChanged"
+      />
+      <MenubarSeparator />
       <MenubarSub>
         <MenubarSubTrigger class="py-2" inset>
           编辑器
@@ -162,52 +228,6 @@ function customStyle() {
           </MenubarItem>
         </MenubarSubContent>
       </MenubarSub>
-      <MenubarSub>
-        <MenubarSubTrigger class="py-2" inset>
-          导入导出
-        </MenubarSubTrigger>
-        <MenubarSubContent class="z-[60] w-40 py-2">
-          <MenubarItem class="py-2" @click="onCopy('txt')">
-            复制公众号格式
-          </MenubarItem>
-          <MenubarItem class="py-2" @click="onCopy('html')">
-            复制 HTML 格式
-          </MenubarItem>
-          <MenubarItem class="py-2" @click="onCopy('md')">
-            复制 MD 格式
-          </MenubarItem>
-          <MenubarSeparator />
-          <MenubarItem class="py-2" @click="importMarkdownContent()">
-            导入 .md
-          </MenubarItem>
-          <MenubarItem class="py-2" @click="exportEditorContent2MD()">
-            导出 .md
-          </MenubarItem>
-          <MenubarItem class="py-2" @click="exportEditorContent2HTML()">
-            导出 .html
-          </MenubarItem>
-          <MenubarItem class="py-2" @click="exportEditorContent2PureHTML()">
-            导出 .html（无样式）
-          </MenubarItem>
-          <MenubarItem class="py-2" @click="exportEditorContent2PDF()">
-            导出 .pdf
-          </MenubarItem>
-          <MenubarItem class="py-2" @click="downloadAsCardImage()">
-            导出 .png
-          </MenubarItem>
-        </MenubarSubContent>
-      </MenubarSub>
-      <MenubarCheckboxItem class="py-2" :checked="isDark" @click="toggleDark()">
-        暗色模式
-      </MenubarCheckboxItem>
-      <MenubarSeparator />
-      <StyleOptionMenu
-        title="主题"
-        :options="themeOptions"
-        :current="theme"
-        :change="themeChanged"
-      />
-      <MenubarSeparator />
       <StyleOptionMenu
         title="字体"
         :options="fontFamilyOptions"

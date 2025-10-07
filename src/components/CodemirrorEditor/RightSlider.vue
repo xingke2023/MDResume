@@ -10,19 +10,11 @@ import {
   themeOptions,
   widthOptions,
 } from '@/config'
-import { useDisplayStore, useStore } from '@/stores'
+import { useStore } from '@/stores'
 
 const store = useStore()
-const displayStore = useDisplayStore()
 
-const { isDark, primaryColor } = storeToRefs(store)
-
-function customStyle() {
-  displayStore.toggleShowCssEditor()
-  setTimeout(() => {
-    store.cssEditor!.refresh()
-  }, 50)
-}
+const { primaryColor } = storeToRefs(store)
 
 const isOpen = ref(false)
 
@@ -48,7 +40,7 @@ const formatOptions = ref<Format[]>([`rgb`, `hex`, `hsl`, `hsv`])
   >
     <div
       v-show="store.isOpenRightSlider"
-      class="fixed inset-0 z-[100] flex flex-col bg-white dark:bg-[#191919]"
+      class="fixed inset-y-0 right-0 z-[100] flex w-full flex-col bg-white dark:bg-[#191919]"
     >
       <!-- 顶部栏 -->
       <div class="flex items-center justify-between border-b border-gray-200 bg-white px-4 py-3 dark:border-gray-700 dark:bg-[#191919]">
@@ -65,23 +57,23 @@ const formatOptions = ref<Format[]>([`rgb`, `hex`, `hsl`, `hsv`])
       </div>
 
       <!-- 设置内容 -->
-      <div class="space-y-4 flex-1 overflow-auto p-4">
-        <div class="space-y-2">
-          <h2>字体</h2>
-          <div class="grid grid-cols-3 justify-items-center gap-2">
+      <div class="space-y-2 flex-1 overflow-auto px-3 py-2">
+        <div class="flex items-center gap-2">
+          <h2 class="whitespace-nowrap text-xs" style="font-weight: 600;">字体</h2>
+          <div class="flex gap-1">
             <Button
-              v-for="{ label, value } in fontFamilyOptions" :key="value" variant="outline" class="w-full"
+              v-for="{ label, value } in fontFamilyOptions" :key="value" variant="outline" size="sm" class="h-7 w-14 text-xs"
               :class="{ 'border-black dark:border-white border-2': store.fontFamily === value }" @click="store.fontChanged(value)"
             >
               {{ label }}
             </Button>
           </div>
         </div>
-        <div class="space-y-2">
-          <h2>字号</h2>
-          <div class="grid grid-cols-5 justify-items-center gap-2">
+        <div class="flex items-center gap-2">
+          <h2 class="whitespace-nowrap text-xs" style="font-weight: 600;">字号</h2>
+          <div class="grid flex-1 grid-cols-5 justify-items-center gap-1">
             <Button
-              v-for="{ value, desc } in fontSizeOptions" :key="value" variant="outline" class="w-full" :class="{
+              v-for="{ value, desc } in fontSizeOptions" :key="value" variant="outline" size="sm" class="h-7 w-full text-xs" :class="{
                 'border-black dark:border-white border-2': store.fontSize === value,
               }" @click="store.sizeChanged(value)"
             >
@@ -89,16 +81,16 @@ const formatOptions = ref<Format[]>([`rgb`, `hex`, `hsl`, `hsv`])
             </Button>
           </div>
         </div>
-        <div class="space-y-2">
-          <h2>主题色</h2>
-          <div class="grid grid-cols-3 justify-items-center gap-2">
+        <div class="space-y-1">
+          <h2 class="text-xs" style="font-weight: 600;">主题色</h2>
+          <div class="grid grid-cols-4 justify-items-center gap-1">
             <Button
-              v-for="{ label, value } in colorOptions" :key="value" class="w-full" variant="outline" :class="{
+              v-for="{ label, value } in colorOptions" :key="value" size="sm" class="h-7 w-full text-xs" variant="outline" :class="{
                 'border-black dark:border-white border-2': store.primaryColor === value,
               }" @click="store.colorChanged(value)"
             >
               <span
-                class="mr-2 inline-block h-4 w-4 rounded-full" :style="{
+                class="mr-1.5 inline-block h-3 w-3 rounded-full" :style="{
                   background: value,
                 }"
               />
@@ -106,9 +98,9 @@ const formatOptions = ref<Format[]>([`rgb`, `hex`, `hsl`, `hsv`])
             </Button>
           </div>
         </div>
-        <div class="space-y-2">
-          <h2>自定义主题色</h2>
-          <div ref="pickColorsContainer">
+        <div class="flex items-center gap-2">
+          <h2 class="whitespace-nowrap text-xs" style="font-weight: 600;">自定义主题色</h2>
+          <div ref="pickColorsContainer" class="flex-1">
             <PickColors
               v-if="pickColorsContainer" v-model:value="primaryColor" show-alpha :format="format"
               :format-options="formatOptions" :theme="store.isDark ? 'dark' : 'light'"
@@ -116,26 +108,11 @@ const formatOptions = ref<Format[]>([`rgb`, `hex`, `hsl`, `hsv`])
             />
           </div>
         </div>
-        <div class="space-y-2">
-          <h2>代码块主题</h2>
-          <div>
-            <Select v-model="store.codeBlockTheme" @update:model-value="store.codeBlockThemeChanged">
-              <SelectTrigger>
-                <SelectValue placeholder="Select a code block theme" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem v-for="{ label, value } in codeBlockThemeOptions" :key="label" :value="value">
-                  {{ label }}
-                </SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-        </div>
-        <div class="space-y-2">
-          <h2>图注格式</h2>
-          <div class="grid grid-cols-3 justify-items-center gap-2">
+        <div class="flex items-center gap-2">
+          <h2 class="whitespace-nowrap text-xs" style="font-weight: 600;">图注格式</h2>
+          <div class="flex gap-1">
             <Button
-              v-for="{ label, value } in legendOptions" :key="value" class="w-full" variant="outline" :class="{
+              v-for="{ label, value } in legendOptions" :key="value" size="sm" class="h-7 w-14 text-xs" variant="outline" :class="{
                 'border-black dark:border-white border-2': store.legend === value,
               }" @click="store.legendChanged(value)"
             >
@@ -144,37 +121,18 @@ const formatOptions = ref<Format[]>([`rgb`, `hex`, `hsl`, `hsv`])
           </div>
         </div>
 
-        <div class="space-y-2">
-          <h2>Mac 代码块</h2>
-          <div class="grid grid-cols-5 justify-items-center gap-2">
+        <div class="flex items-center gap-2">
+          <h2 class="whitespace-nowrap text-xs" style="font-weight: 600;">AI 工具箱</h2>
+          <div class="flex gap-1">
             <Button
-              class="w-full" variant="outline" :class="{
-                'border-black dark:border-white border-2': store.isMacCodeBlock,
-              }" @click="!store.isMacCodeBlock && store.macCodeBlockChanged()"
-            >
-              开启
-            </Button>
-            <Button
-              class="w-full" variant="outline" :class="{
-                'border-black dark:border-white border-2': !store.isMacCodeBlock,
-              }" @click="store.isMacCodeBlock && store.macCodeBlockChanged()"
-            >
-              关闭
-            </Button>
-          </div>
-        </div>
-        <div class="space-y-2">
-          <h2>AI 工具箱</h2>
-          <div class="grid grid-cols-5 justify-items-center gap-2">
-            <Button
-              class="w-full" variant="outline" :class="{
+              size="sm" class="h-7 w-14 text-xs" variant="outline" :class="{
                 'border-black dark:border-white border-2': store.showAIToolbox,
               }" @click="!store.showAIToolbox && store.aiToolboxChanged()"
             >
               开启
             </Button>
             <Button
-              class="w-full" variant="outline" :class="{
+              size="sm" class="h-7 w-14 text-xs" variant="outline" :class="{
                 'border-black dark:border-white border-2': !store.showAIToolbox,
               }" @click="store.showAIToolbox && store.aiToolboxChanged()"
             >
@@ -182,18 +140,18 @@ const formatOptions = ref<Format[]>([`rgb`, `hex`, `hsl`, `hsv`])
             </Button>
           </div>
         </div>
-        <div class="space-y-2">
-          <h2>微信外链转底部引用</h2>
-          <div class="grid grid-cols-5 justify-items-center gap-2">
+        <div class="flex items-center gap-2">
+          <h2 class="whitespace-nowrap text-xs" style="font-weight: 600;">微信外链转底部引用</h2>
+          <div class="flex gap-1">
             <Button
-              class="w-full" variant="outline" :class="{
+              size="sm" class="h-7 w-14 text-xs" variant="outline" :class="{
                 'border-black dark:border-white border-2': store.isCiteStatus,
               }" @click="!store.isCiteStatus && store.citeStatusChanged()"
             >
               开启
             </Button>
             <Button
-              class="w-full" variant="outline" :class="{
+              size="sm" class="h-7 w-14 text-xs" variant="outline" :class="{
                 'border-black dark:border-white border-2': !store.isCiteStatus,
               }" @click="store.isCiteStatus && store.citeStatusChanged()"
             >
@@ -201,18 +159,18 @@ const formatOptions = ref<Format[]>([`rgb`, `hex`, `hsl`, `hsv`])
             </Button>
           </div>
         </div>
-        <div class="space-y-2">
-          <h2>段落首行缩进</h2>
-          <div class="grid grid-cols-5 justify-items-center gap-2">
+        <div class="flex items-center gap-2">
+          <h2 class="whitespace-nowrap text-xs" style="font-weight: 600;">段落首行缩进</h2>
+          <div class="flex gap-1">
             <Button
-              class="w-full" variant="outline" :class="{
+              size="sm" class="h-7 w-14 text-xs" variant="outline" :class="{
                 'border-black dark:border-white border-2': store.isUseIndent,
               }" @click="!store.isUseIndent && store.useIndentChanged()"
             >
               开启
             </Button>
             <Button
-              class="w-full" variant="outline" :class="{
+              size="sm" class="h-7 w-14 text-xs" variant="outline" :class="{
                 'border-black dark:border-white border-2': !store.isUseIndent,
               }" @click="store.isUseIndent && store.useIndentChanged()"
             >
@@ -220,80 +178,17 @@ const formatOptions = ref<Format[]>([`rgb`, `hex`, `hsl`, `hsv`])
             </Button>
           </div>
         </div>
-        <div class="space-y-2">
-          <h2>自定义 CSS 面板</h2>
-          <div class="grid grid-cols-5 justify-items-center gap-2">
+        <div class="flex items-center gap-2">
+          <h2 class="whitespace-nowrap text-xs" style="font-weight: 600;">预览模式</h2>
+          <div class="grid flex-1 grid-cols-5 justify-items-center gap-1">
             <Button
-              class="w-full" variant="outline" :class="{
-                'border-black dark:border-white border-2': displayStore.isShowCssEditor,
-              }" @click="!displayStore.isShowCssEditor && customStyle()"
-            >
-              开启
-            </Button>
-            <Button
-              class="w-full" variant="outline" :class="{
-                'border-black dark:border-white border-2': !displayStore.isShowCssEditor,
-              }" @click="displayStore.isShowCssEditor && customStyle()"
-            >
-              关闭
-            </Button>
-          </div>
-        </div>
-        <div class="space-y-2">
-          <h2>编辑区位置</h2>
-          <div class="grid grid-cols-5 justify-items-center gap-2">
-            <Button
-              class="w-full" variant="outline" :class="{
-                'border-black dark:border-white border-2': store.isEditOnLeft,
-              }" @click="!store.isEditOnLeft && store.toggleEditOnLeft()"
-            >
-              左侧
-            </Button>
-            <Button
-              class="w-full" variant="outline" :class="{
-                'border-black dark:border-white border-2': !store.isEditOnLeft,
-              }" @click="store.isEditOnLeft && store.toggleEditOnLeft()"
-            >
-              右侧
-            </Button>
-          </div>
-        </div>
-        <div class="space-y-2">
-          <h2>预览模式</h2>
-          <div class="grid grid-cols-5 justify-items-center gap-2">
-            <Button
-              v-for="{ label, value } in widthOptions" :key="value" class="w-full" variant="outline" :class="{
+              v-for="{ label, value } in widthOptions" :key="value" size="sm" class="h-7 w-full text-xs" variant="outline" :class="{
                 'border-black dark:border-white border-2': store.previewWidth === value,
               }" @click="store.previewWidthChanged(value)"
             >
               {{ label }}
             </Button>
           </div>
-        </div>
-        <div class="space-y-2">
-          <h2>模式</h2>
-          <div class="grid grid-cols-5 justify-items-center gap-2">
-            <Button
-              class="w-full" variant="outline" :class="{
-                'border-black dark:border-white border-2': !isDark,
-              }" @click="store.toggleDark(false)"
-            >
-              <Sun class="h-4 w-4" />
-            </Button>
-            <Button
-              class="w-full" variant="outline" :class="{
-                'border-black dark:border-white border-2': isDark,
-              }" @click="store.toggleDark(true)"
-            >
-              <Moon class="h-4 w-4" />
-            </Button>
-          </div>
-        </div>
-        <div class="space-y-2">
-          <h2>样式配置</h2>
-          <Button variant="destructive" @click="store.resetStyleConfirm">
-            重置
-          </Button>
         </div>
       </div>
     </div>
@@ -302,20 +197,20 @@ const formatOptions = ref<Format[]>([`rgb`, `hex`, `hsl`, `hsv`])
   <!-- 桌面端：侧边栏 -->
   <div
     v-else
-    class="relative overflow-hidden border-l-2 border-gray/20 bg-white transition-width duration-300 dark:bg-[#191919]"
-    :class="[store.isOpenRightSlider ? 'w-100' : 'w-0 border-l-0']"
+    class="relative overflow-hidden border-l-2 border-gray/20 bg-white transition-all duration-300 dark:bg-[#191919]"
+    :class="[store.isOpenRightSlider ? 'w-[45%]' : 'w-0 border-l-0']"
   >
     <div
-      class="space-y-4 h-full overflow-auto p-4 transition-transform" :class="{
+      class="space-y-2 h-full overflow-auto px-3 py-2 transition-transform" :class="{
         'translate-x-0': store.isOpenRightSlider,
         'translate-x-full': !store.isOpenRightSlider,
       }"
     >
-      <div class="space-y-2">
-        <h2>主题</h2>
-        <div class="grid grid-cols-3 justify-items-center gap-2">
+      <div class="space-y-1">
+        <h2 class="text-xs" style="font-weight: 600;">主题</h2>
+        <div class="grid grid-cols-3 justify-items-center gap-1">
           <Button
-            v-for="{ label, value } in themeOptions" :key="value" class="w-full" variant="outline" :class="{
+            v-for="{ label, value } in themeOptions" :key="value" size="sm" class="h-7 w-full text-xs" variant="outline" :class="{
               'border-black dark:border-white border-2': store.theme === value,
             }" @click="store.themeChanged(value)"
           >
@@ -323,22 +218,22 @@ const formatOptions = ref<Format[]>([`rgb`, `hex`, `hsl`, `hsv`])
           </Button>
         </div>
       </div>
-      <div class="space-y-2">
-        <h2>字体</h2>
-        <div class="grid grid-cols-3 justify-items-center gap-2">
+      <div class="flex items-center gap-2">
+        <h2 class="whitespace-nowrap text-sm" style="font-weight: 600;">字体</h2>
+        <div class="flex gap-1">
           <Button
-            v-for="{ label, value } in fontFamilyOptions" :key="value" variant="outline" class="w-full"
+            v-for="{ label, value } in fontFamilyOptions" :key="value" variant="outline" size="sm" class="h-7 w-14 text-xs"
             :class="{ 'border-black dark:border-white border-2': store.fontFamily === value }" @click="store.fontChanged(value)"
           >
             {{ label }}
           </Button>
         </div>
       </div>
-      <div class="space-y-2">
-        <h2>字号</h2>
-        <div class="grid grid-cols-5 justify-items-center gap-2">
+      <div class="flex items-center gap-2">
+        <h2 class="whitespace-nowrap text-sm" style="font-weight: 600;">字号</h2>
+        <div class="grid flex-1 grid-cols-5 justify-items-center gap-1">
           <Button
-            v-for="{ value, desc } in fontSizeOptions" :key="value" variant="outline" class="w-full" :class="{
+            v-for="{ value, desc } in fontSizeOptions" :key="value" variant="outline" size="sm" class="h-7 w-full text-xs" :class="{
               'border-black dark:border-white border-2': store.fontSize === value,
             }" @click="store.sizeChanged(value)"
           >
@@ -346,16 +241,16 @@ const formatOptions = ref<Format[]>([`rgb`, `hex`, `hsl`, `hsv`])
           </Button>
         </div>
       </div>
-      <div class="space-y-2">
-        <h2>主题色</h2>
-        <div class="grid grid-cols-3 justify-items-center gap-2">
+      <div class="space-y-1">
+        <h2 class="text-xs" style="font-weight: 600;">主题色</h2>
+        <div class="grid grid-cols-3 justify-items-center gap-1">
           <Button
-            v-for="{ label, value } in colorOptions" :key="value" class="w-full" variant="outline" :class="{
+            v-for="{ label, value } in colorOptions" :key="value" size="sm" class="h-7 w-full text-xs" variant="outline" :class="{
               'border-black dark:border-white border-2': store.primaryColor === value,
             }" @click="store.colorChanged(value)"
           >
             <span
-              class="mr-2 inline-block h-4 w-4 rounded-full" :style="{
+              class="mr-1.5 inline-block h-3 w-3 rounded-full" :style="{
                 background: value,
               }"
             />
@@ -363,9 +258,9 @@ const formatOptions = ref<Format[]>([`rgb`, `hex`, `hsl`, `hsv`])
           </Button>
         </div>
       </div>
-      <div class="space-y-2">
-        <h2>自定义主题色</h2>
-        <div ref="pickColorsContainer">
+      <div class="flex items-center gap-2">
+        <h2 class="whitespace-nowrap text-sm" style="font-weight: 600;">自定义主题色</h2>
+        <div ref="pickColorsContainer" class="flex-1">
           <PickColors
             v-if="pickColorsContainer" v-model:value="primaryColor" show-alpha :format="format"
             :format-options="formatOptions" :theme="store.isDark ? 'dark' : 'light'"
@@ -373,26 +268,11 @@ const formatOptions = ref<Format[]>([`rgb`, `hex`, `hsl`, `hsv`])
           />
         </div>
       </div>
-      <div class="space-y-2">
-        <h2>代码块主题</h2>
-        <div>
-          <Select v-model="store.codeBlockTheme" @update:model-value="store.codeBlockThemeChanged">
-            <SelectTrigger>
-              <SelectValue placeholder="Select a code block theme" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem v-for="{ label, value } in codeBlockThemeOptions" :key="label" :value="value">
-                {{ label }}
-              </SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-      </div>
-      <div class="space-y-2">
-        <h2>图注格式</h2>
-        <div class="grid grid-cols-3 justify-items-center gap-2">
+      <div class="flex items-center gap-2">
+        <h2 class="whitespace-nowrap text-sm" style="font-weight: 600;">图注格式</h2>
+        <div class="flex gap-1">
           <Button
-            v-for="{ label, value } in legendOptions" :key="value" class="w-full" variant="outline" :class="{
+            v-for="{ label, value } in legendOptions" :key="value" size="sm" class="h-7 w-14 text-xs" variant="outline" :class="{
               'border-black dark:border-white border-2': store.legend === value,
             }" @click="store.legendChanged(value)"
           >
@@ -401,37 +281,18 @@ const formatOptions = ref<Format[]>([`rgb`, `hex`, `hsl`, `hsv`])
         </div>
       </div>
 
-      <div class="space-y-2">
-        <h2>Mac 代码块</h2>
-        <div class="grid grid-cols-5 justify-items-center gap-2">
+      <div class="flex items-center gap-2">
+        <h2 class="whitespace-nowrap text-sm" style="font-weight: 600;">AI 工具箱</h2>
+        <div class="flex gap-1">
           <Button
-            class="w-full" variant="outline" :class="{
-              'border-black dark:border-white border-2': store.isMacCodeBlock,
-            }" @click="!store.isMacCodeBlock && store.macCodeBlockChanged()"
-          >
-            开启
-          </Button>
-          <Button
-            class="w-full" variant="outline" :class="{
-              'border-black dark:border-white border-2': !store.isMacCodeBlock,
-            }" @click="store.isMacCodeBlock && store.macCodeBlockChanged()"
-          >
-            关闭
-          </Button>
-        </div>
-      </div>
-      <div class="space-y-2">
-        <h2>AI 工具箱</h2>
-        <div class="grid grid-cols-5 justify-items-center gap-2">
-          <Button
-            class="w-full" variant="outline" :class="{
+            size="sm" class="h-7 w-14 text-xs" variant="outline" :class="{
               'border-black dark:border-white border-2': store.showAIToolbox,
             }" @click="!store.showAIToolbox && store.aiToolboxChanged()"
           >
             开启
           </Button>
           <Button
-            class="w-full" variant="outline" :class="{
+            size="sm" class="h-7 w-14 text-xs" variant="outline" :class="{
               'border-black dark:border-white border-2': !store.showAIToolbox,
             }" @click="store.showAIToolbox && store.aiToolboxChanged()"
           >
@@ -439,18 +300,18 @@ const formatOptions = ref<Format[]>([`rgb`, `hex`, `hsl`, `hsv`])
           </Button>
         </div>
       </div>
-      <div class="space-y-2">
-        <h2>微信外链转底部引用</h2>
-        <div class="grid grid-cols-5 justify-items-center gap-2">
+      <div class="flex items-center gap-2">
+        <h2 class="whitespace-nowrap text-sm" style="font-weight: 600;">微信外链转底部引用</h2>
+        <div class="flex gap-1">
           <Button
-            class="w-full" variant="outline" :class="{
+            size="sm" class="h-7 w-14 text-xs" variant="outline" :class="{
               'border-black dark:border-white border-2': store.isCiteStatus,
             }" @click="!store.isCiteStatus && store.citeStatusChanged()"
           >
             开启
           </Button>
           <Button
-            class="w-full" variant="outline" :class="{
+            size="sm" class="h-7 w-14 text-xs" variant="outline" :class="{
               'border-black dark:border-white border-2': !store.isCiteStatus,
             }" @click="store.isCiteStatus && store.citeStatusChanged()"
           >
@@ -458,18 +319,18 @@ const formatOptions = ref<Format[]>([`rgb`, `hex`, `hsl`, `hsv`])
           </Button>
         </div>
       </div>
-      <div class="space-y-2">
-        <h2>段落首行缩进</h2>
-        <div class="grid grid-cols-5 justify-items-center gap-2">
+      <div class="flex items-center gap-2">
+        <h2 class="whitespace-nowrap text-sm" style="font-weight: 600;">段落首行缩进</h2>
+        <div class="flex gap-1">
           <Button
-            class="w-full" variant="outline" :class="{
+            size="sm" class="h-7 w-14 text-xs" variant="outline" :class="{
               'border-black dark:border-white border-2': store.isUseIndent,
             }" @click="!store.isUseIndent && store.useIndentChanged()"
           >
             开启
           </Button>
           <Button
-            class="w-full" variant="outline" :class="{
+            size="sm" class="h-7 w-14 text-xs" variant="outline" :class="{
               'border-black dark:border-white border-2': !store.isUseIndent,
             }" @click="store.isUseIndent && store.useIndentChanged()"
           >
@@ -477,49 +338,11 @@ const formatOptions = ref<Format[]>([`rgb`, `hex`, `hsl`, `hsv`])
           </Button>
         </div>
       </div>
-      <div class="space-y-2">
-        <h2>自定义 CSS 面板</h2>
-        <div class="grid grid-cols-5 justify-items-center gap-2">
+      <div class="flex items-center gap-2">
+        <h2 class="whitespace-nowrap text-sm" style="font-weight: 600;">预览模式</h2>
+        <div class="grid flex-1 grid-cols-5 justify-items-center gap-1">
           <Button
-            class="w-full" variant="outline" :class="{
-              'border-black dark:border-white border-2': displayStore.isShowCssEditor,
-            }" @click="!displayStore.isShowCssEditor && customStyle()"
-          >
-            开启
-          </Button>
-          <Button
-            class="w-full" variant="outline" :class="{
-              'border-black dark:border-white border-2': !displayStore.isShowCssEditor,
-            }" @click="displayStore.isShowCssEditor && customStyle()"
-          >
-            关闭
-          </Button>
-        </div>
-      </div>
-      <div class="space-y-2">
-        <h2>编辑区位置</h2>
-        <div class="grid grid-cols-5 justify-items-center gap-2">
-          <Button
-            class="w-full" variant="outline" :class="{
-              'border-black dark:border-white border-2': store.isEditOnLeft,
-            }" @click="!store.isEditOnLeft && store.toggleEditOnLeft()"
-          >
-            左侧
-          </Button>
-          <Button
-            class="w-full" variant="outline" :class="{
-              'border-black dark:border-white border-2': !store.isEditOnLeft,
-            }" @click="store.isEditOnLeft && store.toggleEditOnLeft()"
-          >
-            右侧
-          </Button>
-        </div>
-      </div>
-      <div class="space-y-2">
-        <h2>预览模式</h2>
-        <div class="grid grid-cols-5 justify-items-center gap-2">
-          <Button
-            v-for="{ label, value } in widthOptions" :key="value" class="w-full" variant="outline" :class="{
+            v-for="{ label, value } in widthOptions" :key="value" size="sm" class="h-7 w-full text-xs" variant="outline" :class="{
               'border-black dark:border-white border-2': store.previewWidth === value,
             }" @click="store.previewWidthChanged(value)"
           >
@@ -527,59 +350,34 @@ const formatOptions = ref<Format[]>([`rgb`, `hex`, `hsl`, `hsv`])
           </Button>
         </div>
       </div>
-      <div class="space-y-2">
-        <h2>模式</h2>
-        <div class="grid grid-cols-5 justify-items-center gap-2">
-          <Button
-            class="w-full" variant="outline" :class="{
-              'border-black dark:border-white border-2': !isDark,
-            }" @click="store.toggleDark(false)"
-          >
-            <Sun class="h-4 w-4" />
-          </Button>
-          <Button
-            class="w-full" variant="outline" :class="{
-              'border-black dark:border-white border-2': isDark,
-            }" @click="store.toggleDark(true)"
-          >
-            <Moon class="h-4 w-4" />
-          </Button>
-        </div>
-      </div>
-      <div class="space-y-2">
-        <h2>样式配置</h2>
-        <Button variant="destructive" @click="store.resetStyleConfirm">
-          重置
-        </Button>
-      </div>
     </div>
   </div>
 </template>
 
 <style scoped>
 .drawer-enter-active {
-  animation: slideUp 0.3s ease-out;
+  animation: slideLeft 0.3s ease-out;
 }
 
 .drawer-leave-active {
-  animation: slideDown 0.3s ease-out;
+  animation: slideRight 0.3s ease-out;
 }
 
-@keyframes slideUp {
+@keyframes slideLeft {
   from {
-    transform: translateY(100%);
+    transform: translateX(100%);
   }
   to {
-    transform: translateY(0);
+    transform: translateX(0);
   }
 }
 
-@keyframes slideDown {
+@keyframes slideRight {
   from {
-    transform: translateY(0);
+    transform: translateX(0);
   }
   to {
-    transform: translateY(100%);
+    transform: translateX(100%);
   }
 }
 </style>

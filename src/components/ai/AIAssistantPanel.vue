@@ -40,6 +40,8 @@ const displayStore = useDisplayStore()
 const { toggleAIImageDialog } = displayStore
 
 /* ---------- 菜单按钮 ---------- */
+/* ---------- 弹窗开关 ---------- */
+const dialogVisible = ref(props.open)
 const activeTab = ref(`text-edit`)
 const posterDialogVisible = ref(false)
 
@@ -57,9 +59,6 @@ function switchToPoster() {
   // 打开海报制作对话框
   posterDialogVisible.value = true
 }
-
-/* ---------- 弹窗开关 ---------- */
-const dialogVisible = ref(props.open)
 watch(() => props.open, val => (dialogVisible.value = val))
 watch(dialogVisible, (val) => {
   emit(`update:open`, val)
