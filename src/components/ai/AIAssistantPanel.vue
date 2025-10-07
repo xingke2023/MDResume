@@ -4,9 +4,6 @@ import {
   Check,
   Copy,
   Edit,
-  FileText,
-  Image as ImageIcon,
-  ImagePlus,
   Pause,
   Plus,
   RefreshCcw,
@@ -691,23 +688,20 @@ async function sendMessage() {
           <TabsList class="grid h-9 w-full grid-cols-3 bg-gray-100 p-1 dark:bg-gray-800">
             <TabsTrigger
               value="text-edit"
-              class="flex h-7 items-center gap-1.5 data-[state=active]:bg-blue-500 data-[state=active]:text-white data-[state=active]:shadow-sm"
+              class="flex h-7 items-center justify-center data-[state=active]:bg-blue-500 data-[state=active]:text-white data-[state=active]:shadow-sm"
             >
-              <FileText class="h-3.5 w-3.5" />
               <span class="text-xs font-medium">文本编辑</span>
             </TabsTrigger>
             <TabsTrigger
               value="ai-image"
-              class="flex h-7 items-center gap-1.5 data-[state=active]:bg-purple-500 data-[state=active]:text-white data-[state=active]:shadow-sm"
+              class="flex h-7 items-center justify-center data-[state=active]:bg-purple-500 data-[state=active]:text-white data-[state=active]:shadow-sm"
             >
-              <ImageIcon class="h-3.5 w-3.5" />
               <span class="text-xs font-medium">AI文生图</span>
             </TabsTrigger>
             <TabsTrigger
               value="poster"
-              class="flex h-7 items-center gap-1.5 data-[state=active]:bg-green-500 data-[state=active]:text-white data-[state=active]:shadow-sm"
+              class="flex h-7 items-center justify-center data-[state=active]:bg-green-500 data-[state=active]:text-white data-[state=active]:shadow-sm"
             >
-              <ImagePlus class="h-3.5 w-3.5" />
               <span class="text-xs font-medium">海报制作</span>
             </TabsTrigger>
           </TabsList>
