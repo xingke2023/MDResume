@@ -1305,6 +1305,15 @@ function handleCopyWithMode(mode: string) {
           >
             H5
           </Button>
+          <!-- 标题6 -->
+          <Button
+            variant="outline"
+            size="sm"
+            class="flex-shrink-0"
+            @click="applyHeadingLevel(6)"
+          >
+            H6
+          </Button>
           <!-- 加粗 -->
           <Button
             variant="outline"
