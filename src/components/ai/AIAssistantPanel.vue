@@ -4,7 +4,9 @@ import {
   Check,
   Copy,
   Edit,
+  FileText,
   Image as ImageIcon,
+  ImagePlus,
   Pause,
   Plus,
   RefreshCcw,
@@ -24,11 +26,17 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import { Textarea } from '@/components/ui/textarea'
+import {
+  Tabs,
+  TabsList,
+  TabsTrigger,
+} from '@/components/ui/tabs'
 import { useDisplayStore } from '@/stores'
 import useAIConfigStore from '@/stores/AIConfig'
 import type { QuickCommandRuntime } from '@/stores/useQuickCommands'
 import { useQuickCommands } from '@/stores/useQuickCommands'
 import { copyPlain } from '@/utils/clipboard'
+import PosterGeneratorDialog from '@/components/ai/PosterGeneratorDialog.vue'
 
 /* ---------- 组件属性 ---------- */
 const props = defineProps<{ open: boolean }>()
@@ -39,13 +47,28 @@ const { editor } = storeToRefs(store)
 const displayStore = useDisplayStore()
 const { toggleAIImageDialog } = displayStore
 
+/* ---------- 菜单选项卡 ---------- */
+const activeTab = ref(`text-edit`)
+const posterDialogVisible = ref(false)
+
+function handleTabChange(value: string | number) {
+  const tabValue = String(value)
+  if (tabValue === `ai-image`) {
+    // 切换到AI文生图
+    dialogVisible.value = false
+    setTimeout(() => toggleAIImageDialog(true), 100)
+  }
+  else if (tabValue === `poster`) {
+    // 打开海报制作对话框
+    posterDialogVisible.value = true
+  }
+  else {
+    activeTab.value = tabValue
+  }
+}
+
 /* ---------- 弹窗开关 ---------- */
 const dialogVisible = ref(props.open)
-
-function switchToImageGen() {
-  dialogVisible.value = false
-  setTimeout(() => toggleAIImageDialog(true), 100)
-}
 watch(() => props.open, val => (dialogVisible.value = val))
 watch(dialogVisible, (val) => {
   emit(`update:open`, val)
@@ -635,23 +658,11 @@ async function sendMessage() {
       class="bg-card text-card-foreground h-dvh max-h-dvh w-full flex flex-col rounded-none shadow-xl sm:max-h-[80vh] sm:max-w-2xl sm:rounded-xl"
     >
       <!-- ============ 头部 ============ -->
-      <DialogHeader class="space-y-1 flex flex-col items-start">
-        <div class="w-full flex items-center justify-left">
-          <div class="flex items-center">
-            <DialogTitle>AI助手</DialogTitle>
-            <span class="text-muted-foreground ml-2 text-xs"> - </span>
-          </div>
+      <DialogHeader class="space-y-3 flex flex-col items-start">
+        <div class="w-full flex items-center justify-between">
+          <DialogTitle>AI助手</DialogTitle>
 
           <div class="flex items-center gap-1">
-            <Button
-              title="AI 文生图"
-              aria-label="AI 文生图"
-              variant="ghost"
-              size="icon"
-              @click="switchToImageGen"
-            >
-              <ImageIcon class="h-4 w-4" />
-            </Button>
             <Button
               title="清空对话内容"
               aria-label="清空对话内容"
@@ -674,6 +685,24 @@ async function sendMessage() {
             </Button>
           </div>
         </div>
+
+        <!-- ============ 菜单选项卡 ============ -->
+        <Tabs :model-value="activeTab" class="w-full" @update:model-value="handleTabChange">
+          <TabsList class="grid w-full grid-cols-3">
+            <TabsTrigger value="text-edit" class="flex items-center gap-1.5">
+              <FileText class="h-4 w-4" />
+              <span>文本编辑</span>
+            </TabsTrigger>
+            <TabsTrigger value="ai-image" class="flex items-center gap-1.5">
+              <ImageIcon class="h-4 w-4" />
+              <span>AI文生图</span>
+            </TabsTrigger>
+            <TabsTrigger value="poster" class="flex items-center gap-1.5">
+              <ImagePlus class="h-4 w-4" />
+              <span>海报制作</span>
+            </TabsTrigger>
+          </TabsList>
+        </Tabs>
 
         <DialogDescription class="sr-only">
           AI助手对话框，用于与AI进行对话交流，帮助您编写和优化内容
@@ -967,6 +996,9 @@ async function sendMessage() {
       {{ customToastMessage }}
     </div>
   </Transition>
+
+  <!-- 海报制作对话框 -->
+  <PosterGeneratorDialog v-model:open="posterDialogVisible" />
 </template>
 
 <style scoped>
