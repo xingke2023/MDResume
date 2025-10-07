@@ -240,6 +240,11 @@ pie
 // 段落首行缩进 - 切换全局缩进样式
 function applyParagraphIndent() {
   store.useIndentChanged()
+  // 显示当前缩进状态
+  nextTick(() => {
+    const status = store.isUseIndent ? `已开启` : `已关闭`
+    toast.success(`段落首行缩进${status}`)
+  })
 }
 
 // 撤销
@@ -330,17 +335,14 @@ const beautifyPrompts = {
 
 【重要规则】
 - 严禁修改、增加、删除、改写原文的任何文字内容
-- 严禁调整原文的语序、用词、语气
-- 只能添加 Markdown 格式标记（#、**、空行等）
-- 原文是什么就输出什么，一字不改
+- 只能添加修改 Markdown 格式标记（#、**、空行等）
+- 段落间要有空行，内容分段落空一行
+- 标题统一使用 H4（#### ），不使用其他级别的标题
+- 不要使用无序列表和有序列表
 
 【格式要求】
 1. 直接输出 Markdown 源码，不要包含 \`\`\`markdown 或任何代码块标记
-2. 段落间要有空行，内容分段落空一行
-3. 标题统一使用 H4（#### ），不使用其他级别的标题
-4. 不要使用无序列表和有序列表
-5. 只做基础格式整理，不做任何文字修改
-6. 确保输出符合标准 Markdown 语法`,
+2. 确保输出符合标准 Markdown 语法`,
 
   standard: `你是一个 Markdown 格式优化专家。请将原文优化为良好的 Markdown 格式。
 
@@ -379,7 +381,7 @@ const beautifyPrompts = {
 }
 
 // 一键美化功能
-async function beautifyMarkdown(mode: string = 'simple', customRequirement: string = '') {
+async function beautifyMarkdown(mode: string = `simple`, customRequirement: string = ``) {
   beautifyConfirmVisible.value = false
 
   if (!editor.value || isBeautifying.value)

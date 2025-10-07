@@ -16,8 +16,8 @@ export const mwebIndigoTheme: Theme = {
   block: {
     container: {
       'min-width': `200px`,
-      'max-width': `760px`,
-      'margin': `0 auto`,
+      'width': `100%`,
+      'margin': `0`,
       'padding': `1em`,
     },
 
@@ -27,6 +27,7 @@ export const mwebIndigoTheme: Theme = {
       'margin-bottom': `16px`,
       'line-height': `1.25`,
       'font-size': `1.8em`,
+      'font-family': `PingFang SC, Verdana, Helvetica Neue, Microsoft Yahei, Hiragino Sans GB, Microsoft Sans Serif, WenQuanYi Micro Hei, sans-serif`,
       'font-weight': `600`,
       'color': `#2d3748`,
       'border-color': `#5a67d8`,
@@ -37,8 +38,8 @@ export const mwebIndigoTheme: Theme = {
       'border-left-width': `0px`,
       'padding-top': `0.25rem`,
       'padding-bottom': `0.25rem`,
-      'padding-left': `0.75rem`,
-      'text-align': `center`,
+      'padding-left': `0rem`,
+      'text-align': `left`,
     },
 
     h2: {
@@ -47,6 +48,7 @@ export const mwebIndigoTheme: Theme = {
       'margin-bottom': `16px`,
       'line-height': `1.25`,
       'font-size': `1.5em`,
+      'font-family': `PingFang SC, Verdana, Helvetica Neue, Microsoft Yahei, Hiragino Sans GB, Microsoft Sans Serif, WenQuanYi Micro Hei, sans-serif`,
       'font-weight': `600`,
       'color': `#2d3748`,
       'border-color': `#5a67d8`,
@@ -66,6 +68,7 @@ export const mwebIndigoTheme: Theme = {
       'margin-bottom': `16px`,
       'line-height': `1.25`,
       'font-size': `1.3em`,
+      'font-family': `PingFang SC, Verdana, Helvetica Neue, Microsoft Yahei, Hiragino Sans GB, Microsoft Sans Serif, WenQuanYi Micro Hei, sans-serif`,
       'font-weight': `600`,
       'color': `#2d3748`,
     },
@@ -76,6 +79,7 @@ export const mwebIndigoTheme: Theme = {
       'margin-bottom': `16px`,
       'line-height': `1.25`,
       'font-size': `1.2em`,
+      'font-family': `PingFang SC, Verdana, Helvetica Neue, Microsoft Yahei, Hiragino Sans GB, Microsoft Sans Serif, WenQuanYi Micro Hei, sans-serif`,
       'font-weight': `600`,
       'color': `#2d3748`,
     },
@@ -86,6 +90,7 @@ export const mwebIndigoTheme: Theme = {
       'margin-bottom': `16px`,
       'line-height': `1.25`,
       'font-size': `1.1em`,
+      'font-family': `PingFang SC, Verdana, Helvetica Neue, Microsoft Yahei, Hiragino Sans GB, Microsoft Sans Serif, WenQuanYi Micro Hei, sans-serif`,
       'font-weight': `600`,
       'color': `#2d3748`,
     },
@@ -96,6 +101,7 @@ export const mwebIndigoTheme: Theme = {
       'margin-bottom': `16px`,
       'line-height': `1.25`,
       'font-size': `1em`,
+      'font-family': `PingFang SC, Verdana, Helvetica Neue, Microsoft Yahei, Hiragino Sans GB, Microsoft Sans Serif, WenQuanYi Micro Hei, sans-serif`,
       'font-weight': `600`,
       'color': `#2d3748`,
     },
@@ -185,7 +191,7 @@ export const mwebIndigoTheme: Theme = {
       'margin': `0`,
       'padding': `0`,
       'list-style': `none`,
-      'padding-left': `2em`,
+      'padding-left': `0.5em`,
       'margin-bottom': `1rem`,
     },
 
@@ -193,7 +199,7 @@ export const mwebIndigoTheme: Theme = {
       'margin': `0`,
       'padding': `0`,
       'list-style': `none`,
-      'padding-left': `2em`,
+      'padding-left': `0.5em`,
       'margin-bottom': `1rem`,
     },
 
@@ -228,8 +234,10 @@ export const mwebIndigoTheme: Theme = {
 
   inline: {
     listitem: {
-      margin: `0`,
-      padding: `0`,
+      'text-indent': `-1em`,
+      'display': `block`,
+      'margin': `0.2em 8px`,
+      'padding': `0`,
     },
 
     codespan: {

@@ -24,7 +24,7 @@ export const defaultTheme: Theme = {
     h2: {
       'display': `table`,
       'padding': `0 0.2em`,
-      'margin': `4em auto 2em`,
+      'margin': `2em auto 2em`,
       'color': `#fff`,
       'background': `var(--md-primary-color)`,
       'font-size': `1.2em`,
@@ -189,7 +189,7 @@ export const defaultTheme: Theme = {
     // 有序列表
     ol: {
       'list-style': `none`,
-      'margin-left': `2em`,
+      'padding-left': `1em`,
       'margin-bottom': `1em`,
       'color': `hsl(var(--foreground))`,
     },
@@ -197,7 +197,7 @@ export const defaultTheme: Theme = {
     // 无序列表
     ul: {
       'list-style': `none`,
-      'margin-left': `2em`,
+      'padding-left': `1em`,
       'margin-bottom': `1em`,
       'color': `hsl(var(--foreground))`,
     },

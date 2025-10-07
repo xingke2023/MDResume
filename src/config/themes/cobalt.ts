@@ -17,9 +17,9 @@ export const cobaltTheme: Theme = {
   },
   block: {
     container: {
-      'max-width': `46rem`,
-      'margin': `0 auto`,
-      'padding': `1.6em 3.2em`,
+      width: `100%`,
+      margin: `0`,
+      padding: `1em`,
     },
     h1: {
       'margin-top': `1.5em`,
@@ -140,16 +140,14 @@ export const cobaltTheme: Theme = {
     },
     ol: {
       'list-style': `none`,
-      'margin-left': `1.3em`,
-      'padding': `0`,
+      'padding-left': `0.5em`,
       'counter-reset': `ol_counter`,
       'margin': `0.75em 0 0.45em`,
     },
     ul: {
       'list-style': `none`,
-      'margin-left': `1.3em`,
-      'padding': `0`,
-      'margin': `0.75em 0 0.45em`,
+      'padding-left': `0.5em`,
+      'margin': `0em 0 0em`,
     },
     hr: {
       'margin': `0.75em auto`,
@@ -186,8 +184,10 @@ export const cobaltTheme: Theme = {
   },
   inline: {
     listitem: {
-      'word-wrap': `break-word`,
-      'position': `relative`,
+      'text-indent': `-1em`,
+      'display': `block`,
+      'margin': `0.2em 8px`,
+      'padding': `0`,
     },
     codespan: {
       'display': `inline`,

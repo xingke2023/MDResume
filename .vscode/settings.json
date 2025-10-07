@@ -45,5 +45,6 @@
     "scss",
     "pcss",
     "postcss"
-  ]
+  ],
+  "svn.ignoreMissingSvnWarning": true
 }

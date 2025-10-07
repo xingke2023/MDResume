@@ -54,6 +54,11 @@ export const colorOptions: IConfigOption[] = [
     desc: `稳重冷静`,
   },
   {
+    label: `石墨黑`,
+    value: `#333333`,
+    desc: `内敛极简`,
+  },
+  {
     label: `翡翠绿`,
     value: `#009874`,
     desc: `自然平衡`,
@@ -87,11 +92,6 @@ export const colorOptions: IConfigOption[] = [
     label: `橄榄绿`,
     value: `#556B2F`,
     desc: `沉稳自然`,
-  },
-  {
-    label: `石墨黑`,
-    value: `#333333`,
-    desc: `内敛极简`,
   },
   {
     label: `雾烟灰`,

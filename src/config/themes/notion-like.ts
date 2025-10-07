@@ -12,9 +12,9 @@ export const notionLikeTheme: Theme = {
   },
   block: {
     container: {
-      'max-width': `860px`,
-      'margin': `0 auto`,
-      'padding': `30px`,
+      'width': `100%`,
+      'margin': `0`,
+      'padding': `5px`,
       'padding-bottom': `100px`,
     },
 
@@ -26,7 +26,7 @@ export const notionLikeTheme: Theme = {
       'margin-top': `2rem`,
       'margin-bottom': `1rem`,
       'padding-bottom': `0.3em`,
-      'text-align': `center`,
+      'text-align': `left`,
     },
 
     h2: {
@@ -144,13 +144,13 @@ export const notionLikeTheme: Theme = {
 
     ol: {
       'list-style': `none`,
-      'padding-left': `30px`,
+      'padding-left': `0.5em`,
       'margin': `0.8em 0`,
     },
 
     ul: {
       'list-style': `none`,
-      'padding-left': `30px`,
+      'padding-left': `0.5em`,
       'margin': `0.8em 0`,
     },
 
@@ -186,8 +186,10 @@ export const notionLikeTheme: Theme = {
 
   inline: {
     listitem: {
-      margin: `0`,
-      padding: `0`,
+      'text-indent': `-1em`,
+      'display': `block`,
+      'margin': `0.2em 8px`,
+      'padding': `0`,
     },
 
     codespan: {

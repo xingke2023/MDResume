@@ -133,13 +133,13 @@ export const simpleTheme: Theme = toMerged(defaultTheme, {
 
     ol: {
       'list-style': `none`,
-      'margin-left': `2em`,
+      'padding-left': `1em`,
       'margin-bottom': `1em`,
     },
 
     ul: {
       'list-style': `none`,
-      'margin-left': `2em`,
+      'padding-left': `1em`,
       'margin-bottom': `1em`,
     },
 

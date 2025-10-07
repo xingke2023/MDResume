@@ -9,15 +9,15 @@ export const rainbowTheme: Theme = {
   },
   block: {
     container: {
-      'max-width': `60rem`,
-      'padding-left': `2rem`,
-      'padding-right': `2rem`,
-      'margin': `0 auto`,
+      'width': `100%`,
+      'padding-left': `0.5rem`,
+      'padding-right': `0.5rem`,
+      'margin': `0`,
     },
 
     h1: {
-      'font-size': `2.2rem`,
-      'text-align': `center`,
+      'font-size': `2rem`,
+      'text-align': `left`,
       'text-shadow': `0.15rem 0.15rem 0.3rem rgb(187, 187, 187)`,
       'margin-top': `2rem`,
       'margin-bottom': `1.5rem`,
@@ -25,10 +25,10 @@ export const rainbowTheme: Theme = {
     },
 
     h2: {
-      'font-size': `1.8rem`,
+      'font-size': `1.5rem`,
       'margin-top': `1.8rem`,
-      'margin-left': `-1.5rem`,
-      'margin-right': `-1.5rem`,
+      'margin-left': `-0.5rem`,
+      'margin-right': `-0.5rem`,
       'margin-bottom': `1.5rem`,
       'background-color': `rgb(255, 232, 232)`,
       'padding-left': `1rem`,
@@ -41,7 +41,7 @@ export const rainbowTheme: Theme = {
     },
 
     h3: {
-      'font-size': `1.6rem`,
+      'font-size': `1.3rem`,
       'text-decoration': `underline double rgb(255, 191, 191) 0.15rem`,
       'margin-top': `1.6rem`,
       'margin-bottom': `1rem`,
@@ -141,13 +141,13 @@ export const rainbowTheme: Theme = {
 
     ol: {
       'list-style': `none`,
-      'padding-left': `2rem`,
+      'padding-left': `1em`,
       'margin': `1rem 0`,
     },
 
     ul: {
       'list-style': `none`,
-      'padding-left': `2rem`,
+      'padding-left': `1em`,
       'margin': `1rem 0`,
     },
 

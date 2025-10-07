@@ -3,8 +3,6 @@ import type { IConfigOption, Theme } from '@/types'
 import { cobaltTheme } from './cobalt'
 import { defaultTheme } from './default'
 import { graceTheme } from './grace'
-import { greenInteractiveTheme } from './green-interactive'
-import { mdmdtLightTheme } from './mdmdt-light'
 import { mwebCleanTheme } from './mweb-clean'
 import { mwebIndigoTheme } from './mweb-indigo'
 import { notionLikeTheme } from './notion-like'
@@ -18,9 +16,7 @@ export const themeMap = {
   mwebClean: mwebCleanTheme,
   mwebIndigo: mwebIndigoTheme,
   notionLike: notionLikeTheme,
-  mdmdtLight: mdmdtLightTheme,
   rainbow: rainbowTheme,
-  greenInteractive: greenInteractiveTheme,
   cobalt: cobaltTheme,
 }
 
@@ -59,16 +55,6 @@ export const themeOptions: IConfigOption<keyof typeof themeMap>[] = [
     label: `Notion Like`,
     value: `notionLike`,
     desc: `类 Notion 简洁风格`,
-  },
-  {
-    label: `MDMDT Light`,
-    value: `mdmdtLight`,
-    desc: `现代简约亮色主题`,
-  },
-  {
-    label: `Green Interactive`,
-    value: `greenInteractive`,
-    desc: `绿色交互动画主题`,
   },
   {
     label: `Cobalt`,
