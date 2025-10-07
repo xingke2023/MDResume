@@ -2,15 +2,14 @@
 import {
   Bold,
   BookOpen,
+  Calendar,
   ChartPie,
   Code,
   CreditCard,
   Eraser,
-  Flame,
   ImagePlus,
   Indent,
   Italic,
-  LayoutList,
   Link,
   List,
   ListOrdered,
@@ -29,7 +28,9 @@ import {
   Wrench,
 } from 'lucide-vue-next'
 import { toast } from 'vue-sonner'
+import IndustryHotspotDialog from '@/components/ai/IndustryHotspotDialog.vue'
 import PosterGeneratorDialog from '@/components/ai/PosterGeneratorDialog.vue'
+import WritingPlanDialog from '@/components/ai/WritingPlanDialog.vue'
 import { ctrlKey, themeOptions } from '@/config'
 import { useDisplayStore, useStore } from '@/stores'
 import useAIConfigStore from '@/stores/AIConfig'
@@ -468,20 +469,20 @@ const fetchUrlInput = ref<HTMLInputElement | null>(null)
 const rewriteDialogRef = ref<InstanceType<typeof RewriteDialog> | null>(null)
 const rewriteDialogVisible = ref(false)
 
-// 行业信息推送状态
+// 行业热点文案推送状态
 const industryInfoDialogVisible = ref(false)
 
-// 显示行业信息推送对话框
+// 显示行业热点文案推送对话框
 function showIndustryInfoDialog() {
   industryInfoDialogVisible.value = true
 }
 
-// 爆文推送状态
-const viralArticleDialogVisible = ref(false)
+// 个人写作计划建议状态
+const writingPlanDialogVisible = ref(false)
 
-// 显示爆文推送对话框
-function showViralArticleDialog() {
-  viralArticleDialogVisible.value = true
+// 显示个人写作计划建议对话框
+function showWritingPlanDialog() {
+  writingPlanDialogVisible.value = true
 }
 
 // 个人知识库状态
@@ -1006,7 +1007,7 @@ function handleCopyWithMode(mode: string) {
         v-if="isMobile"
         variant="outline"
         title="编辑器"
-        class="px-2 text-red-500 -ml-2 dark:text-red-400" :class="[
+        class="px-2 -ml-2" :class="[
           isShowMobileToolbar ? 'bg-blue-50 dark:bg-blue-950' : '',
         ]"
         @click="isShowMobileToolbar = !isShowMobileToolbar"
@@ -1114,25 +1115,25 @@ function handleCopyWithMode(mode: string) {
             <Wrench class="mr-2 size-4" />
             {{ isFetching ? '抓取中...' : '公众号文章抓取工具' }}
           </DropdownMenuItem>
+          <DropdownMenuItem :disabled="isBeautifying" class="py-3" @click="showBeautifyConfirm()">
+            <Sparkles class="mr-2 size-4" />
+            {{ isBeautifying ? '美化中...' : '全文一键排版' }}
+          </DropdownMenuItem>
           <DropdownMenuItem class="py-3" @click="showRewriteDialog()">
             <Wand2 class="mr-2 size-4" />
-            全文改写工具
+            全文一键改写
           </DropdownMenuItem>
           <DropdownMenuItem class="py-3" @click="showIndustryInfoDialog()">
             <Newspaper class="mr-2 size-4" />
-            实时行业热点信息推送
+            行业热点文案推送
           </DropdownMenuItem>
-          <DropdownMenuItem class="py-3" @click="showViralArticleDialog()">
-            <Flame class="mr-2 size-4" />
-            行业爆文推送
+          <DropdownMenuItem class="py-3" @click="showWritingPlanDialog()">
+            <Calendar class="mr-2 size-4" />
+            个人写作计划✍️
           </DropdownMenuItem>
           <DropdownMenuItem class="py-3" @click="showKnowledgeBaseDialog()">
             <BookOpen class="mr-2 size-4" />
-            个人AI知识库
-          </DropdownMenuItem>
-          <DropdownMenuItem :disabled="isBeautifying" class="py-3" @click="showBeautifyConfirm()">
-            <Sparkles class="mr-2 size-4" />
-            {{ isBeautifying ? '美化中...' : '一键排版' }}
+            个人知识库
           </DropdownMenuItem>
           <DropdownMenuItem class="py-3" @click="showPosterGeneratorDialog()">
             <ImagePlus class="mr-2 size-4" />
@@ -1210,7 +1211,6 @@ function handleCopyWithMode(mode: string) {
             title="预设模块"
             @click="isOpenPresetPanel = !isOpenPresetPanel"
           >
-            <LayoutList class="mr-1 size-4" />
             预设模块
           </Button>
           <!-- 标题1 -->
@@ -1389,16 +1389,6 @@ function handleCopyWithMode(mode: string) {
           >
             <Redo class="size-4" />
           </Button>
-          <!-- 格式化 -->
-          <Button
-            variant="outline"
-            size="sm"
-            class="flex-shrink-0"
-            title="格式化"
-            @click="formatContent()"
-          >
-            <Wand2 class="size-4" />
-          </Button>
           <!-- 上传图片 -->
           <Button
             variant="outline"
@@ -1438,6 +1428,17 @@ function handleCopyWithMode(mode: string) {
             @click="handleDeleteCurrentLine"
           >
             <Eraser class="size-4" />
+          </Button>
+          <!-- 格式化 -->
+          <Button
+            variant="outline"
+            size="sm"
+            class="flex-shrink-0"
+            title="格式化"
+            @click="formatContent()"
+          >
+            <Wand2 class="mr-1 size-4" />
+            格式化
           </Button>
           <!-- 清空内容 -->
           <Button
@@ -1647,124 +1648,11 @@ function handleCopyWithMode(mode: string) {
   <!-- 一键改写对话框 -->
   <RewriteDialog ref="rewriteDialogRef" v-model:visible="rewriteDialogVisible" />
 
-  <!-- 行业信息推送对话框 -->
-  <div
-    v-if="industryInfoDialogVisible"
-    class="backdrop-blur-sm fixed inset-0 z-50 flex items-center justify-center bg-black/50"
-    @click="industryInfoDialogVisible = false"
-  >
-    <div
-      class="mx-4 max-w-lg w-[90vw] scale-100 transform rounded-2xl bg-white p-6 shadow-2xl transition-all duration-300 dark:bg-gray-800"
-      @click.stop
-    >
-      <!-- 标题图标 -->
-      <div class="mb-4 flex items-center justify-center">
-        <div class="bg-gradient-to-r from-blue-500 to-cyan-600 h-12 w-12 flex items-center justify-center rounded-full">
-          <Newspaper class="h-6 w-6 text-white" />
-        </div>
-      </div>
+  <!-- 行业热点文案推送对话框 -->
+  <IndustryHotspotDialog v-model:visible="industryInfoDialogVisible" />
 
-      <!-- 标题 -->
-      <h3 class="mb-2 text-center text-xl text-gray-900 font-bold dark:text-gray-100">
-        一手行业信息推送
-      </h3>
-
-      <!-- 描述 -->
-      <p class="mb-4 text-center text-sm text-gray-600 dark:text-gray-400">
-        获取最新的行业资讯和信息推送
-      </p>
-
-      <!-- 内容区域 -->
-      <div class="mb-6 rounded-lg bg-blue-50 p-4 dark:bg-blue-900/20">
-        <p class="text-sm text-blue-800 dark:text-blue-300">
-          <span class="font-medium">📢 功能说明：</span>
-        </p>
-        <ul class="space-y-1 mt-2 text-sm text-blue-700 dark:text-blue-300">
-          <li>• 实时获取行业最新动态</li>
-          <li>• 推送热门资讯和趋势分析</li>
-          <li>• 智能筛选相关内容</li>
-        </ul>
-      </div>
-
-      <!-- 按钮组 -->
-      <div class="flex justify-end gap-3">
-        <Button
-          variant="outline"
-          class="flex-1"
-          @click="industryInfoDialogVisible = false"
-        >
-          关闭
-        </Button>
-        <Button
-          class="bg-gradient-to-r from-blue-500 to-cyan-600 hover:from-blue-600 hover:to-cyan-700 flex-1 border-0 text-white"
-          @click="industryInfoDialogVisible = false"
-        >
-          <Newspaper class="mr-1 h-4 w-4" />
-          开始使用
-        </Button>
-      </div>
-    </div>
-  </div>
-
-  <!-- 爆文推送对话框 -->
-  <div
-    v-if="viralArticleDialogVisible"
-    class="backdrop-blur-sm fixed inset-0 z-50 flex items-center justify-center bg-black/50"
-    @click="viralArticleDialogVisible = false"
-  >
-    <div
-      class="mx-4 max-w-lg w-[90vw] scale-100 transform rounded-2xl bg-white p-6 shadow-2xl transition-all duration-300 dark:bg-gray-800"
-      @click.stop
-    >
-      <!-- 标题图标 -->
-      <div class="mb-4 flex items-center justify-center">
-        <div class="bg-gradient-to-r from-orange-500 to-red-600 h-12 w-12 flex items-center justify-center rounded-full">
-          <Flame class="h-6 w-6 text-white" />
-        </div>
-      </div>
-
-      <!-- 标题 -->
-      <h3 class="mb-2 text-center text-xl text-gray-900 font-bold dark:text-gray-100">
-        行业爆文推送
-      </h3>
-
-      <!-- 描述 -->
-      <p class="mb-4 text-center text-sm text-gray-600 dark:text-gray-400">
-        获取行业内热门爆款文章和案例分析
-      </p>
-
-      <!-- 内容区域 -->
-      <div class="mb-6 rounded-lg bg-orange-50 p-4 dark:bg-orange-900/20">
-        <p class="text-sm text-orange-800 dark:text-orange-300">
-          <span class="font-medium">🔥 功能特点：</span>
-        </p>
-        <ul class="space-y-1 mt-2 text-sm text-orange-700 dark:text-orange-300">
-          <li>• 精选行业高阅读量爆文</li>
-          <li>• 分析爆文成功要素</li>
-          <li>• 追踪热门话题趋势</li>
-          <li>• 提供写作灵感参考</li>
-        </ul>
-      </div>
-
-      <!-- 按钮组 -->
-      <div class="flex justify-end gap-3">
-        <Button
-          variant="outline"
-          class="flex-1"
-          @click="viralArticleDialogVisible = false"
-        >
-          关闭
-        </Button>
-        <Button
-          class="bg-gradient-to-r from-orange-500 to-red-600 hover:from-orange-600 hover:to-red-700 flex-1 border-0 text-white"
-          @click="viralArticleDialogVisible = false"
-        >
-          <Flame class="mr-1 h-4 w-4" />
-          开始使用
-        </Button>
-      </div>
-    </div>
-  </div>
+  <!-- 个人写作计划建议对话框 -->
+  <WritingPlanDialog v-model:visible="writingPlanDialogVisible" />
 
   <!-- 个人知识库对话框 -->
   <div
@@ -1798,12 +1686,9 @@ function handleCopyWithMode(mode: string) {
         <p class="text-sm text-blue-800 dark:text-blue-300">
           <span class="font-medium">📚 功能说明：</span>
         </p>
-        <ul class="space-y-1 mt-2 text-sm text-blue-700 dark:text-blue-300">
-          <li>• 用于撰写文案的知识积累</li>
-          <li>• 建立个性化查询助手</li>
-          <li>• 管理个人资料和素材库</li>
-          <li>• 智能检索和内容推荐</li>
-        </ul>
+        <p class="mt-2 text-sm text-blue-700 dark:text-blue-300">
+          个人AI知识库是您写文章时的背景文件，您写作的文章会围绕您的知识库来编写。
+        </p>
       </div>
 
       <!-- 按钮组 -->

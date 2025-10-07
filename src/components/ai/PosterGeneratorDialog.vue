@@ -813,7 +813,7 @@ function getTimeRemainingClass(index: number): string {
         </div>
 
         <!-- 精美介绍 -->
-        <div class="bg-gradient-to-br from-pink-50 via-purple-50 to-blue-50 dark:from-pink-950/40 dark:via-purple-950/40 dark:to-blue-950/40 w-full border-2 border-pink-300 rounded-lg p-4 dark:border-pink-700">
+        <div class="bg-gradient-to-br from-pink-50 via-purple-50 to-blue-50 dark:from-pink-950/40 dark:via-purple-950/40 dark:to-blue-950/40 w-full rounded-lg p-4">
           <div class="space-y-3">
             <div class="flex items-center gap-2">
               <span class="text-2xl">🎨</span>
