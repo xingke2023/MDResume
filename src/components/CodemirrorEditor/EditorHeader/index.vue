@@ -1324,16 +1324,6 @@ function handleCopyWithMode(mode: string) {
           >
             <Bold class="size-4" />
           </Button>
-          <!-- 斜体 -->
-          <Button
-            variant="outline"
-            size="sm"
-            class="flex-shrink-0"
-            title="斜体"
-            @click="addFormat(`${ctrlKey}-I`)"
-          >
-            <Italic class="size-4" />
-          </Button>
           <!-- 删除线 -->
           <Button
             variant="outline"
