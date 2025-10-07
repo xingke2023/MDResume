@@ -26,6 +26,11 @@ export const themeMap = {
 
 export const themeOptions: IConfigOption<keyof typeof themeMap>[] = [
   {
+    label: `Indigo`,
+    value: `mwebIndigo`,
+    desc: `蓝紫配色网格背景`,
+  },
+  {
     label: `优雅`,
     value: `grace`,
     desc: ``,
@@ -34,11 +39,6 @@ export const themeOptions: IConfigOption<keyof typeof themeMap>[] = [
     label: `经典`,
     value: `default`,
     desc: ``,
-  },
-  {
-    label: `Indigo`,
-    value: `mwebIndigo`,
-    desc: `蓝紫配色网格背景`,
   },
   {
     label: `Rainbow`,
