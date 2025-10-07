@@ -2,8 +2,6 @@
 import { ref } from 'vue'
 import { Sparkles } from 'lucide-vue-next'
 import { Button } from '@/components/ui/button'
-import { Label } from '@/components/ui/label'
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 
 defineProps<{
   confirmVisible: boolean
@@ -75,25 +73,29 @@ function handleConfirm() {
 
       <!-- 模式选择 -->
       <div class="mb-6">
-        <Label class="mb-3 block text-sm text-gray-700 font-medium dark:text-gray-300">
+        <label class="mb-3 block text-sm text-gray-700 font-medium dark:text-gray-300">
           选择排版模式
-        </Label>
-        <RadioGroup v-model="selectedMode" class="space-y-3">
-          <div
+        </label>
+        <div class="space-y-3">
+          <label
             v-for="mode in modes"
             :key="mode.value"
-            class="flex items-start space-x-3 rounded-lg border border-gray-200 p-3 transition-colors dark:border-gray-700"
+            class="flex items-start space-x-3 rounded-lg border border-gray-200 p-3 transition-colors cursor-pointer dark:border-gray-700"
             :class="[
               selectedMode === mode.value
                 ? 'border-blue-500 bg-blue-50 dark:border-blue-600 dark:bg-blue-950/30'
                 : 'hover:bg-gray-50 dark:hover:bg-gray-800/50'
             ]"
           >
-            <RadioGroupItem :id="mode.value" :value="mode.value" class="mt-0.5" />
+            <input
+              v-model="selectedMode"
+              type="radio"
+              :value="mode.value"
+              class="mt-1 h-4 w-4 cursor-pointer border-gray-300 text-blue-600 focus:ring-2 focus:ring-blue-500 dark:border-gray-600"
+            >
             <div class="flex-1">
-              <Label
-                :for="mode.value"
-                class="cursor-pointer text-sm font-medium"
+              <div
+                class="text-sm font-medium"
                 :class="[
                   selectedMode === mode.value
                     ? 'text-blue-700 dark:text-blue-300'
@@ -101,7 +103,7 @@ function handleConfirm() {
                 ]"
               >
                 {{ mode.label }}
-              </Label>
+              </div>
               <p
                 class="text-xs"
                 :class="[
@@ -113,8 +115,8 @@ function handleConfirm() {
                 {{ mode.description }}
               </p>
             </div>
-          </div>
-        </RadioGroup>
+          </label>
+        </div>
       </div>
 
       <!-- 提示内容 -->
