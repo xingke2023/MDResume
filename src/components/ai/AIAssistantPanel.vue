@@ -23,11 +23,6 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import { Textarea } from '@/components/ui/textarea'
-import {
-  Tabs,
-  TabsList,
-  TabsTrigger,
-} from '@/components/ui/tabs'
 import { useDisplayStore } from '@/stores'
 import useAIConfigStore from '@/stores/AIConfig'
 import type { QuickCommandRuntime } from '@/stores/useQuickCommands'
@@ -44,24 +39,23 @@ const { editor } = storeToRefs(store)
 const displayStore = useDisplayStore()
 const { toggleAIImageDialog } = displayStore
 
-/* ---------- 菜单选项卡 ---------- */
+/* ---------- 菜单按钮 ---------- */
 const activeTab = ref(`text-edit`)
 const posterDialogVisible = ref(false)
 
-function handleTabChange(value: string | number) {
-  const tabValue = String(value)
-  if (tabValue === `ai-image`) {
-    // 切换到AI文生图
-    dialogVisible.value = false
-    setTimeout(() => toggleAIImageDialog(true), 100)
-  }
-  else if (tabValue === `poster`) {
-    // 打开海报制作对话框
-    posterDialogVisible.value = true
-  }
-  else {
-    activeTab.value = tabValue
-  }
+function switchToTextEdit() {
+  activeTab.value = `text-edit`
+}
+
+function switchToAIImage() {
+  // 切换到AI文生图
+  dialogVisible.value = false
+  setTimeout(() => toggleAIImageDialog(true), 100)
+}
+
+function switchToPoster() {
+  // 打开海报制作对话框
+  posterDialogVisible.value = true
 }
 
 /* ---------- 弹窗开关 ---------- */
@@ -683,29 +677,34 @@ async function sendMessage() {
           </div>
         </div>
 
-        <!-- ============ 菜单选项卡 ============ -->
-        <Tabs :model-value="activeTab" class="w-full" @update:model-value="handleTabChange">
-          <TabsList class="grid h-9 w-full grid-cols-3 bg-gray-100 p-1 dark:bg-gray-800">
-            <TabsTrigger
-              value="text-edit"
-              class="flex h-7 items-center justify-center data-[state=active]:bg-blue-500 data-[state=active]:text-white data-[state=active]:shadow-sm"
-            >
-              <span class="text-xs font-medium">文本编辑</span>
-            </TabsTrigger>
-            <TabsTrigger
-              value="ai-image"
-              class="flex h-7 items-center justify-center data-[state=active]:bg-purple-500 data-[state=active]:text-white data-[state=active]:shadow-sm"
-            >
-              <span class="text-xs font-medium">AI文生图</span>
-            </TabsTrigger>
-            <TabsTrigger
-              value="poster"
-              class="flex h-7 items-center justify-center data-[state=active]:bg-green-500 data-[state=active]:text-white data-[state=active]:shadow-sm"
-            >
-              <span class="text-xs font-medium">海报制作</span>
-            </TabsTrigger>
-          </TabsList>
-        </Tabs>
+        <!-- ============ 菜单按钮 ============ -->
+        <div class="grid h-9 w-full grid-cols-3 gap-2 rounded-lg bg-gray-100 p-1 dark:bg-gray-800">
+          <Button
+            :variant="activeTab === 'text-edit' ? 'default' : 'ghost'"
+            size="sm"
+            class="h-7 text-xs font-medium transition-all"
+            :class="activeTab === 'text-edit' ? 'bg-blue-500 text-white hover:bg-blue-600 shadow-sm' : 'hover:bg-gray-200 dark:hover:bg-gray-700'"
+            @click="switchToTextEdit"
+          >
+            文本编辑
+          </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            class="h-7 text-xs font-medium transition-all hover:bg-purple-100 dark:hover:bg-purple-900/30"
+            @click="switchToAIImage"
+          >
+            AI文生图
+          </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            class="h-7 text-xs font-medium transition-all hover:bg-green-100 dark:hover:bg-green-900/30"
+            @click="switchToPoster"
+          >
+            海报制作
+          </Button>
+        </div>
 
         <DialogDescription class="sr-only">
           AI助手对话框，用于与AI进行对话交流，帮助您编写和优化内容
