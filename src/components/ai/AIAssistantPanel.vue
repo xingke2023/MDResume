@@ -678,28 +678,25 @@ async function sendMessage() {
         </div>
 
         <!-- ============ 菜单按钮 ============ -->
-        <div class="grid h-9 w-full grid-cols-3 gap-2 rounded-lg bg-gray-100 p-1 dark:bg-gray-800">
+        <div class="flex w-full items-center gap-2">
           <Button
-            :variant="activeTab === 'text-edit' ? 'default' : 'ghost'"
             size="sm"
-            class="h-7 text-xs font-medium transition-all"
-            :class="activeTab === 'text-edit' ? 'bg-blue-500 text-white hover:bg-blue-600 shadow-sm' : 'hover:bg-gray-200 dark:hover:bg-gray-700'"
+            class="h-8 flex-1 text-xs font-medium transition-all"
+            :class="activeTab === 'text-edit' ? 'bg-blue-500 text-white hover:bg-blue-600 shadow-md' : 'bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700'"
             @click="switchToTextEdit"
           >
             文本编辑
           </Button>
           <Button
-            variant="ghost"
             size="sm"
-            class="h-7 text-xs font-medium transition-all hover:bg-purple-100 dark:hover:bg-purple-900/30"
+            class="h-8 flex-1 border border-purple-200 bg-white text-xs font-medium text-purple-600 transition-all hover:bg-purple-50 dark:border-purple-800 dark:bg-gray-900 dark:text-purple-400 dark:hover:bg-purple-900/30"
             @click="switchToAIImage"
           >
             AI文生图
           </Button>
           <Button
-            variant="ghost"
             size="sm"
-            class="h-7 text-xs font-medium transition-all hover:bg-green-100 dark:hover:bg-green-900/30"
+            class="h-8 flex-1 border border-green-200 bg-white text-xs font-medium text-green-600 transition-all hover:bg-green-50 dark:border-green-800 dark:bg-gray-900 dark:text-green-400 dark:hover:bg-green-900/30"
             @click="switchToPoster"
           >
             海报制作
