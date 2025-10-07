@@ -66,7 +66,7 @@ function customStyle() {
     <MenubarTrigger class="px-1.5 sm:px-3">
       <Menu class="size-4" />
     </MenubarTrigger>
-    <MenubarContent class="w-40 py-2" align="start">
+    <MenubarContent class="w-36 py-2" align="start">
       <MenubarCheckboxItem class="py-2" :checked="isOpenPostSlider" @click="isOpenPostSlider = !isOpenPostSlider">
         草稿箱
       </MenubarCheckboxItem>
@@ -74,7 +74,7 @@ function customStyle() {
         <MenubarSubTrigger class="py-2" inset>
           编辑器
         </MenubarSubTrigger>
-        <MenubarSubContent class="w-40 py-2">
+        <MenubarSubContent class="w-36 py-2">
           <MenubarItem class="py-2">
             <Undo class="mr-2 size-4" />
             撤销
@@ -166,7 +166,7 @@ function customStyle() {
         <MenubarSubTrigger class="py-2" inset>
           导入导出
         </MenubarSubTrigger>
-        <MenubarSubContent class="w-48 py-2">
+        <MenubarSubContent class="w-40 py-2">
           <MenubarItem class="py-2" @click="onCopy('txt')">
             复制公众号格式
           </MenubarItem>
