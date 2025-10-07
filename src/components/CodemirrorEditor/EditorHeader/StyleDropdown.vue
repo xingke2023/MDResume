@@ -66,7 +66,7 @@ function customStyle() {
     <MenubarTrigger class="px-1.5 sm:px-3">
       <Menu class="size-4" />
     </MenubarTrigger>
-    <MenubarContent class="w-48 py-2" align="start">
+    <MenubarContent class="w-40 py-2" align="start">
       <MenubarCheckboxItem class="py-2" :checked="isOpenPostSlider" @click="isOpenPostSlider = !isOpenPostSlider">
         草稿箱
       </MenubarCheckboxItem>
