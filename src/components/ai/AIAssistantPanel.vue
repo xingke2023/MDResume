@@ -677,7 +677,7 @@ async function sendMessage() {
         </div>
 
         <!-- ============ 菜单按钮 ============ -->
-        <div class="w-full flex items-center gap-2">
+        <div v-if="false" class="w-full flex items-center gap-2">
           <Button
             size="sm"
             class="h-8 flex-1 text-xs font-medium transition-all"
@@ -688,14 +688,14 @@ async function sendMessage() {
           </Button>
           <Button
             size="sm"
-            class="h-8 flex-1 border border-purple-200 bg-white text-xs text-purple-600 font-medium transition-all dark:border-purple-800 dark:bg-gray-900 hover:bg-purple-50 dark:text-purple-400 dark:hover:bg-purple-900/30"
+            class="h-8 flex-1 border border-purple-300 bg-purple-50 text-xs text-purple-600 font-medium transition-all dark:border-purple-700 dark:bg-purple-900/20 hover:bg-purple-100 dark:text-purple-400 dark:hover:bg-purple-900/40"
             @click="switchToAIImage"
           >
             AI作图
           </Button>
           <Button
             size="sm"
-            class="h-8 flex-1 border border-green-200 bg-white text-xs text-green-600 font-medium transition-all dark:border-green-800 dark:bg-gray-900 hover:bg-green-50 dark:text-green-400 dark:hover:bg-green-900/30"
+            class="h-8 flex-1 border border-green-300 bg-green-50 text-xs text-green-600 font-medium transition-all dark:border-green-700 dark:bg-green-900/20 hover:bg-green-100 dark:text-green-400 dark:hover:bg-green-900/40"
             @click="switchToPoster"
           >
             海报制作

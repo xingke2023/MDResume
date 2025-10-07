@@ -65,6 +65,10 @@ function toggleView() {
   if (showEditor.value && !isShowMobileToolbar.value) {
     isShowMobileToolbar.value = true
   }
+  // 如果切换到预览模式，自动收起格式工具栏
+  else if (!showEditor.value && isShowMobileToolbar.value) {
+    isShowMobileToolbar.value = false
+  }
 }
 
 // 监听主题切换事件（手机端）
