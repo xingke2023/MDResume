@@ -11,11 +11,14 @@ defineProps<{
 const emit = defineEmits<{
   'update:confirmVisible': [value: boolean]
   'update:loadingVisible': [value: boolean]
-  'confirm': [mode: string]
+  'confirm': [mode: string, customRequirement: string]
 }>()
 
 // 排版模式
 const selectedMode = ref('simple')
+
+// 自定义要求
+const customRequirement = ref('')
 
 const modes = [
   {
@@ -37,6 +40,8 @@ const modes = [
 
 function closeConfirm() {
   emit('update:confirmVisible', false)
+  // 关闭时清空自定义要求
+  customRequirement.value = ''
 }
 
 function closeLoading() {
@@ -44,7 +49,7 @@ function closeLoading() {
 }
 
 function handleConfirm() {
-  emit('confirm', selectedMode.value)
+  emit('confirm', selectedMode.value, customRequirement.value)
 }
 </script>
 
@@ -117,6 +122,22 @@ function handleConfirm() {
             </div>
           </label>
         </div>
+      </div>
+
+      <!-- 自定义要求输入 -->
+      <div class="mb-6">
+        <label class="mb-2 block text-sm text-gray-700 font-medium dark:text-gray-300">
+          自定义排版要求（可选）
+        </label>
+        <textarea
+          v-model="customRequirement"
+          rows="3"
+          placeholder="例如：标题使用蓝色、段落间距加大、重点内容加粗等..."
+          class="w-full resize-none rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-900 transition-colors placeholder:text-gray-400 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 dark:placeholder:text-gray-500 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+        />
+        <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+          💡 不填写则按照所选模式的默认规则进行排版
+        </p>
       </div>
 
       <!-- 提示内容 -->

@@ -379,7 +379,7 @@ const beautifyPrompts = {
 }
 
 // 一键美化功能
-async function beautifyMarkdown(mode: string = 'simple') {
+async function beautifyMarkdown(mode: string = 'simple', customRequirement: string = '') {
   beautifyConfirmVisible.value = false
 
   if (!editor.value || isBeautifying.value)
@@ -418,7 +418,12 @@ async function beautifyMarkdown(mode: string = 'simple') {
     }
 
     // 根据模式选择对应的 prompt
-    const systemPrompt = beautifyPrompts[mode as keyof typeof beautifyPrompts] || beautifyPrompts.simple
+    let systemPrompt = beautifyPrompts[mode as keyof typeof beautifyPrompts] || beautifyPrompts.simple
+
+    // 如果有自定义要求，添加到 prompt 中
+    if (customRequirement && customRequirement.trim()) {
+      systemPrompt += `\n\n【用户自定义要求】\n${customRequirement.trim()}`
+    }
 
     const userPrompt = `将原文的格式调整为良好的 Markdown，一定不要改变原文内容，增加减少原文文字都不可以：\n\n原文是：\n
 
