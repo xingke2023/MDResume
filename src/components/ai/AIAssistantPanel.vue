@@ -688,18 +688,27 @@ async function sendMessage() {
 
         <!-- ============ 菜单选项卡 ============ -->
         <Tabs :model-value="activeTab" class="w-full" @update:model-value="handleTabChange">
-          <TabsList class="grid w-full grid-cols-3">
-            <TabsTrigger value="text-edit" class="flex items-center gap-1.5">
-              <FileText class="h-4 w-4" />
-              <span>文本编辑</span>
+          <TabsList class="grid h-9 w-full grid-cols-3 bg-gray-100 p-1 dark:bg-gray-800">
+            <TabsTrigger
+              value="text-edit"
+              class="flex h-7 items-center gap-1.5 data-[state=active]:bg-blue-500 data-[state=active]:text-white data-[state=active]:shadow-sm"
+            >
+              <FileText class="h-3.5 w-3.5" />
+              <span class="text-xs font-medium">文本编辑</span>
             </TabsTrigger>
-            <TabsTrigger value="ai-image" class="flex items-center gap-1.5">
-              <ImageIcon class="h-4 w-4" />
-              <span>AI文生图</span>
+            <TabsTrigger
+              value="ai-image"
+              class="flex h-7 items-center gap-1.5 data-[state=active]:bg-purple-500 data-[state=active]:text-white data-[state=active]:shadow-sm"
+            >
+              <ImageIcon class="h-3.5 w-3.5" />
+              <span class="text-xs font-medium">AI文生图</span>
             </TabsTrigger>
-            <TabsTrigger value="poster" class="flex items-center gap-1.5">
-              <ImagePlus class="h-4 w-4" />
-              <span>海报制作</span>
+            <TabsTrigger
+              value="poster"
+              class="flex h-7 items-center gap-1.5 data-[state=active]:bg-green-500 data-[state=active]:text-white data-[state=active]:shadow-sm"
+            >
+              <ImagePlus class="h-3.5 w-3.5" />
+              <span class="text-xs font-medium">海报制作</span>
             </TabsTrigger>
           </TabsList>
         </Tabs>
