@@ -54,6 +54,7 @@ function pullFromStore(): void {
 
 function pushToStore(): void {
   type.value = config.type
+  endpoint.value = config.endpoint
   apiKey.value = config.apiKey
   model.value = config.model
   size.value = config.size
@@ -89,7 +90,7 @@ function saveConfig() {
     return
   }
 
-  if (config.type !== DEFAULT_SERVICE_TYPE && !config.apiKey.trim()) {
+  if (config.type !== DEFAULT_SERVICE_TYPE && config.type !== 'aiwriting' && !config.apiKey.trim()) {
     testResult.value = `❌ 请输入 API Key`
     return
   }
@@ -103,7 +104,7 @@ function saveConfig() {
     return
   }
 
-  if (config.type === DEFAULT_SERVICE_TYPE) {
+  if (config.type === DEFAULT_SERVICE_TYPE || config.type === 'aiwriting') {
     config.apiKey = ``
   }
 
@@ -123,22 +124,30 @@ async function testConnection() {
   loading.value = true
 
   const headers: Record<string, string> = { 'Content-Type': `application/json` }
-  if (config.apiKey && config.type !== DEFAULT_SERVICE_TYPE)
+  if (config.apiKey && config.type !== DEFAULT_SERVICE_TYPE && config.type !== 'aiwriting')
     headers.Authorization = `Bearer ${config.apiKey}`
 
   try {
     const url = new URL(config.endpoint)
-    if (!url.pathname.includes(`/images/`) && !url.pathname.endsWith(`/images/generations`)) {
-      url.pathname = url.pathname.replace(/\/?$/, `/images/generations`)
+
+    // 人工智能写作服务使用自定义端点，不修改路径
+    if (config.type !== 'aiwriting') {
+      if (!url.pathname.includes(`/images/`) && !url.pathname.endsWith(`/images/generations`)) {
+        url.pathname = url.pathname.replace(/\/?$/, `/images/generations`)
+      }
     }
 
-    const payload = {
-      model: config.model,
+    const payload: any = {
       prompt: `test connection`,
-      size: config.size,
-      quality: config.quality,
-      style: config.style,
-      n: 1,
+    }
+
+    // 只为非人工智能写作服务添加标准参数
+    if (config.type !== 'aiwriting') {
+      payload.model = config.model
+      payload.size = config.size
+      payload.quality = config.quality
+      payload.style = config.style
+      payload.n = 1
     }
 
     const res = await window.fetch(url.toString(), {
@@ -197,7 +206,7 @@ const styleOptions = [
             {{ currentService.label }}
           </SelectValue>
         </SelectTrigger>
-        <SelectContent>
+        <SelectContent class="z-[80]">
           <SelectItem
             v-for="option in imageServiceOptions"
             :key="option.value"
@@ -217,12 +226,12 @@ const styleOptions = [
         type="url"
         class="bg-background focus:ring-primary focus:border-primary mt-1 w-full border rounded-md p-2 transition-colors focus:ring-2"
         placeholder="https://api.openai.com/v1"
-        readonly
+        :readonly="config.type !== 'aiwriting'"
       >
     </div>
 
     <!-- API Key -->
-    <div v-if="config.type !== 'default'">
+    <div v-if="config.type !== 'default' && config.type !== 'aiwriting'">
       <Label class="mb-1 block text-sm font-medium">API Key</Label>
       <input
         v-model="config.apiKey"
@@ -241,7 +250,7 @@ const styleOptions = [
             {{ config.model || '请选择模型' }}
           </SelectValue>
         </SelectTrigger>
-        <SelectContent>
+        <SelectContent class="z-[80]">
           <SelectItem
             v-for="modelName in currentService.models"
             :key="modelName"
@@ -262,7 +271,7 @@ const styleOptions = [
             {{ sizeOptions.find(opt => opt.value === config.size)?.label || config.size }}
           </SelectValue>
         </SelectTrigger>
-        <SelectContent>
+        <SelectContent class="z-[80]">
           <SelectItem
             v-for="option in sizeOptions"
             :key="option.value"
@@ -283,7 +292,7 @@ const styleOptions = [
             {{ qualityOptions.find(opt => opt.value === config.quality)?.label || config.quality }}
           </SelectValue>
         </SelectTrigger>
-        <SelectContent>
+        <SelectContent class="z-[80]">
           <SelectItem
             v-for="option in qualityOptions"
             :key="option.value"
@@ -304,7 +313,7 @@ const styleOptions = [
             {{ styleOptions.find(opt => opt.value === config.style)?.label || config.style }}
           </SelectValue>
         </SelectTrigger>
-        <SelectContent>
+        <SelectContent class="z-[80]">
           <SelectItem
             v-for="option in styleOptions"
             :key="option.value"
@@ -324,6 +333,17 @@ const styleOptions = [
           默认图像服务
         </p>
         <p>免费使用，无需配置 API Key，支持 Kwai-Kolors/Kolors 模型。</p>
+      </div>
+    </div>
+
+    <!-- 人工智能写作说明 -->
+    <div v-if="config.type === 'aiwriting'" class="flex items-start gap-2 rounded-md bg-blue-50 p-3 text-sm dark:bg-blue-950/30">
+      <Info class="mt-0.5 h-4 w-4 flex-shrink-0 text-blue-500" />
+      <div class="text-blue-700 dark:text-blue-300">
+        <p class="font-medium">
+          人工智能写作服务
+        </p>
+        <p>请输入您的自定义 API 端点地址。无需配置 API Key。</p>
       </div>
     </div>
 

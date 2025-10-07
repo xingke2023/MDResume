@@ -14,8 +14,24 @@ export default defineStore(`AIImageConfig`, () => {
   const style = useStorage<string>(`openai_image_style`, `natural`)
 
   /* ————— 与 service 强相关的字段 ————— */
-  const endpoint = ref<string>(``) // 由 watch(type) 初始化
-  const model = ref<string>(``) // 同上
+  const endpoint = customRef<string>((track, trigger) => {
+    let value = ``
+    return {
+      get() {
+        track()
+        return value
+      },
+      set(val: string) {
+        value = val
+        // 为人工智能写作服务保存自定义 endpoint
+        if (type.value === 'aiwriting') {
+          localStorage.setItem(`openai_image_endpoint_aiwriting`, val)
+        }
+        trigger()
+      },
+    }
+  })
+  const model = ref<string>(``) // 由 watch(type) 初始化
 
   /* ————— apiKey：按 service 前缀持久化 ————— */
   const apiKey = customRef<string>((track, trigger) => ({
@@ -39,8 +55,13 @@ export default defineStore(`AIImageConfig`, () => {
     (newType) => {
       const svc = imageServiceOptions.find(s => s.value === newType) ?? imageServiceOptions[0]
 
-      // 更新端点
-      endpoint.value = svc.endpoint
+      // 更新端点 - 人工智能写作服务使用保存的自定义端点
+      if (newType === 'aiwriting') {
+        endpoint.value = localStorage.getItem(`openai_image_endpoint_aiwriting`) || svc.endpoint
+      }
+      else {
+        endpoint.value = svc.endpoint
+      }
 
       // 读取或回退模型
       const saved = localStorage.getItem(`openai_image_model_${newType}`) || ``
@@ -70,6 +91,8 @@ export default defineStore(`AIImageConfig`, () => {
       localStorage.removeItem(`openai_image_key_${value}`)
       localStorage.removeItem(`openai_image_model_${value}`)
     })
+    // 清理人工智能写作的自定义端点
+    localStorage.removeItem(`openai_image_endpoint_aiwriting`)
   }
 
   return {

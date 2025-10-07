@@ -47,6 +47,12 @@ export const imageServiceOptions: ImageServiceOption[] = [
       `stable-sd3`,
     ],
   },
+  {
+    value: `aiwriting`,
+    label: `人工智能写作`,
+    endpoint: `https://wechat.easy-write.com/extract/extract/api/generate_image`,
+    models: [`custom`],
+  },
 ]
 
 export const DEFAULT_IMAGE_MODEL = imageServiceOptions[0].models[0]

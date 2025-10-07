@@ -48,6 +48,7 @@ watch(dialogVisible, val => emit(`update:open`, val))
 /* ---------- 状态管理 ---------- */
 const configVisible = ref(false)
 const loading = ref(false)
+const loadingProgress = ref(0) // 加载进度 (0-100)
 const prompt = ref<string>(``)
 const lastUsedPrompt = ref<string>(``) // 存储最后一次使用的提示词，用于重新生成
 const generatedImages = ref<string[]>([])
@@ -203,6 +204,70 @@ function handleKeydown(e: KeyboardEvent) {
   }
 }
 
+/* ---------- 轮询任务状态 ---------- */
+async function pollTaskStatus(taskId: string): Promise<string | null> {
+  const maxAttempts = 60 // 最多轮询60次
+  const pollInterval = 2000 // 每2秒轮询一次
+
+  for (let attempt = 0; attempt < maxAttempts; attempt++) {
+    try {
+      // 检查是否被取消
+      if (abortController.value?.signal.aborted) {
+        throw new Error(`任务已取消`)
+      }
+
+      const queryUrl = `https://wechat.easy-write.com/extract/extract/api/query_task_simple?task_id=${taskId}`
+      const queryRes = await window.fetch(queryUrl, {
+        method: `GET`,
+        signal: abortController.value?.signal,
+      })
+
+      if (!queryRes.ok) {
+        throw new Error(`查询任务状态失败: ${queryRes.status}`)
+      }
+
+      const queryData = await queryRes.json()
+
+      if (!queryData.success) {
+        throw new Error(queryData.error || `查询任务失败`)
+      }
+
+      // 检查任务状态
+      if (queryData.status === `succeeded` && queryData.images && queryData.images.length > 0) {
+        // 任务成功，返回第一张图片
+        loadingProgress.value = 100
+        return queryData.images[0]
+      }
+      else if (queryData.status === `failed`) {
+        throw new Error(queryData.message || `图像生成失败`)
+      }
+      else if (queryData.status === `running` || queryData.status === `processing`) {
+        // 任务处理中，更新进度并继续等待
+        const progress = Math.round((queryData.progress || 0) * 100)
+        loadingProgress.value = progress
+        console.log(`任务处理中，进度: ${progress}%`)
+        await new Promise(resolve => setTimeout(resolve, pollInterval))
+        continue
+      }
+      else if (queryData.status === `unknown`) {
+        throw new Error(`任务状态未知`)
+      }
+    }
+    catch (e) {
+      if ((e as Error).name === `AbortError`) {
+        throw e
+      }
+      // 其他错误，继续重试
+      if (attempt === maxAttempts - 1) {
+        throw e
+      }
+      await new Promise(resolve => setTimeout(resolve, pollInterval))
+    }
+  }
+
+  throw new Error(`任务超时，请稍后重试`)
+}
+
 /* ---------- 生成图像 ---------- */
 async function generateImage() {
   if (!prompt.value.trim() || loading.value)
@@ -213,29 +278,38 @@ async function generateImage() {
   lastUsedPrompt.value = currentPrompt
 
   loading.value = true
+  loadingProgress.value = 0 // 重置进度
   abortController.value = new AbortController()
 
   const headers: Record<string, string> = { 'Content-Type': `application/json` }
-  if (apiKey.value && type.value !== `default`)
+  if (apiKey.value && type.value !== `default` && type.value !== `aiwriting`)
     headers.Authorization = `Bearer ${apiKey.value}`
 
   try {
     const url = new URL(endpoint.value)
-    if (!url.pathname.includes(`/images/`) && !url.pathname.endsWith(`/images/generations`)) {
-      url.pathname = url.pathname.replace(/\/?$/, `/images/generations`)
+
+    // 人工智能写作服务不修改路径，其他服务添加标准路径
+    if (type.value !== `aiwriting`) {
+      if (!url.pathname.includes(`/images/`) && !url.pathname.endsWith(`/images/generations`)) {
+        url.pathname = url.pathname.replace(/\/?$/, `/images/generations`)
+      }
     }
 
     const payload: any = {
-      model: model.value,
       prompt: currentPrompt,
-      size: size.value,
-      n: 1,
     }
 
-    // 只对 DALL-E 模型添加额外参数
-    if (model.value.includes(`dall-e`)) {
-      payload.quality = quality.value
-      payload.style = style.value
+    // 只为非人工智能写作服务添加标准参数
+    if (type.value !== `aiwriting`) {
+      payload.model = model.value
+      payload.size = size.value
+      payload.n = 1
+
+      // 只对 DALL-E 模型添加额外参数
+      if (model.value.includes(`dall-e`)) {
+        payload.quality = quality.value
+        payload.style = style.value
+      }
     }
 
     const res = await window.fetch(url.toString(), {
@@ -252,23 +326,29 @@ async function generateImage() {
 
     const data = await res.json()
 
-    if (data.data && data.data.length > 0) {
-      const imageUrl = data.data[0].url || data.data[0].b64_json
+    // 处理人工智能写作服务的响应
+    if (type.value === `aiwriting`) {
+      if (!data.success) {
+        throw new Error(data.message || `任务提交失败`)
+      }
+
+      const taskId = data.task_id
+      if (!taskId) {
+        throw new Error(`未收到任务ID`)
+      }
+
+      // 轮询查询任务状态
+      const imageUrl = await pollTaskStatus(taskId)
 
       if (imageUrl) {
-        // 如果是 base64 格式，转换为 data URL
-        const finalUrl = imageUrl.startsWith(`data:`) || imageUrl.startsWith(`http`)
-          ? imageUrl
-          : `data:image/png;base64,${imageUrl}`
-
         const currentTimestamp = Date.now()
 
-        generatedImages.value.unshift(finalUrl)
-        imagePrompts.value.unshift(currentPrompt) // 保存对应的prompt
-        imageTimestamps.value.unshift(currentTimestamp) // 保存生成时间戳
+        generatedImages.value.unshift(imageUrl)
+        imagePrompts.value.unshift(currentPrompt)
+        imageTimestamps.value.unshift(currentTimestamp)
         currentImageIndex.value = 0
 
-        // 限制存储的图片数量，避免占用过多存储空间
+        // 限制存储的图片数量
         if (generatedImages.value.length > 20) {
           generatedImages.value = generatedImages.value.slice(0, 20)
           imagePrompts.value = imagePrompts.value.slice(0, 20)
@@ -279,12 +359,45 @@ async function generateImage() {
         localStorage.setItem(`ai_image_prompts`, JSON.stringify(imagePrompts.value))
         localStorage.setItem(`ai_image_timestamps`, JSON.stringify(imageTimestamps.value))
 
-        // 清空输入框
         prompt.value = ``
       }
     }
     else {
-      throw new Error(`未收到有效的图像数据`)
+      // 处理标准 OpenAI 格式的响应
+      if (data.data && data.data.length > 0) {
+        const imageUrl = data.data[0].url || data.data[0].b64_json
+
+        if (imageUrl) {
+          // 如果是 base64 格式，转换为 data URL
+          const finalUrl = imageUrl.startsWith(`data:`) || imageUrl.startsWith(`http`)
+            ? imageUrl
+            : `data:image/png;base64,${imageUrl}`
+
+          const currentTimestamp = Date.now()
+
+          generatedImages.value.unshift(finalUrl)
+          imagePrompts.value.unshift(currentPrompt) // 保存对应的prompt
+          imageTimestamps.value.unshift(currentTimestamp) // 保存生成时间戳
+          currentImageIndex.value = 0
+
+          // 限制存储的图片数量，避免占用过多存储空间
+          if (generatedImages.value.length > 20) {
+            generatedImages.value = generatedImages.value.slice(0, 20)
+            imagePrompts.value = imagePrompts.value.slice(0, 20)
+            imageTimestamps.value = imageTimestamps.value.slice(0, 20)
+          }
+
+          localStorage.setItem(`ai_generated_images`, JSON.stringify(generatedImages.value))
+          localStorage.setItem(`ai_image_prompts`, JSON.stringify(imagePrompts.value))
+          localStorage.setItem(`ai_image_timestamps`, JSON.stringify(imageTimestamps.value))
+
+          // 清空输入框
+          prompt.value = ``
+        }
+      }
+      else {
+        throw new Error(`未收到有效的图像数据`)
+      }
     }
   }
   catch (e) {
@@ -325,26 +438,61 @@ function clearImages() {
 /* ---------- 下载图像 ---------- */
 async function downloadImage(imageUrl: string, index: number) {
   try {
-    const response = await fetch(imageUrl)
-    const blob = await response.blob()
-    const url = window.URL.createObjectURL(blob)
-    const a = document.createElement(`a`)
-    a.href = url
+    console.log(`📥 开始下载图片:`, imageUrl)
 
     // 生成包含prompt信息的文件名
     const relatedPrompt = imagePrompts.value[index] || ``
     const promptPart = relatedPrompt
       ? relatedPrompt.substring(0, 20).replace(/[^\w\s-]/g, ``).replace(/\s+/g, `-`)
       : `no-prompt`
-    a.download = `ai-image-${index + 1}-${promptPart}.png`
+    const filename = `ai-image-${index + 1}-${promptPart}.png`
 
-    document.body.appendChild(a)
-    a.click()
-    document.body.removeChild(a)
-    window.URL.revokeObjectURL(url)
+    // 人工智能写作服务的图片有 CORS 限制，直接使用 URL 下载
+    if (type.value === `aiwriting`) {
+      // 创建临时链接直接下载
+      const a = document.createElement(`a`)
+      a.href = imageUrl
+      a.download = filename
+      a.target = `_blank` // 在新标签页打开，如果下载失败会显示图片
+      document.body.appendChild(a)
+      a.click()
+      document.body.removeChild(a)
+
+      console.log(`✅ 图片下载链接已触发`)
+      if (typeof toast !== `undefined`) {
+        toast.success(`已触发下载，如果未自动下载请右键图片另存为`)
+      }
+    }
+    else {
+      // 其他服务商使用 fetch 方式下载
+      const response = await fetch(imageUrl)
+      console.log(`📥 Fetch 响应状态:`, response.status)
+
+      if (!response.ok) {
+        throw new Error(`HTTP 错误: ${response.status}`)
+      }
+
+      const blob = await response.blob()
+      console.log(`📥 Blob 大小:`, blob.size, `类型:`, blob.type)
+
+      const url = window.URL.createObjectURL(blob)
+      const a = document.createElement(`a`)
+      a.href = url
+      a.download = filename
+
+      document.body.appendChild(a)
+      a.click()
+      document.body.removeChild(a)
+      window.URL.revokeObjectURL(url)
+
+      console.log(`✅ 图片下载成功`)
+    }
   }
   catch (error) {
-    console.error(`下载图像失败:`, error)
+    console.error(`❌ 下载图像失败:`, error)
+    if (typeof toast !== `undefined`) {
+      toast.error(`下载失败: ${(error as Error).message}`)
+    }
   }
 }
 
@@ -385,29 +533,38 @@ async function regenerateWithPrompt(promptText: string) {
     return
 
   loading.value = true
+  loadingProgress.value = 0 // 重置进度
   abortController.value = new AbortController()
 
   const headers: Record<string, string> = { 'Content-Type': `application/json` }
-  if (apiKey.value && type.value !== `default`)
+  if (apiKey.value && type.value !== `default` && type.value !== `aiwriting`)
     headers.Authorization = `Bearer ${apiKey.value}`
 
   try {
     const url = new URL(endpoint.value)
-    if (!url.pathname.includes(`/images/`) && !url.pathname.endsWith(`/images/generations`)) {
-      url.pathname = url.pathname.replace(/\/?$/, `/images/generations`)
+
+    // 人工智能写作服务不修改路径，其他服务添加标准路径
+    if (type.value !== `aiwriting`) {
+      if (!url.pathname.includes(`/images/`) && !url.pathname.endsWith(`/images/generations`)) {
+        url.pathname = url.pathname.replace(/\/?$/, `/images/generations`)
+      }
     }
 
     const payload: any = {
-      model: model.value,
       prompt: promptText.trim(),
-      size: size.value,
-      n: 1,
     }
 
-    // 只对 DALL-E 模型添加额外参数
-    if (model.value.includes(`dall-e`)) {
-      payload.quality = quality.value
-      payload.style = style.value
+    // 只为非人工智能写作服务添加标准参数
+    if (type.value !== `aiwriting`) {
+      payload.model = model.value
+      payload.size = size.value
+      payload.n = 1
+
+      // 只对 DALL-E 模型添加额外参数
+      if (model.value.includes(`dall-e`)) {
+        payload.quality = quality.value
+        payload.style = style.value
+      }
     }
 
     const res = await window.fetch(url.toString(), {
@@ -424,23 +581,29 @@ async function regenerateWithPrompt(promptText: string) {
 
     const data = await res.json()
 
-    if (data.data && data.data.length > 0) {
-      const imageUrl = data.data[0].url || data.data[0].b64_json
+    // 处理人工智能写作服务的响应
+    if (type.value === `aiwriting`) {
+      if (!data.success) {
+        throw new Error(data.message || `任务提交失败`)
+      }
+
+      const taskId = data.task_id
+      if (!taskId) {
+        throw new Error(`未收到任务ID`)
+      }
+
+      // 轮询查询任务状态
+      const imageUrl = await pollTaskStatus(taskId)
 
       if (imageUrl) {
-        // 如果是 base64 格式，转换为 data URL
-        const finalUrl = imageUrl.startsWith(`data:`) || imageUrl.startsWith(`http`)
-          ? imageUrl
-          : `data:image/png;base64,${imageUrl}`
-
         const currentTimestamp = Date.now()
 
-        generatedImages.value.unshift(finalUrl)
-        imagePrompts.value.unshift(promptText.trim()) // 保存对应的prompt
-        imageTimestamps.value.unshift(currentTimestamp) // 保存生成时间戳
+        generatedImages.value.unshift(imageUrl)
+        imagePrompts.value.unshift(promptText.trim())
+        imageTimestamps.value.unshift(currentTimestamp)
         currentImageIndex.value = 0
 
-        // 限制存储的图片数量，避免占用过多存储空间
+        // 限制存储的图片数量
         if (generatedImages.value.length > 20) {
           generatedImages.value = generatedImages.value.slice(0, 20)
           imagePrompts.value = imagePrompts.value.slice(0, 20)
@@ -453,7 +616,38 @@ async function regenerateWithPrompt(promptText: string) {
       }
     }
     else {
-      throw new Error(`未收到有效的图像数据`)
+      // 处理标准 OpenAI 格式的响应
+      if (data.data && data.data.length > 0) {
+        const imageUrl = data.data[0].url || data.data[0].b64_json
+
+        if (imageUrl) {
+          // 如果是 base64 格式，转换为 data URL
+          const finalUrl = imageUrl.startsWith(`data:`) || imageUrl.startsWith(`http`)
+            ? imageUrl
+            : `data:image/png;base64,${imageUrl}`
+
+          const currentTimestamp = Date.now()
+
+          generatedImages.value.unshift(finalUrl)
+          imagePrompts.value.unshift(promptText.trim()) // 保存对应的prompt
+          imageTimestamps.value.unshift(currentTimestamp) // 保存生成时间戳
+          currentImageIndex.value = 0
+
+          // 限制存储的图片数量，避免占用过多存储空间
+          if (generatedImages.value.length > 20) {
+            generatedImages.value = generatedImages.value.slice(0, 20)
+            imagePrompts.value = imagePrompts.value.slice(0, 20)
+            imageTimestamps.value = imageTimestamps.value.slice(0, 20)
+          }
+
+          localStorage.setItem(`ai_generated_images`, JSON.stringify(generatedImages.value))
+          localStorage.setItem(`ai_image_prompts`, JSON.stringify(imagePrompts.value))
+          localStorage.setItem(`ai_image_timestamps`, JSON.stringify(imageTimestamps.value))
+        }
+      }
+      else {
+        throw new Error(`未收到有效的图像数据`)
+      }
     }
   }
   catch (e) {
@@ -483,12 +677,60 @@ function nextImage() {
   }
 }
 
+/* ---------- 通过后端接口上传图片URL到微信图床 ---------- */
+async function uploadImageViaProxy(imageUrl: string): Promise<string> {
+  try {
+    console.log(`📤 通过后端上传图片URL到微信图床:`, imageUrl)
+
+    // 调用后端接口，发送图片URL，后端下载并上传到微信图床
+    const uploadResponse = await fetch(`https://wechat.easy-write.com/api/media/upload-image-url`, {
+      method: `POST`,
+      headers: {
+        'Content-Type': `application/json`,
+        'X-API-Key': `0dbe66d87befa7a9d5d7c1bdbc631a9b7dc5ce88be9a20e41c26790060802647`,
+      },
+      body: JSON.stringify({
+        imageUrl,
+      }),
+    })
+
+    if (!uploadResponse.ok) {
+      if (uploadResponse.status === 413) {
+        throw new Error(`图片超过服务器限制（5MB），请使用更小的尺寸`)
+      }
+      throw new Error(`上传失败: ${uploadResponse.status}`)
+    }
+
+    const data = await uploadResponse.json()
+
+    if (!data.data || !data.data.url) {
+      throw new Error(`上传成功但未返回图片URL`)
+    }
+
+    console.log(`✅ 上传到微信图床成功:`, data.data.url)
+    return data.data.url
+  }
+  catch (error) {
+    console.error(`❌ 上传到微信图床失败:`, error)
+    throw error
+  }
+}
+
 /* ---------- 上传图片到微信图床 ---------- */
 async function uploadToWechat(imageUrl: string): Promise<string> {
   try {
+    console.log(`📤 开始上传图片到微信图床:`, imageUrl)
+
     // 将图片 URL 转换为 Blob
     const response = await fetch(imageUrl)
+    console.log(`📤 Fetch 响应状态:`, response.status)
+
+    if (!response.ok) {
+      throw new Error(`获取图片失败: HTTP ${response.status}`)
+    }
+
     const blob = await response.blob()
+    console.log(`📤 Blob 大小:`, blob.size, `类型:`, blob.type)
 
     // 检查文件大小（5MB限制）
     const maxSize = 5 * 1024 * 1024
@@ -545,8 +787,17 @@ async function insertImageToCursor(imageUrl: string) {
     // 显示上传中提示
     toast.loading(`正在处理图片插入...`, { id: `upload-ai-image` })
 
-    // 上传到微信图床
-    const wechatImageUrl = await uploadToWechat(imageUrl)
+    let finalImageUrl = imageUrl
+
+    // 人工智能写作服务的图片需要通过代理上传到微信图床
+    if (type.value === `aiwriting`) {
+      // 使用后端代理上传图片
+      finalImageUrl = await uploadImageViaProxy(imageUrl)
+    }
+    else {
+      // 其他服务商直接上传到微信图床
+      finalImageUrl = await uploadToWechat(imageUrl)
+    }
 
     toast.dismiss(`upload-ai-image`)
 
@@ -560,7 +811,7 @@ async function insertImageToCursor(imageUrl: string) {
       : `AI生成的图像`
 
     // 使用微信图床的URL生成Markdown图片语法
-    const markdownImage = `![${altText}](${wechatImageUrl})`
+    const markdownImage = `![${altText}](${finalImageUrl})`
 
     // 获取当前光标位置并插入
     const cursor = editor.value.getCursor()
@@ -741,9 +992,14 @@ function getTimeRemainingClass(index: number): string {
         <div class="min-h-[250px] flex items-center justify-center rounded-lg bg-gray-50 sm:min-h-[300px] dark:bg-gray-800">
           <div v-if="loading" class="flex flex-col items-center gap-4">
             <Loader2 class="animate-spin text-primary h-8 w-8" />
-            <p class="text-muted-foreground text-sm">
-              正在生成图像...
-            </p>
+            <div class="flex flex-col items-center gap-2">
+              <p class="text-muted-foreground text-sm">
+                正在生成图像...
+              </p>
+              <p v-if="type === 'aiwriting' && loadingProgress > 0" class="text-primary text-lg font-semibold">
+                {{ loadingProgress }}%
+              </p>
+            </div>
             <Button
               variant="outline"
               size="sm"
@@ -783,7 +1039,7 @@ function getTimeRemainingClass(index: number): string {
                 <img
                   :src="generatedImages[currentImageIndex]"
                   :alt="`生成的图像 ${currentImageIndex + 1}`"
-                  class="object-contain border-border h-auto max-h-[300px] w-full border rounded-lg shadow-lg transition-transform sm:max-h-[350px] hover:scale-105"
+                  class="border-border object-contain h-auto max-h-[300px] w-full border rounded-lg shadow-lg transition-transform sm:max-h-[350px] hover:scale-105"
                 >
                 <!-- 点击查看大图提示 -->
                 <div class="pointer-events-none absolute inset-0 flex items-center justify-center rounded-lg bg-black/0 opacity-0 transition-opacity group-hover:bg-black/10 group-hover:opacity-100">
