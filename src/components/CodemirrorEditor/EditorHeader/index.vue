@@ -29,6 +29,7 @@ import {
   Wrench,
 } from 'lucide-vue-next'
 import { toast } from 'vue-sonner'
+import PosterGeneratorDialog from '@/components/ai/PosterGeneratorDialog.vue'
 import { ctrlKey, themeOptions } from '@/config'
 import { useDisplayStore, useStore } from '@/stores'
 import useAIConfigStore from '@/stores/AIConfig'
@@ -489,6 +490,14 @@ const knowledgeBaseDialogVisible = ref(false)
 // 显示个人知识库对话框
 function showKnowledgeBaseDialog() {
   knowledgeBaseDialogVisible.value = true
+}
+
+// 海报制作状态
+const posterGeneratorDialogVisible = ref(false)
+
+// 显示海报制作对话框
+function showPosterGeneratorDialog() {
+  posterGeneratorDialogVisible.value = true
 }
 
 // 发布到公众号状态
@@ -1003,7 +1012,7 @@ function handleCopyWithMode(mode: string) {
         @click="isShowMobileToolbar = !isShowMobileToolbar"
       >
         <Pencil class="mr-1 size-4" />
-        编辑器
+        编辑
       </Button>
 
       <!-- 撤销重做 - 电脑端显示 -->
@@ -1097,7 +1106,7 @@ function handleCopyWithMode(mode: string) {
       <DropdownMenu>
         <DropdownMenuTrigger as-child>
           <Button variant="outline" class="px-2">
-            工具库
+            工具🔥
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="start" class="py-2">
@@ -1124,6 +1133,15 @@ function handleCopyWithMode(mode: string) {
           <DropdownMenuItem :disabled="isBeautifying" class="py-3" @click="showBeautifyConfirm()">
             <Sparkles class="mr-2 size-4" />
             {{ isBeautifying ? '美化中...' : '一键排版' }}
+          </DropdownMenuItem>
+          <DropdownMenuItem class="py-3" @click="showPosterGeneratorDialog()">
+            <ImagePlus class="mr-2 size-4" />
+            <span class="flex items-center gap-2">
+              海报制作
+              <span class="rounded-full bg-red-500 px-1.5 py-0.5 text-[10px] text-white font-semibold">
+                NEW
+              </span>
+            </span>
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
@@ -1911,6 +1929,9 @@ function handleCopyWithMode(mode: string) {
     @select-image="selectCoverImage"
     @update-crop="updateCropParameters"
   />
+
+  <!-- 海报制作对话框 -->
+  <PosterGeneratorDialog v-model:open="posterGeneratorDialogVisible" />
 </template>
 
 <style lang="less" scoped>
