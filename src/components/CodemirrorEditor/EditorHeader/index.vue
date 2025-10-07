@@ -1111,10 +1111,6 @@ function handleCopyWithMode(mode: string) {
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="start" class="py-2">
-          <DropdownMenuItem :disabled="isFetching" class="py-3" @click="showFetchDialog()">
-            <Wrench class="mr-2 size-4" />
-            {{ isFetching ? '抓取中...' : '公众号文章抓取工具' }}
-          </DropdownMenuItem>
           <DropdownMenuItem class="py-3" @click="showRewriteDialog()">
             <Wand2 class="mr-2 size-4" />
             全文一键改写
@@ -1122,6 +1118,10 @@ function handleCopyWithMode(mode: string) {
           <DropdownMenuItem :disabled="isBeautifying" class="py-3" @click="showBeautifyConfirm()">
             <Sparkles class="mr-2 size-4" />
             {{ isBeautifying ? '美化中...' : '全文一键排版' }}
+          </DropdownMenuItem>
+          <DropdownMenuItem :disabled="isFetching" class="py-3" @click="showFetchDialog()">
+            <Wrench class="mr-2 size-4" />
+            {{ isFetching ? '抓取中...' : '公众号文章抓取工具' }}
           </DropdownMenuItem>
           <DropdownMenuItem class="py-3" @click="showIndustryInfoDialog()">
             <Newspaper class="mr-2 size-4" />
