@@ -11,11 +11,11 @@ import {
 } from 'wxt/modules'
 
 export default defineWxtModule({
-  async setup(wxt) {
+  async setup(wxt: any) {
     wxt.config.alias[`/src/main.ts`] = `./src/main.ts`
     wxt.config.alias[`/src/sidepanel.ts`] = `./src/sidepanel.ts`
     wxt.config.manifest.options_page = `options.html`
-    wxt.hook(`entrypoints:grouped`, (_, groups) => {
+    wxt.hook(`entrypoints:grouped`, (_: any, groups: any) => {
       groups.push([{
         type: `options`,
         name: `options`,
@@ -33,7 +33,7 @@ export default defineWxtModule({
         skipped: false,
       }])
     })
-    wxt.hook(`vite:build:extendConfig`, (_, config) => {
+    wxt.hook(`vite:build:extendConfig`, (_: any, config: any) => {
       if (config.build?.rollupOptions?.input && config.build?.rollupOptions?.output) {
         const input = config.build?.rollupOptions.input as Record<string, string>
         const wxtOutput = config.build?.rollupOptions.output as OutputOptions
@@ -92,7 +92,7 @@ export function htmlScriptToVirtual(
           // Extension CSP blocks inline scripts, so that's why we're pulling them out.
           const promises: Promise<void>[] = []
           const inlineScripts = document.querySelectorAll(`script[src^=http]`)
-          inlineScripts.forEach(async (script) => {
+          inlineScripts.forEach(async (script: any) => {
             promises.push(new Promise<void>((resolve) => {
               const url = script.getAttribute(`src`) ?? ``
               if (url?.startsWith(`http://localhost`)) {
@@ -162,7 +162,7 @@ export function htmlScriptToLocal(
         const promises: Promise<void>[] = []
         const httpScripts = document.querySelectorAll(`script[src^=http]`)
         if (httpScripts.length > 0) {
-          httpScripts.forEach(async (script) => {
+          httpScripts.forEach(async (script: any) => {
             /* eslint-disable no-async-promise-executor */
             promises.push(new Promise<void>(async (resolve) => {
               const url = script.getAttribute(`src`) ?? ``
@@ -192,7 +192,7 @@ export function htmlScriptToLocal(
         // out.
         const inlineScripts = document.querySelectorAll(`script:not([src])`)
         if (inlineScripts.length > 0) {
-          inlineScripts.forEach(async (script) => {
+          inlineScripts.forEach(async (script: any) => {
             promises.push(new Promise<void>(async (resolve) => {
               // Save the text content for later
               const textContent = script.textContent ?? ``
@@ -233,7 +233,7 @@ export function vueDevtoolsHack(
       handler(html) {
         const { document } = parseHTML(html)
         const inlineScripts = document.querySelectorAll(`script[src^='/@id/virtual:']`)
-        inlineScripts.forEach((script) => {
+        inlineScripts.forEach((script: any) => {
           const src = script.getAttribute(`src`)
           const newSrc = `${server?.origin}${src}`
           script.setAttribute(`src`, newSrc)
