@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ClipboardPasteIcon, Contact2Icon, CopyIcon, Redo2Icon, TableIcon, Undo2Icon, UploadCloudIcon } from 'lucide-vue-next'
+import { useDisplayStore, useStore } from '@/stores'
 
 const { toggleShowInsertFormDialog, toggleShowUploadImgDialog, toggleShowInsertMpCardDialog } = useDisplayStore()
 
