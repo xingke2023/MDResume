@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { computed, onMounted, reactive, ref } from 'vue'
-import { storeToRefs } from 'pinia'
 import { Info } from 'lucide-vue-next'
+import { storeToRefs } from 'pinia'
+import { computed, onMounted, reactive, ref } from 'vue'
 import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
 import {
@@ -92,7 +92,7 @@ function saveConfig() {
     return
   }
 
-  if (config.type !== DEFAULT_SERVICE_TYPE && config.type !== 'aiwriting' && !config.apiKey.trim()) {
+  if (config.type !== DEFAULT_SERVICE_TYPE && config.type !== `aiwriting` && !config.apiKey.trim()) {
     testResult.value = `❌ 请输入 API Key`
     return
   }
@@ -106,7 +106,7 @@ function saveConfig() {
     return
   }
 
-  if (config.type === DEFAULT_SERVICE_TYPE || config.type === 'aiwriting') {
+  if (config.type === DEFAULT_SERVICE_TYPE || config.type === `aiwriting`) {
     config.apiKey = ``
   }
 
@@ -126,14 +126,14 @@ async function testConnection() {
   loading.value = true
 
   const headers: Record<string, string> = { 'Content-Type': `application/json` }
-  if (config.apiKey && config.type !== DEFAULT_SERVICE_TYPE && config.type !== 'aiwriting')
+  if (config.apiKey && config.type !== DEFAULT_SERVICE_TYPE && config.type !== `aiwriting`)
     headers.Authorization = `Bearer ${config.apiKey}`
 
   try {
     const url = new URL(config.endpoint)
 
     // 人工智能写作服务使用自定义端点，不修改路径
-    if (config.type !== 'aiwriting') {
+    if (config.type !== `aiwriting`) {
       if (!url.pathname.includes(`/images/`) && !url.pathname.endsWith(`/images/generations`)) {
         url.pathname = url.pathname.replace(/\/?$/, `/images/generations`)
       }
@@ -144,7 +144,7 @@ async function testConnection() {
     }
 
     // 只为非人工智能写作服务添加标准参数
-    if (config.type !== 'aiwriting') {
+    if (config.type !== `aiwriting`) {
       payload.model = config.model
       payload.size = config.size
       payload.quality = config.quality
@@ -194,191 +194,203 @@ const styleOptions = [
 </script>
 
 <template>
-  <div class="space-y-4 max-w-full">
-    <div class="border-b pb-2 text-lg font-semibold">
-      AI 图像生成配置
-    </div>
+  <div class="space-y-4 h-full max-w-full flex flex-col">
+    <!-- 可滚动内容区 -->
+    <div class="scrollbar-hidden space-y-4 flex-1 overflow-y-auto">
+      <!-- 服务商选择 -->
+      <div>
+        <Label class="mb-1 block text-sm font-medium">服务商</Label>
+        <Select v-model="config.type" @update:model-value="handleServiceChange">
+          <SelectTrigger class="w-full focus:ring-0 focus:ring-offset-0">
+            <SelectValue>
+              {{ currentService.label }}
+            </SelectValue>
+          </SelectTrigger>
+          <SelectContent class="z-[80]">
+            <SelectItem
+              v-for="option in imageServiceOptions"
+              :key="option.value"
+              :value="option.value"
+            >
+              {{ option.label }}
+            </SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
 
-    <!-- 服务商选择 -->
-    <div>
-      <Label class="mb-1 block text-sm font-medium">服务商</Label>
-      <Select v-model="config.type" @update:model-value="handleServiceChange">
-        <SelectTrigger class="w-full">
-          <SelectValue>
-            {{ currentService.label }}
-          </SelectValue>
-        </SelectTrigger>
-        <SelectContent class="z-[80]">
-          <SelectItem
-            v-for="option in imageServiceOptions"
-            :key="option.value"
-            :value="option.value"
-          >
-            {{ option.label }}
-          </SelectItem>
-        </SelectContent>
-      </Select>
-    </div>
+      <!-- 端点配置 - 人工智能写作隐藏 -->
+      <div v-if="config.type !== 'aiwriting'">
+        <Label class="mb-1 block text-sm font-medium">API 端点</Label>
+        <input
+          v-model="config.endpoint"
+          type="url"
+          class="bg-background focus:ring-primary focus:border-primary mt-1 w-full border rounded-md p-2 transition-colors focus:ring-2"
+          placeholder="https://api.openai.com/v1"
+        >
+      </div>
 
-    <!-- 端点配置 - 人工智能写作隐藏 -->
-    <div v-if="config.type !== 'aiwriting'">
-      <Label class="mb-1 block text-sm font-medium">API 端点</Label>
-      <input
-        v-model="config.endpoint"
-        type="url"
-        class="bg-background focus:ring-primary focus:border-primary mt-1 w-full border rounded-md p-2 transition-colors focus:ring-2"
-        placeholder="https://api.openai.com/v1"
-      >
-    </div>
+      <!-- API Key -->
+      <div v-if="config.type !== 'default' && config.type !== 'aiwriting'">
+        <Label class="mb-1 block text-sm font-medium">API Key</Label>
+        <input
+          v-model="config.apiKey"
+          type="password"
+          class="bg-background focus:border-primary focus:ring-primary mt-1 w-full border rounded-md p-2 transition-colors focus:ring-2"
+          placeholder="sk-..."
+        >
+      </div>
 
-    <!-- API Key -->
-    <div v-if="config.type !== 'default' && config.type !== 'aiwriting'">
-      <Label class="mb-1 block text-sm font-medium">API Key</Label>
-      <input
-        v-model="config.apiKey"
-        type="password"
-        class="bg-background focus:border-primary focus:ring-primary mt-1 w-full border rounded-md p-2 transition-colors focus:ring-2"
-        placeholder="sk-..."
-      >
-    </div>
+      <!-- 模型选择 -->
+      <div>
+        <Label class="mb-1 block text-sm font-medium">模型</Label>
+        <Select v-model="config.model">
+          <SelectTrigger class="w-full focus:ring-0 focus:ring-offset-0">
+            <SelectValue>
+              {{ config.model || '请选择模型' }}
+            </SelectValue>
+          </SelectTrigger>
+          <SelectContent class="z-[80]">
+            <SelectItem
+              v-for="modelName in currentService.models"
+              :key="modelName"
+              :value="modelName"
+            >
+              {{ modelName }}
+            </SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
 
-    <!-- 模型选择 -->
-    <div>
-      <Label class="mb-1 block text-sm font-medium">模型</Label>
-      <Select v-model="config.model">
-        <SelectTrigger class="w-full">
-          <SelectValue>
-            {{ config.model || '请选择模型' }}
-          </SelectValue>
-        </SelectTrigger>
-        <SelectContent class="z-[80]">
-          <SelectItem
-            v-for="modelName in currentService.models"
-            :key="modelName"
-            :value="modelName"
-          >
-            {{ modelName }}
-          </SelectItem>
-        </SelectContent>
-      </Select>
-    </div>
+      <!-- 图像尺寸 -->
+      <div>
+        <Label class="mb-1 block text-sm font-medium">图像尺寸</Label>
+        <Select v-model="config.size">
+          <SelectTrigger class="w-full focus:ring-0 focus:ring-offset-0">
+            <SelectValue>
+              {{ sizeOptions.find(opt => opt.value === config.size)?.label || config.size }}
+            </SelectValue>
+          </SelectTrigger>
+          <SelectContent class="z-[80]">
+            <SelectItem
+              v-for="option in sizeOptions"
+              :key="option.value"
+              :value="option.value"
+            >
+              {{ option.label }}
+            </SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
 
-    <!-- 图像尺寸 -->
-    <div>
-      <Label class="mb-1 block text-sm font-medium">图像尺寸</Label>
-      <Select v-model="config.size">
-        <SelectTrigger class="w-full">
-          <SelectValue>
-            {{ sizeOptions.find(opt => opt.value === config.size)?.label || config.size }}
-          </SelectValue>
-        </SelectTrigger>
-        <SelectContent class="z-[80]">
-          <SelectItem
-            v-for="option in sizeOptions"
-            :key="option.value"
-            :value="option.value"
-          >
-            {{ option.label }}
-          </SelectItem>
-        </SelectContent>
-      </Select>
-    </div>
+      <!-- 图像质量 -->
+      <div v-if="config.model.includes('dall-e')">
+        <Label class="mb-1 block text-sm font-medium">图像质量</Label>
+        <Select v-model="config.quality">
+          <SelectTrigger class="w-full focus:ring-0 focus:ring-offset-0">
+            <SelectValue>
+              {{ qualityOptions.find(opt => opt.value === config.quality)?.label || config.quality }}
+            </SelectValue>
+          </SelectTrigger>
+          <SelectContent class="z-[80]">
+            <SelectItem
+              v-for="option in qualityOptions"
+              :key="option.value"
+              :value="option.value"
+            >
+              {{ option.label }}
+            </SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
 
-    <!-- 图像质量 -->
-    <div v-if="config.model.includes('dall-e')">
-      <Label class="mb-1 block text-sm font-medium">图像质量</Label>
-      <Select v-model="config.quality">
-        <SelectTrigger class="w-full">
-          <SelectValue>
-            {{ qualityOptions.find(opt => opt.value === config.quality)?.label || config.quality }}
-          </SelectValue>
-        </SelectTrigger>
-        <SelectContent class="z-[80]">
-          <SelectItem
-            v-for="option in qualityOptions"
-            :key="option.value"
-            :value="option.value"
-          >
-            {{ option.label }}
-          </SelectItem>
-        </SelectContent>
-      </Select>
-    </div>
+      <!-- 图像风格 -->
+      <div v-if="config.model.includes('dall-e')">
+        <Label class="mb-1 block text-sm font-medium">图像风格</Label>
+        <Select v-model="config.style">
+          <SelectTrigger class="w-full focus:ring-0 focus:ring-offset-0">
+            <SelectValue>
+              {{ styleOptions.find(opt => opt.value === config.style)?.label || config.style }}
+            </SelectValue>
+          </SelectTrigger>
+          <SelectContent class="z-[80]">
+            <SelectItem
+              v-for="option in styleOptions"
+              :key="option.value"
+              :value="option.value"
+            >
+              {{ option.label }}
+            </SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
 
-    <!-- 图像风格 -->
-    <div v-if="config.model.includes('dall-e')">
-      <Label class="mb-1 block text-sm font-medium">图像风格</Label>
-      <Select v-model="config.style">
-        <SelectTrigger class="w-full">
-          <SelectValue>
-            {{ styleOptions.find(opt => opt.value === config.style)?.label || config.style }}
-          </SelectValue>
-        </SelectTrigger>
-        <SelectContent class="z-[80]">
-          <SelectItem
-            v-for="option in styleOptions"
-            :key="option.value"
-            :value="option.value"
-          >
-            {{ option.label }}
-          </SelectItem>
-        </SelectContent>
-      </Select>
-    </div>
+      <!-- 说明 -->
+      <div v-if="config.type === 'default'" class="flex items-start gap-2 rounded-md bg-blue-50 p-3 text-sm dark:bg-blue-950/30">
+        <Info class="mt-0.5 h-4 w-4 flex-shrink-0 text-blue-500" />
+        <div class="text-blue-700 dark:text-blue-300">
+          <p class="font-medium">
+            默认图像服务
+          </p>
+          <p>免费使用，无需配置 API Key，支持 Kwai-Kolors/Kolors 模型。</p>
+        </div>
+      </div>
 
-    <!-- 说明 -->
-    <div v-if="config.type === 'default'" class="flex items-start gap-2 rounded-md bg-blue-50 p-3 text-sm dark:bg-blue-950/30">
-      <Info class="mt-0.5 h-4 w-4 flex-shrink-0 text-blue-500" />
-      <div class="text-blue-700 dark:text-blue-300">
-        <p class="font-medium">
-          默认图像服务
-        </p>
-        <p>免费使用，无需配置 API Key，支持 Kwai-Kolors/Kolors 模型。</p>
+      <!-- 人工智能写作说明 -->
+      <div v-if="config.type === 'aiwriting'" class="flex items-start gap-2 rounded-md bg-blue-50 p-3 text-sm dark:bg-blue-950/30">
+        <Info class="mt-0.5 h-4 w-4 flex-shrink-0 text-blue-500" />
+        <div class="text-blue-700 dark:text-blue-300">
+          <p class="font-medium">
+            人工智能写作服务
+          </p>
+          <p>使用默认的 API 端点，无需配置 API Key 和端点地址。</p>
+        </div>
       </div>
     </div>
 
-    <!-- 人工智能写作说明 -->
-    <div v-if="config.type === 'aiwriting'" class="flex items-start gap-2 rounded-md bg-blue-50 p-3 text-sm dark:bg-blue-950/30">
-      <Info class="mt-0.5 h-4 w-4 flex-shrink-0 text-blue-500" />
-      <div class="text-blue-700 dark:text-blue-300">
-        <p class="font-medium">
-          人工智能写作服务
-        </p>
-        <p>使用默认的 API 端点，无需配置 API Key 和端点地址。</p>
+    <!-- 固定底部按钮区 -->
+    <div class="flex-shrink-0 border-t pt-4">
+      <!-- 操作按钮 -->
+      <div class="flex gap-2">
+        <Button
+          type="button"
+          class="flex-1"
+          @click="saveConfig"
+        >
+          保存配置
+        </Button>
+        <Button
+          variant="outline"
+          type="button"
+          class="flex-1"
+          @click="clearConfig"
+        >
+          清空
+        </Button>
+        <Button
+          size="sm"
+          variant="outline"
+          class="flex-1"
+          :disabled="loading"
+          @click="testConnection"
+        >
+          {{ loading ? '测试中...' : '测试连接' }}
+        </Button>
       </div>
-    </div>
 
-    <!-- 操作按钮 -->
-    <div class="flex flex-wrap gap-2">
-      <Button
-        type="button"
-        class="min-w-[100px] flex-1"
-        @click="saveConfig"
-      >
-        保存配置
-      </Button>
-      <Button
-        variant="outline"
-        type="button"
-        class="min-w-[80px] flex-1"
-        @click="clearConfig"
-      >
-        清空
-      </Button>
-      <Button
-        size="sm"
-        variant="outline"
-        class="min-w-[100px] flex-1"
-        :disabled="loading"
-        @click="testConnection"
-      >
-        {{ loading ? '测试中...' : '测试连接' }}
-      </Button>
-    </div>
-
-    <!-- 测试结果显示 -->
-    <div v-if="testResult" class="mt-1 text-xs text-gray-500">
-      {{ testResult }}
+      <!-- 测试结果显示 -->
+      <div v-if="testResult" class="mt-2 text-xs text-gray-500">
+        {{ testResult }}
+      </div>
     </div>
   </div>
 </template>
+
+<style scoped>
+.scrollbar-hidden::-webkit-scrollbar {
+  display: none;
+}
+.scrollbar-hidden {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+</style>

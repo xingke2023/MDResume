@@ -788,7 +788,7 @@ function getTimeRemainingClass(index: number): string {
 <template>
   <Dialog v-model:open="dialogVisible">
     <DialogContent
-      class="bg-card text-card-foreground z-[70] h-auto max-h-[90vh] w-[95vw] flex flex-col overflow-y-auto sm:max-h-[85vh] sm:max-w-4xl"
+      class="bg-card text-card-foreground z-[70] h-[90vh] w-[95vw] flex flex-col overflow-y-auto sm:max-w-4xl"
     >
       <!-- ============ 头部 ============ -->
       <DialogHeader class="space-y-3 flex flex-col items-start">

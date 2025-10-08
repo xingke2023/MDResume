@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { MessageCircle } from 'lucide-vue-next'
 import { Button } from '@/components/ui/button'
-import ImageCropper from './ImageCropper.vue'
+import ImageCropper from '../ImageCropper.vue'
 
 const props = defineProps<{
   visible: boolean
@@ -58,7 +58,7 @@ function updateDigest(value: string) {
     @click="handleClose"
   >
     <div
-      class="my-8 max-w-2xl w-full scale-100 transform rounded-2xl bg-white shadow-2xl transition-all duration-300 dark:bg-gray-800"
+      class="h-[90vh] max-w-2xl w-full flex flex-col scale-100 transform rounded-2xl bg-white shadow-2xl transition-all duration-300 dark:bg-gray-800"
       @click.stop
     >
       <!-- 顶部固定标题区域 -->
@@ -70,13 +70,13 @@ function updateDigest(value: string) {
       </div>
 
       <!-- 可滚动表单区域 -->
-      <div class="max-h-[calc(90vh-240px)] overflow-y-auto px-6 py-4">
+      <div class="flex-1 overflow-y-auto px-6 py-4">
         <!-- 表单 -->
         <div class="space-y-4">
           <!-- 封面图片 -->
           <div>
             <label class="mb-2 block text-sm text-gray-700 font-medium dark:text-gray-300">
-              封面图片
+              封面图片 <span class="text-red-500">*</span>
             </label>
 
             <!-- 图片裁剪组件 -->
@@ -89,35 +89,35 @@ function updateDigest(value: string) {
 
           <!-- 标题 -->
           <div>
-            <label class="mb-2 block text-sm text-gray-700 font-medium dark:text-gray-300">
+            <label class="mb-1.5 block text-sm text-gray-700 font-medium dark:text-gray-300">
               文章标题 <span class="text-red-500">*</span>
             </label>
             <input
               :value="props.publishForm.title"
               type="text"
               placeholder="请输入文章标题"
-              class="dark:placeholder-gray-400 w-full border border-gray-300 rounded-lg px-4 py-2.5 text-gray-900 transition-colors dark:border-gray-600 focus:border-green-500 dark:bg-gray-700 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-green-500"
+              class="dark:placeholder-gray-400 w-full border border-gray-300 rounded-lg px-4 py-1 text-gray-900 transition-colors dark:border-gray-600 focus:border-green-500 dark:bg-gray-700 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-green-500"
               @input="updateTitle(($event.target as HTMLInputElement).value)"
             >
           </div>
 
           <!-- 作者 -->
-          <div>
-            <label class="mb-2 block text-sm text-gray-700 font-medium dark:text-gray-300">
+          <div class="flex items-center gap-2">
+            <label class="w-8 flex-shrink-0 text-sm text-gray-700 font-medium dark:text-gray-300">
               作者
             </label>
             <input
               :value="props.publishForm.author"
               type="text"
               placeholder="请输入作者名称"
-              class="dark:placeholder-gray-400 w-full border border-gray-300 rounded-lg px-4 py-2.5 text-gray-900 transition-colors dark:border-gray-600 focus:border-green-500 dark:bg-gray-700 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-green-500"
+              class="dark:placeholder-gray-400 max-w-[8rem] border border-gray-300 rounded-lg px-4 py-1 text-gray-900 transition-colors dark:border-gray-600 focus:border-green-500 dark:bg-gray-700 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-green-500"
               @input="updateAuthor(($event.target as HTMLInputElement).value)"
             >
           </div>
 
           <!-- 摘要 -->
           <div>
-            <label class="mb-2 block text-sm text-gray-700 font-medium dark:text-gray-300">
+            <label class="mb-1.5 block text-sm text-gray-700 font-medium dark:text-gray-300">
               文章摘要
             </label>
             <textarea

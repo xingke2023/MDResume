@@ -670,10 +670,12 @@ async function sendMessage() {
               title="配置参数"
               aria-label="配置参数"
               variant="ghost"
-              size="icon"
+              size="sm"
+              class="px-2"
               @click="configVisible = !configVisible"
             >
-              <Settings class="h-4 w-4" />
+              <Settings class="mr-1 h-4 w-4" />
+              模型设置
             </Button>
           </div>
         </div>
@@ -866,8 +868,8 @@ async function sendMessage() {
             class="ring-border/20 rounded-2xl px-4 py-2 text-sm leading-relaxed shadow-sm ring-1"
             :class="[
               msg.role === 'user'
-                ? 'bg-green-100 text-gray-800 dark:bg-green-900/50 dark:text-green-100 max-w-[65%]'
-                : 'bg-gray-100 text-gray-800 dark:bg-muted/60 dark:text-muted-foreground max-w-[85%]',
+                ? 'bg-green-100 text-gray-800 dark:bg-green-900/50 dark:text-green-100 max-w-[85%]'
+                : 'bg-gray-100 text-gray-800 dark:bg-muted/60 dark:text-muted-foreground max-w-[100%]',
             ]"
           >
             <!-- reasoning -->

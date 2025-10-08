@@ -243,7 +243,7 @@ async function insertImageToEditor(imageUrl: string, imagePrompt: string) {
   <!-- Nano Banana 对话框 -->
   <div
     v-if="visible"
-    class="backdrop-blur-sm fixed inset-0 z-50 flex items-center justify-center bg-black/50"
+    class="backdrop-blur-sm fixed inset-0 z-[70] flex items-center justify-center bg-black/50"
     @click="closeDialog"
   >
     <div

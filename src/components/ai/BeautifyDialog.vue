@@ -57,7 +57,7 @@ function handleConfirm() {
   <!-- 一键排版确认对话框 -->
   <div
     v-if="confirmVisible"
-    class="backdrop-blur-sm fixed inset-0 z-50 flex items-center justify-center bg-black/50"
+    class="backdrop-blur-sm fixed inset-0 z-[70] flex items-center justify-center bg-black/50"
     @click="closeConfirm"
   >
     <div
@@ -168,7 +168,7 @@ function handleConfirm() {
   <!-- 一键排版加载对话框 -->
   <div
     v-if="loadingVisible"
-    class="backdrop-blur-sm fixed inset-0 z-50 flex items-center justify-center bg-black/50"
+    class="backdrop-blur-sm fixed inset-0 z-[70] flex items-center justify-center bg-black/50"
     @click="closeLoading"
   >
     <div

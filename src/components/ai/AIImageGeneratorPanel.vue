@@ -936,39 +936,34 @@ function getTimeRemainingClass(index: number): string {
     >
       <!-- ============ 头部 ============ -->
       <DialogHeader class="space-y-1 flex flex-col items-start">
-        <div class="space-x-1 flex items-center">
+        <div class="w-full flex items-center justify-between">
           <DialogTitle>AI 文生图</DialogTitle>
 
-          <Button
-            :title="configVisible ? 'AI 文生图' : '配置参数'"
-            :aria-label="configVisible ? 'AI 文生图' : '配置参数'"
-            variant="ghost"
-            size="icon"
-            @click="configVisible = !configVisible"
-          >
-            <ImageIcon v-if="configVisible" class="h-4 w-4" />
-            <Settings v-else class="h-4 w-4" />
-          </Button>
+          <div class="flex items-center gap-1 pr-2">
+            <Button
+              :title="configVisible ? 'AI 文生图' : '配置参数'"
+              :aria-label="configVisible ? 'AI 文生图' : '配置参数'"
+              variant="ghost"
+              size="sm"
+              class="px-2"
+              @click="configVisible = !configVisible"
+            >
+              <Settings class="mr-1 h-4 w-4" />
+              模型配置
+            </Button>
 
-          <Button
-            title="AI 对话"
-            aria-label="AI 对话"
-            variant="ghost"
-            size="icon"
-            @click="switchToChat()"
-          >
-            <MessageCircle class="h-4 w-4" />
-          </Button>
-
-          <Button
-            title="清空图像"
-            aria-label="清空图像"
-            variant="ghost"
-            size="icon"
-            @click="clearImages"
-          >
-            <Trash2 class="h-4 w-4" />
-          </Button>
+            <Button
+              title="清空图像"
+              aria-label="清空图像"
+              variant="ghost"
+              size="sm"
+              class="px-2"
+              @click="clearImages"
+            >
+              <Trash2 class="mr-1 h-4 w-4" />
+              清空图像
+            </Button>
+          </div>
         </div>
         <p class="text-muted-foreground text-sm">
           使用 AI 根据文字描述生成图像
@@ -978,9 +973,11 @@ function getTimeRemainingClass(index: number): string {
       <!-- ============ 参数配置面板 ============ -->
       <div
         v-if="configVisible"
-        class="mb-4 max-h-[60vh] w-full flex-shrink-0 overflow-y-auto border rounded-md p-4"
+        class="mb-4 h-[60vh] w-full flex flex-shrink-0 flex-col border rounded-md"
       >
-        <AIImageConfig @saved="handleConfigSaved" />
+        <div class="flex-1 overflow-y-auto p-4">
+          <AIImageConfig @saved="handleConfigSaved" />
+        </div>
       </div>
 
       <!-- ============ 图像展示区域 ============ -->

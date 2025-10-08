@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { computed, nextTick, reactive, ref, watch } from 'vue'
-import { storeToRefs } from 'pinia'
 import { Info } from 'lucide-vue-next'
+import { storeToRefs } from 'pinia'
+import { computed, nextTick, reactive, ref, watch } from 'vue'
 import { serviceOptions } from '@/config/ai-services'
 import { DEFAULT_SERVICE_TYPE } from '@/constants/AIConfig'
 import useAIConfigStore from '@/stores/AIConfig'
@@ -40,9 +40,10 @@ function pullFromStore() {
   config.endpoint = endpoint.value
   // 对于 deepseek 服务，如果使用的是系统默认密钥，界面显示空值
   const currentKey = apiKey.value
-  if (config.type === 'deepseek' && currentKey === 'sk-f7fccdf51bda44ff8830dc18b8b5bf6e') {
-    config.apiKey = ''
-  } else {
+  if (config.type === `deepseek` && currentKey === `sk-f7fccdf51bda44ff8830dc18b8b5bf6e`) {
+    config.apiKey = ``
+  }
+  else {
     config.apiKey = currentKey
   }
   config.model = model.value
@@ -64,9 +65,10 @@ watch(
     config.endpoint = endpoint.value
     // 对于 deepseek 服务，如果使用的是系统默认密钥，界面显示空值
     const currentKey = apiKey.value
-    if (config.type === 'deepseek' && currentKey === 'sk-f7fccdf51bda44ff8830dc18b8b5bf6e') {
-      config.apiKey = ''
-    } else {
+    if (config.type === `deepseek` && currentKey === `sk-f7fccdf51bda44ff8830dc18b8b5bf6e`) {
+      config.apiKey = ``
+    }
+    else {
       config.apiKey = currentKey
     }
     config.model = model.value
@@ -91,9 +93,10 @@ function saveConfig(emitEvent = true) {
   maxToken.value = config.maxToken
 
   // 对于 deepseek 服务，如果用户输入为空，则保存系统默认密钥
-  if (config.type === 'deepseek' && !config.apiKey.trim()) {
-    apiKey.value = 'sk-f7fccdf51bda44ff8830dc18b8b5bf6e'
-  } else {
+  if (config.type === `deepseek` && !config.apiKey.trim()) {
+    apiKey.value = `sk-f7fccdf51bda44ff8830dc18b8b5bf6e`
+  }
+  else {
     apiKey.value = config.apiKey
   }
 
@@ -174,9 +177,9 @@ async function testConnection() {
     </div>
 
     <!-- 服务类型 -->
-    <div>
-      <Label class="mb-1 block text-sm font-medium">服务类型</Label>
-      <Select v-model="config.type">
+    <div class="flex items-center gap-2">
+      <Label class="w-14 flex-shrink-0 text-sm font-medium">服务类型</Label>
+      <Select v-model="config.type" class="flex-1">
         <SelectTrigger class="w-full">
           <SelectValue>
             {{ currentService.label }}
@@ -195,30 +198,30 @@ async function testConnection() {
     </div>
 
     <!-- API 端点 -->
-    <div v-if="config.type !== 'default'">
-      <Label class="mb-1 block text-sm font-medium">API 端点</Label>
+    <div v-if="config.type !== 'default'" class="flex items-center gap-2">
+      <Label class="w-14 flex-shrink-0 text-sm font-medium">API 端点</Label>
       <Input
         v-model="config.endpoint"
         placeholder="输入 API 端点 URL"
-        class="focus:border-gray-400 focus:ring-1 focus:ring-gray-300"
+        class="flex-1 focus:border-gray-400 focus:ring-1 focus:ring-gray-300"
       />
     </div>
 
     <!-- API 密钥，仅非 default 显示 -->
-    <div v-if="config.type !== 'default'">
-      <Label class="mb-1 block text-sm font-medium">API 密钥</Label>
+    <div v-if="config.type !== 'default'" class="flex items-center gap-2">
+      <Label class="w-14 flex-shrink-0 text-sm font-medium">API 密钥</Label>
       <Input
         v-model="config.apiKey"
         type="password"
         placeholder="sk-..."
-        class="focus:border-gray-400 focus:ring-1 focus:ring-gray-300"
+        class="flex-1 focus:border-gray-400 focus:ring-1 focus:ring-gray-300"
       />
     </div>
 
     <!-- 模型名称 -->
-    <div>
-      <Label class="mb-1 block text-sm font-medium">模型名称</Label>
-      <Select v-if="currentService.models.length > 0" v-model="config.model">
+    <div class="flex items-center gap-2">
+      <Label class="w-14 flex-shrink-0 text-sm font-medium">模型名称</Label>
+      <Select v-if="currentService.models.length > 0" v-model="config.model" class="flex-1">
         <SelectTrigger class="w-full">
           <SelectValue>
             {{ config.model || '请选择模型' }}
@@ -238,13 +241,13 @@ async function testConnection() {
         v-else
         v-model="config.model"
         placeholder="输入模型名称"
-        class="focus:border-gray-400 focus:ring-1 focus:ring-gray-300"
+        class="flex-1 focus:border-gray-400 focus:ring-1 focus:ring-gray-300"
       />
     </div>
 
     <!-- 温度 temperature -->
-    <div>
-      <Label class="mb-1 flex items-center gap-1 text-sm font-medium">
+    <div class="flex items-center gap-2">
+      <Label class="w-14 flex flex-shrink-0 items-center gap-1 text-sm font-medium">
         温度
         <TooltipProvider>
           <Tooltip>
@@ -264,25 +267,25 @@ async function testConnection() {
         min="0"
         max="2"
         placeholder="0 ~ 2，默认 1"
-        class="focus:border-gray-400 focus:ring-1 focus:ring-gray-300"
+        class="flex-1 focus:border-gray-400 focus:ring-1 focus:ring-gray-300"
       />
     </div>
 
     <!-- 最大 Token 数 -->
-    <div>
-      <Label class="mb-1 block text-sm font-medium">最大 Token 数</Label>
+    <div class="flex items-center gap-2">
+      <Label class="w-24 flex-shrink-0 text-sm font-medium">最大 Token 数</Label>
       <Input
         v-model.number="config.maxToken"
         type="number"
         min="1"
         max="32768"
         placeholder="比如 1024"
-        class="focus:border-gray-400 focus:ring-1 focus:ring-gray-300"
+        class="flex-1 focus:border-gray-400 focus:ring-1 focus:ring-gray-300"
       />
     </div>
 
     <!-- 操作按钮区域 -->
-    <div class="mt-2 flex flex-col gap-2 sm:flex-row">
+    <div class="mt-2 flex justify-center gap-2">
       <Button size="sm" @click="saveConfig">
         保存
       </Button>

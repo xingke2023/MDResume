@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { useClipboard, useStorage } from '@vueuse/core'
-import { nextTick, ref, toRaw, watch } from 'vue'
 import {
   Bold,
   BookOpen,
@@ -8,13 +7,15 @@ import {
   ChartPie,
   Code,
   CreditCard,
-  Eraser,
+  FileX2,
   Gem,
+  Heading,
   ImagePlus,
   Indent,
   Link,
   List,
   ListOrdered,
+  Minus,
   MinusSquare,
   Newspaper,
   Pencil,
@@ -30,6 +31,7 @@ import {
   Wrench,
 } from 'lucide-vue-next'
 import { storeToRefs } from 'pinia'
+import { nextTick, ref, toRaw, watch } from 'vue'
 import { toast } from 'vue-sonner'
 import BeautifyDialog from '@/components/ai/BeautifyDialog.vue'
 import IndustryHotspotDialog from '@/components/ai/IndustryHotspotDialog.vue'
@@ -40,8 +42,10 @@ import { ctrlKey, themeOptions } from '@/config'
 import { useDisplayStore, useStore } from '@/stores'
 import useAIConfigStore from '@/stores/AIConfig'
 import { addPrefix, processClipboardContent } from '@/utils'
-import PublishDialog from './PublishDialog.vue'
+import FetchArticleDialog from './FetchArticleDialog.vue'
 import RewriteDialog from './RewriteDialog.vue'
+import MpConfigDialog from './WechatPublish/MpConfigDialog.vue'
+import PublishDialog from './WechatPublish/PublishDialog.vue'
 
 const emit = defineEmits([`startCopy`, `endCopy`])
 
@@ -68,6 +72,124 @@ const {
   undo,
   redo,
 } = store
+
+// 插入标题
+function insertHeading(level: number) {
+  if (!editor.value)
+    return
+
+  const editorInstance = toRaw(editor.value)
+  const cursor = editorInstance.getCursor()
+  const line = editorInstance.getLine(cursor.line)
+
+  // 生成对应级别的标题前缀
+  const prefix = `${`#`.repeat(level)} `
+
+  // 如果当前行为空，直接插入标题前缀
+  if (!line.trim()) {
+    editorInstance.replaceRange(prefix, cursor)
+    editorInstance.setCursor({ line: cursor.line, ch: prefix.length })
+  }
+  // 如果当前行已经是标题，替换标题级别
+  else if (line.match(/^#+\s/)) {
+    const newLine = line.replace(/^#+\s/, prefix)
+    editorInstance.replaceRange(
+      newLine,
+      { line: cursor.line, ch: 0 },
+      { line: cursor.line, ch: line.length },
+    )
+  }
+  // 否则在行首添加标题前缀
+  else {
+    editorInstance.replaceRange(prefix, { line: cursor.line, ch: 0 })
+    editorInstance.setCursor({ line: cursor.line, ch: cursor.ch + prefix.length })
+  }
+
+  // 延迟设置焦点，确保下拉菜单完全关闭
+  setTimeout(() => {
+    editorInstance.focus()
+  }, 300)
+}
+
+// 插入分割线
+function insertDivider() {
+  if (!editor.value)
+    return
+  const editorInstance = toRaw(editor.value)
+  const cursor = editorInstance.getCursor()
+  editorInstance.replaceRange(`\n---\n`, cursor)
+  editorInstance.setCursor({ line: cursor.line + 2, ch: 0 })
+  setTimeout(() => editorInstance.focus(), 100)
+}
+
+// 插入引用
+function insertQuote() {
+  if (!editor.value)
+    return
+  const editorInstance = toRaw(editor.value)
+  const selection = editorInstance.getSelection()
+  const cursor = editorInstance.getCursor()
+
+  if (selection) {
+    // 有选中文本，为每行添加引用符号
+    const lines = selection.split('\n')
+    const quoted = lines.map(line => `> ${line}`).join('\n')
+    editorInstance.replaceSelection(quoted)
+  }
+  else {
+    // 无选中文本，插入引用前缀
+    const line = editorInstance.getLine(cursor.line)
+    if (line.startsWith('> ')) {
+      // 如果已经是引用，移除引用符号
+      editorInstance.replaceRange(
+        line.substring(2),
+        { line: cursor.line, ch: 0 },
+        { line: cursor.line, ch: line.length }
+      )
+    }
+    else {
+      // 添加引用符号
+      editorInstance.replaceRange('> ', { line: cursor.line, ch: 0 })
+      editorInstance.setCursor({ line: cursor.line, ch: cursor.ch + 2 })
+    }
+  }
+  setTimeout(() => editorInstance.focus(), 100)
+}
+
+// 段落首行缩进
+function insertIndent() {
+  if (!editor.value)
+    return
+  const editorInstance = toRaw(editor.value)
+  const cursor = editorInstance.getCursor()
+  editorInstance.replaceRange('　　', cursor) // 两个全角空格
+  editorInstance.setCursor({ line: cursor.line, ch: cursor.ch + 2 })
+  setTimeout(() => editorInstance.focus(), 100)
+}
+
+// 删除当前行
+function deleteLine() {
+  if (!editor.value)
+    return
+  const editorInstance = toRaw(editor.value)
+  const cursor = editorInstance.getCursor()
+  const line = cursor.line
+  editorInstance.replaceRange(
+    '',
+    { line, ch: 0 },
+    { line: line + 1, ch: 0 }
+  )
+  setTimeout(() => editorInstance.focus(), 100)
+}
+
+// 清空编辑器
+function clearEditor() {
+  if (!editor.value)
+    return
+  const editorInstance = toRaw(editor.value)
+  editorInstance.setValue('')
+  setTimeout(() => editorInstance.focus(), 100)
+}
 
 // 工具函数，添加格式
 function addFormat(cmd: string) {
@@ -518,10 +640,7 @@ ${content}`
 }
 
 // 抓取工具状态
-const isFetching = ref(false)
 const fetchDialogVisible = ref(false)
-const fetchUrl = ref(``)
-const fetchUrlInput = ref<HTMLInputElement | null>(null)
 
 // 一键改写状态 - 引用组件
 const rewriteDialogRef = ref<InstanceType<typeof RewriteDialog> | null>(null)
@@ -648,17 +767,8 @@ async function handleCoverImageChange(event: Event) {
   }
 }
 
-// 保存公众号配置
-function saveMpConfig() {
-  if (!mpConfigForm.value.appID.trim() || !mpConfigForm.value.appsecret.trim()) {
-    toast.error(`AppID 和 AppSecret 不能为空`)
-    return
-  }
-
-  localStorage.setItem(`mpConfig`, JSON.stringify(mpConfigForm.value))
-  toast.success(`公众号配置保存成功`)
-  showMpConfigDialog.value = false
-
+// 保存公众号配置后的回调
+function handleMpConfigSaved() {
   // 保存后自动打开发布对话框
   showPublishDialog()
 }
@@ -881,103 +991,7 @@ watch(fetchDialogVisible, (visible: boolean) => {
 
 // 显示抓取工具对话框
 function showFetchDialog() {
-  fetchUrl.value = ``
   fetchDialogVisible.value = true
-}
-
-// 抓取公众号文章
-async function fetchArticle() {
-  if (!editor.value || isFetching.value)
-    return
-
-  const url = fetchUrl.value.trim()
-  if (!url) {
-    toast.error(`请输入公众号文章链接`)
-    return
-  }
-
-  // 简单的URL验证
-  if (!url.startsWith(`http://`) && !url.startsWith(`https://`)) {
-    toast.error(`请输入有效的网址`)
-    return
-  }
-
-  isFetching.value = true
-
-  try {
-    // 开发环境使用代理，生产环境直接访问
-    const apiEndpoint = import.meta.env.DEV
-      ? `/api/extract`
-      : `https://wechat.easy-write.com/extract/api/extract`
-
-    const response = await fetch(apiEndpoint, {
-      method: `POST`,
-      headers: {
-        'Content-Type': `application/json`,
-      },
-      body: JSON.stringify({
-        url,
-        format: `text`,
-      }),
-    })
-
-    if (!response.ok) {
-      const errorText = await response.text()
-      console.error(`抓取接口错误详情:`, errorText)
-      throw new Error(`抓取失败 (${response.status}): ${response.statusText}`)
-    }
-
-    const data = await response.json()
-
-    // 检查响应是否成功
-    if (!data.success) {
-      throw new Error(`抓取失败: ${data.message || `未知错误`}`)
-    }
-
-    // 根据format参数获取对应的内容字段
-    // format为html时从content_html获取，为text时从content_text获取
-    const content = data.data?.content_html || data.data?.content_text || data.content || data.text || data.markdown
-
-    if (!content) {
-      console.error(`API响应数据:`, data)
-      throw new Error(`API 返回内容为空`)
-    }
-
-    // 替换编辑器内容
-    toRaw(editor.value).setValue(content)
-    toast.success(`文章抓取成功！内容已导入编辑器`)
-    fetchDialogVisible.value = false
-  }
-  catch (error) {
-    console.error(`抓取文章失败:`, error)
-
-    // 提供更友好的错误提示
-    let errorMessage = `抓取文章失败`
-    const errorMsg = error instanceof Error ? error.message : String(error)
-    if (errorMsg.includes(`Failed to fetch`) || errorMsg.includes(`CORS`) || errorMsg.includes(`cross-origin`)) {
-      errorMessage = `CORS跨域错误：请确保抓取接口支持跨域访问`
-    }
-    else if (errorMsg.includes(`401`)) {
-      errorMessage = `API密钥验证失败，请检查配置`
-    }
-    else if (errorMsg.includes(`429`)) {
-      errorMessage = `API调用频率超限，请稍后重试`
-    }
-    else if (errorMsg.includes(`403`)) {
-      errorMessage = `API访问被拒绝，请检查权限`
-    }
-    else if (errorMsg.includes(`404`)) {
-      errorMessage = `API接口地址错误，请检查配置`
-    }
-    else {
-      errorMessage = `抓取文章失败: ${errorMsg}`
-    }
-
-    toast.error(errorMessage)
-  }
-  finally {
-    isFetching.value = false
-  }
 }
 
 const { copy: copyContent } = useClipboard({
@@ -1112,6 +1126,47 @@ function handleCopyWithMode(mode: string) {
       >
         <Wand2 class="size-4" />
       </Button>
+
+      <!-- 标题选择 - 电脑端显示 -->
+      <DropdownMenu>
+        <DropdownMenuTrigger as-child>
+          <Button
+            variant="outline"
+            size="icon"
+            title="标题"
+            class="hidden sm:inline-flex"
+          >
+            <Heading class="size-4" />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="start">
+          <DropdownMenuItem @click="insertHeading(1)">
+            <span class="text-2xl font-bold">H1</span>
+            <span class="text-muted-foreground ml-2 text-sm">一级标题</span>
+          </DropdownMenuItem>
+          <DropdownMenuItem @click="insertHeading(2)">
+            <span class="text-xl font-bold">H2</span>
+            <span class="text-muted-foreground ml-2 text-sm">二级标题</span>
+          </DropdownMenuItem>
+          <DropdownMenuItem @click="insertHeading(3)">
+            <span class="text-lg font-bold">H3</span>
+            <span class="text-muted-foreground ml-2 text-sm">三级标题</span>
+          </DropdownMenuItem>
+          <DropdownMenuItem @click="insertHeading(4)">
+            <span class="font-bold">H4</span>
+            <span class="text-muted-foreground ml-2 text-sm">四级标题</span>
+          </DropdownMenuItem>
+          <DropdownMenuItem @click="insertHeading(5)">
+            <span class="text-sm font-bold">H5</span>
+            <span class="text-muted-foreground ml-2 text-sm">五级标题</span>
+          </DropdownMenuItem>
+          <DropdownMenuItem @click="insertHeading(6)">
+            <span class="text-xs font-bold">H6</span>
+            <span class="text-muted-foreground ml-2 text-sm">六级标题</span>
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+
       <Button
         variant="outline"
         size="icon"
@@ -1120,6 +1175,24 @@ function handleCopyWithMode(mode: string) {
         @click="addFormat(`${ctrlKey}-B`)"
       >
         <Bold class="size-4" />
+      </Button>
+      <Button
+        variant="outline"
+        size="icon"
+        title="引用"
+        class="hidden sm:inline-flex"
+        @click="insertQuote()"
+      >
+        <Quote class="size-4" />
+      </Button>
+      <Button
+        variant="outline"
+        size="icon"
+        title="超链接"
+        class="hidden sm:inline-flex"
+        @click="addFormat(`${ctrlKey}-K`)"
+      >
+        <Link class="size-4" />
       </Button>
       <Button
         variant="outline"
@@ -1138,6 +1211,24 @@ function handleCopyWithMode(mode: string) {
         @click="addFormat(`${ctrlKey}-U`)"
       >
         <List class="size-4" />
+      </Button>
+      <Button
+        variant="outline"
+        size="icon"
+        title="分割线"
+        class="hidden sm:inline-flex"
+        @click="insertDivider()"
+      >
+        <Minus class="size-4" />
+      </Button>
+      <Button
+        variant="outline"
+        size="icon"
+        title="段落首行缩进"
+        class="hidden sm:inline-flex"
+        @click="insertIndent()"
+      >
+        <Indent class="size-4" />
       </Button>
 
       <!-- 插入工具 - 电脑端显示 -->
@@ -1162,11 +1253,38 @@ function handleCopyWithMode(mode: string) {
       <Button
         variant="outline"
         size="icon"
+        title="图表工具"
+        class="hidden sm:inline-flex"
+        @click="addFormat(`${ctrlKey}-M`)"
+      >
+        <ChartPie class="size-4" />
+      </Button>
+      <Button
+        variant="outline"
+        size="icon"
         title="插入公众号名片"
         class="hidden sm:inline-flex"
         @click="displayStore.toggleShowInsertMpCardDialog()"
       >
         <CreditCard class="size-4" />
+      </Button>
+      <Button
+        variant="outline"
+        size="icon"
+        title="删除当前行"
+        class="hidden sm:inline-flex"
+        @click="deleteLine()"
+      >
+        <Trash2 class="size-4" />
+      </Button>
+      <Button
+        variant="outline"
+        size="icon"
+        title="清空编辑器"
+        class="hidden sm:inline-flex"
+        @click="clearEditor()"
+      >
+        <FileX2 class="size-4" />
       </Button>
 
       <!-- 工具 -->
@@ -1185,9 +1303,9 @@ function handleCopyWithMode(mode: string) {
             <Sparkles class="mr-2 size-4" />
             {{ isBeautifying ? '美化中...' : '全文一键排版' }}
           </DropdownMenuItem>
-          <DropdownMenuItem :disabled="isFetching" class="py-3" @click="showFetchDialog()">
+          <DropdownMenuItem class="py-3" @click="showFetchDialog()">
             <Wrench class="mr-2 size-4" />
-            {{ isFetching ? '抓取中...' : '公众号文章抓取工具' }}
+            公众号文章抓取工具
           </DropdownMenuItem>
           <DropdownMenuItem class="py-3" @click="showIndustryInfoDialog()">
             <Newspaper class="mr-2 size-4" />
@@ -1501,7 +1619,7 @@ function handleCopyWithMode(mode: string) {
             title="删除当前行"
             @click="handleDeleteCurrentLine"
           >
-            <Eraser class="size-4" />
+            <Trash2 class="size-4" />
           </Button>
           <!-- 格式化 -->
           <Button
@@ -1522,7 +1640,7 @@ function handleCopyWithMode(mode: string) {
             title="清空内容"
             @click="handleClearContent"
           >
-            <Trash2 class="mr-1 size-4" />
+            <FileX2 class="mr-1 size-4" />
             清空
           </Button>
         </div>
@@ -1538,77 +1656,7 @@ function handleCopyWithMode(mode: string) {
   />
 
   <!-- 抓取工具对话框 -->
-  <div
-    v-if="fetchDialogVisible"
-    class="backdrop-blur-sm fixed inset-0 z-50 flex items-center justify-center bg-black/50"
-    @click="fetchDialogVisible = false"
-  >
-    <div
-      class="mx-4 max-w-lg w-[90vw] scale-100 transform rounded-2xl bg-white p-6 shadow-2xl transition-all duration-300 dark:bg-gray-800"
-      @click.stop
-    >
-      <!-- 标题图标 -->
-      <div class="mb-4 flex items-center justify-center">
-        <div class="bg-gradient-to-r to-blue-600 from-green-500 h-12 w-12 flex items-center justify-center rounded-full">
-          <Wrench class="h-6 w-6 text-white" />
-        </div>
-      </div>
-
-      <!-- 标题 -->
-      <h3 class="mb-2 text-center text-xl text-gray-900 font-bold dark:text-gray-100">
-        抓取公众号文章
-      </h3>
-
-      <!-- 描述 -->
-      <p class="mb-4 text-center text-sm text-gray-600 dark:text-gray-400">
-        输入公众号文章链接，自动提取内容到编辑器
-      </p>
-
-      <!-- 输入框 -->
-      <div class="mb-4">
-        <label class="mb-2 block text-sm text-gray-700 font-medium dark:text-gray-300">
-          文章链接
-        </label>
-        <input
-          ref="fetchUrlInput"
-          v-model="fetchUrl"
-          type="url"
-          autofocus
-          placeholder="https://mp.weixin.qq.com/s/..."
-          class="dark:placeholder-gray-400 w-full border border-gray-300 rounded-lg px-4 py-2.5 text-gray-900 transition-colors dark:border-gray-600 focus:border-blue-500 dark:bg-gray-700 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
-          @keyup.enter="fetchArticle()"
-        >
-      </div>
-
-      <!-- 提示信息 -->
-      <div class="mb-6 rounded-lg bg-blue-50 p-3 dark:bg-blue-900/20">
-        <p class="text-sm text-blue-800 dark:text-blue-300">
-          <span class="font-medium">💡 提示：</span>支持微信公众号文章链接，提取后将覆盖当前编辑器内容
-        </p>
-      </div>
-
-      <!-- 按钮组 -->
-      <div class="flex justify-end gap-3">
-        <Button
-          variant="outline"
-          class="flex-1"
-          :disabled="isFetching"
-          @click="fetchDialogVisible = false"
-        >
-          取消
-        </Button>
-        <Button
-          class="bg-gradient-to-r from-green-500 to-blue-600 hover:to-blue-700 hover:from-green-600 flex-1 border-0 text-white"
-          :disabled="isFetching || !fetchUrl.trim()"
-          @click="fetchArticle()"
-        >
-          <Wrench v-if="!isFetching" class="mr-1 h-4 w-4" />
-          <div v-if="isFetching" class="animate-spin mr-1 h-4 w-4 border-2 border-white border-t-transparent rounded-full" />
-          {{ isFetching ? '抓取中...' : '开始抓取' }}
-        </Button>
-      </div>
-    </div>
-  </div>
+  <FetchArticleDialog v-model:visible="fetchDialogVisible" />
 
   <!-- 一键改写对话框 -->
   <RewriteDialog ref="rewriteDialogRef" v-model:visible="rewriteDialogVisible" />
@@ -1622,7 +1670,7 @@ function handleCopyWithMode(mode: string) {
   <!-- 个人知识库对话框 -->
   <div
     v-if="knowledgeBaseDialogVisible"
-    class="backdrop-blur-sm fixed inset-0 z-50 flex items-center justify-center bg-black/50"
+    class="backdrop-blur-sm fixed inset-0 z-[70] flex items-center justify-center bg-black/50"
     @click="knowledgeBaseDialogVisible = false"
   >
     <div
@@ -1687,88 +1735,11 @@ function handleCopyWithMode(mode: string) {
   >
 
   <!-- 公众号配置对话框 -->
-  <div
-    v-if="showMpConfigDialog"
-    class="backdrop-blur-sm fixed inset-0 z-[110] flex items-center justify-center overflow-y-auto bg-black/50 p-4"
-    @click="showMpConfigDialog = false"
-  >
-    <div
-      class="max-w-md w-full scale-100 transform rounded-2xl bg-white shadow-2xl transition-all duration-300 dark:bg-gray-800"
-      @click.stop
-    >
-      <!-- 标题 -->
-      <div class="border-b border-gray-200 px-6 py-4 dark:border-gray-700">
-        <h3 class="text-center text-xl text-gray-900 font-bold dark:text-gray-100">
-          配置公众号信息
-        </h3>
-      </div>
-
-      <!-- 表单 -->
-      <div class="px-6 py-6">
-        <div class="space-y-4">
-          <!-- 提示信息 -->
-          <div class="rounded-lg bg-blue-50 p-3 dark:bg-blue-900/20">
-            <p class="text-sm text-blue-800 dark:text-blue-300">
-              <span class="font-medium">💡 提示：</span>请输入您的微信公众号 AppID 和 AppSecret，用于发布文章到公众号
-            </p>
-          </div>
-
-          <!-- AppID -->
-          <div>
-            <label class="mb-2 block text-sm text-gray-700 font-medium dark:text-gray-300">
-              AppID <span class="text-red-500">*</span>
-            </label>
-            <input
-              v-model="mpConfigForm.appID"
-              type="text"
-              placeholder="请输入公众号 AppID"
-              class="dark:placeholder-gray-400 w-full border border-gray-300 rounded-lg px-4 py-2.5 text-gray-900 transition-colors dark:border-gray-600 focus:border-green-500 dark:bg-gray-700 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-green-500"
-            >
-          </div>
-
-          <!-- AppSecret -->
-          <div>
-            <label class="mb-2 block text-sm text-gray-700 font-medium dark:text-gray-300">
-              AppSecret <span class="text-red-500">*</span>
-            </label>
-            <input
-              v-model="mpConfigForm.appsecret"
-              type="password"
-              placeholder="请输入公众号 AppSecret"
-              class="dark:placeholder-gray-400 w-full border border-gray-300 rounded-lg px-4 py-2.5 text-gray-900 transition-colors dark:border-gray-600 focus:border-green-500 dark:bg-gray-700 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-green-500"
-            >
-          </div>
-
-          <!-- 帮助信息 -->
-          <div class="rounded-lg bg-gray-50 p-3 dark:bg-gray-700/50">
-            <p class="text-xs text-gray-600 dark:text-gray-400">
-              <span class="font-medium">如何获取：</span><br>1、登录微信公众平台 https://mp.weixin.qq.com/ <br>设置与开发 → 开发接口管理 → 基本配置 → 开发者ID(AppID) 和 开发者密钥(AppSecret) <br>2、需要将43.153.64.160加入IP白名单<br>3、必须是已认证的公众号
-            </p>
-          </div>
-        </div>
-      </div>
-
-      <!-- 按钮组 -->
-      <div class="border-t border-gray-200 px-6 py-4 dark:border-gray-700">
-        <div class="flex justify-end gap-3">
-          <Button
-            variant="outline"
-            class="flex-1"
-            @click="showMpConfigDialog = false"
-          >
-            取消
-          </Button>
-          <Button
-            class="from-green-500 to-blue-600 bg-gradient-to-r hover:from-green-600 hover:to-blue-700 flex-1 border-0 text-white"
-            :disabled="!mpConfigForm.appID.trim() || !mpConfigForm.appsecret.trim()"
-            @click="saveMpConfig"
-          >
-            保存配置
-          </Button>
-        </div>
-      </div>
-    </div>
-  </div>
+  <MpConfigDialog
+    v-model:visible="showMpConfigDialog"
+    :initial-config="mpConfigForm"
+    @saved="handleMpConfigSaved"
+  />
 
   <!-- 发布到公众号对话框 -->
   <PublishDialog
