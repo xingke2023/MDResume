@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { nextTick, ref, toRaw } from 'vue'
 import { useClipboard, useStorage } from '@vueuse/core'
+import { nextTick, ref, toRaw } from 'vue'
 import {
   Bold,
   BookOpen,
