@@ -10,20 +10,20 @@ import readingTime from 'reading-time'
 import type { ExtendedProperties, IOpts, ThemeStyles } from '@/types'
 import type { RendererAPI } from '@/types/renderer-types'
 
-// 懒加载 Mermaid
-let mermaid: any = null
-async function loadMermaid() {
-  if (!mermaid) {
-    mermaid = (await import('mermaid')).default
-  }
-  return mermaid
-}
-
 import { getStyleString } from '.'
 import markedAlert from './MDAlert'
 import markedFootnotes from './MDFootnotes'
 import { MDKatex } from './MDKatex'
 import markedSlider from './MDSlider'
+
+// 懒加载 Mermaid
+let mermaid: any = null
+async function loadMermaid() {
+  if (!mermaid) {
+    mermaid = (await import(`mermaid`)).default
+  }
+  return mermaid
+}
 
 marked.setOptions({
   breaks: true,

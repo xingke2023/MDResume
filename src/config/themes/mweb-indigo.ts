@@ -2,6 +2,7 @@ import type { Theme } from '@/types'
 
 export const mwebIndigoTheme: Theme = {
   base: {
+
     '--md-primary-color': `#5a67d8`,
     'color': `#595959`,
     'font-family': `-apple-system, BlinkMacSystemFont, Segoe UI, Helvetica, Arial, sans-serif, Apple Color Emoji, Segoe UI Emoji`,
