@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { useClipboard, useStorage } from '@vueuse/core'
-import { nextTick, ref, toRaw } from 'vue'
+import { nextTick, ref, toRaw, watch } from 'vue'
 import {
   Bold,
   BookOpen,
@@ -135,7 +135,7 @@ function applyHeadingLevel(level: number) {
   editorInstance.operation(() => {
     const ranges = editorInstance.listSelections()
 
-    ranges.filter(range => range && typeof range.from === `function` && typeof range.to === `function`).forEach((range) => {
+    ranges.filter((range: any) => range && typeof range.from === `function` && typeof range.to === `function`).forEach((range: any) => {
       const from = range.from()
       const to = range.to()
 
@@ -170,7 +170,7 @@ function applyQuote() {
   editorInstance.operation(() => {
     const ranges = editorInstance.listSelections()
 
-    ranges.filter(range => range && typeof range.from === `function` && typeof range.to === `function`).forEach((range) => {
+    ranges.filter((range: any) => range && typeof range.from === `function` && typeof range.to === `function`).forEach((range: any) => {
       const from = range.from()
       const to = range.to()
 
@@ -864,7 +864,7 @@ function showRewriteDialog() {
 }
 
 // 监听抓取对话框显示状态，自动聚焦输入框
-watch(fetchDialogVisible, (visible) => {
+watch(fetchDialogVisible, (visible: boolean) => {
   if (visible) {
     nextTick(() => {
       setTimeout(() => {

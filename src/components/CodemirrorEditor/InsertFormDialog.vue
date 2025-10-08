@@ -1,3 +1,4 @@
+import { ref } from 'vue'
 <script setup lang="ts">
 import { useDisplayStore, useStore } from '@/stores'
 import { createTable } from '@/utils'
