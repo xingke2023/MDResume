@@ -46,8 +46,22 @@ function handleImageChange(event: Event) {
     return
   }
 
+  // 检查图片数量限制
+  const remainingSlots = 3 - imageFiles.value.length
+  if (remainingSlots <= 0) {
+    toast.error('最多只能上传 3 张图片')
+    input.value = ''
+    return
+  }
+
   // 验证并添加每个文件
+  let addedCount = 0
   Array.from(files).forEach((file) => {
+    // 检查是否超过限制
+    if (addedCount >= remainingSlots) {
+      return
+    }
+
     // 验证文件类型
     if (!file.type.startsWith('image/')) {
       toast.error(`${file.name} 不是图片文件`)
@@ -62,6 +76,7 @@ function handleImageChange(event: Event) {
 
     // 添加文件
     imageFiles.value.push(file)
+    addedCount++
 
     // 生成预览
     const reader = new FileReader()
@@ -73,6 +88,11 @@ function handleImageChange(event: Event) {
     }
     reader.readAsDataURL(file)
   })
+
+  // 如果有文件因数量限制未添加，提示用户
+  if (files.length > remainingSlots) {
+    toast.warning(`已添加 ${addedCount} 张图片，最多只能上传 3 张`)
+  }
 
   // 清空input，允许重复选择同一文件
   input.value = ''
@@ -227,7 +247,7 @@ async function insertImageToEditor(imageUrl: string, imagePrompt: string) {
     @click="closeDialog"
   >
     <div
-      class="mx-4 max-w-2xl w-[90vw] scale-100 transform rounded-2xl bg-white p-6 shadow-2xl transition-all duration-300 dark:bg-gray-800"
+      class="mx-4 max-w-xl w-[85vw] scale-100 transform rounded-2xl bg-white p-6 shadow-2xl transition-all duration-300 dark:bg-gray-800"
       @click.stop
     >
       <!-- 标题图标 -->
@@ -249,74 +269,55 @@ async function insertImageToEditor(imageUrl: string, imagePrompt: string) {
 
       <!-- 表单内容 -->
       <div class="space-y-4">
-        <!-- 图片上传区域 -->
-        <div>
-          <label class="mb-2 block text-sm text-gray-700 font-medium dark:text-gray-300">
-            上传图片 <span class="text-gray-500 text-xs">(可选)</span>
-          </label>
-
-          <!-- 上传区域 -->
-          <div
-            v-if="imagePreviews.length === 0"
-            class="border-2 border-gray-300 border-dashed rounded-lg p-8 text-center transition-colors cursor-pointer dark:border-gray-600 hover:border-purple-500 dark:hover:border-purple-500"
-            @click="selectImage"
-          >
-            <ImagePlus class="mx-auto mb-2 h-12 w-12 text-gray-400" />
-            <p class="text-sm text-gray-600 dark:text-gray-400">
-              点击选择图片（可多选）
-            </p>
-            <p class="mt-1 text-xs text-gray-500 dark:text-gray-500">
-              支持 JPG、PNG、GIF 等格式，单个文件最大 10MB
-            </p>
-          </div>
-
-          <!-- 图片预览网格 -->
-          <div v-else class="space-y-3">
-            <div class="grid grid-cols-2 gap-3 sm:grid-cols-3">
-              <div
-                v-for="(preview, index) in imagePreviews"
-                :key="index"
-                class="group relative aspect-square overflow-hidden border-2 border-gray-300 rounded-lg dark:border-gray-600"
-              >
-                <img
-                  :src="preview"
-                  :alt="`预览图片 ${index + 1}`"
-                  class="h-full w-full object-cover"
-                >
-                <button
-                  class="absolute top-1 right-1 bg-red-500 hover:bg-red-600 rounded-full p-1.5 text-white shadow-lg opacity-0 transition-opacity group-hover:opacity-100"
-                  @click="removeImage(index)"
-                >
-                  <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" viewBox="0 0 20 20" fill="currentColor">
-                    <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" />
-                  </svg>
-                </button>
-              </div>
-            </div>
-
-            <!-- 添加更多图片按钮 -->
-            <button
-              type="button"
-              class="w-full border-2 border-gray-300 border-dashed rounded-lg p-3 text-center text-sm text-gray-600 transition-colors dark:border-gray-600 dark:text-gray-400 hover:border-purple-500 hover:text-purple-600 dark:hover:border-purple-500 dark:hover:text-purple-400"
-              @click="selectImage"
-            >
-              <ImagePlus class="mx-auto mb-1 h-5 w-5" />
-              添加更多图片
-            </button>
-          </div>
-        </div>
-
         <!-- 提示词输入 -->
         <div>
           <label class="mb-2 block text-sm text-gray-700 font-medium dark:text-gray-300">
             提示词 <span class="text-red-500">*</span>
           </label>
-          <textarea
-            v-model="prompt"
-            rows="4"
-            placeholder="请描述您想让 AI 对这张图片做什么分析或处理..."
-            class="w-full resize-none border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-900 transition-colors dark:border-gray-600 focus:border-purple-500 dark:bg-gray-700 dark:text-gray-100 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500/20 dark:placeholder:text-gray-500"
-          />
+          <div class="relative">
+            <textarea
+              v-model="prompt"
+              rows="4"
+              placeholder="请描述您想让 AI 对这张图片做什么分析或处理..."
+              class="w-full resize-none border border-gray-300 rounded-lg px-3 py-2 pb-10 text-sm text-gray-900 transition-colors dark:border-gray-600 focus:border-purple-500 dark:bg-gray-700 dark:text-gray-100 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500/20 dark:placeholder:text-gray-500"
+            />
+
+            <!-- 附件上传按钮 -->
+            <div class="absolute bottom-2 left-2 flex items-center gap-2">
+              <button
+                type="button"
+                :disabled="imageFiles.length >= 3"
+                class="flex items-center gap-1 rounded px-2 py-1 text-xs text-gray-600 transition-colors dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 disabled:cursor-not-allowed disabled:opacity-50"
+                @click="selectImage"
+              >
+                <ImagePlus class="h-4 w-4" />
+                <span>{{ imageFiles.length > 0 ? `${imageFiles.length}/3 张图片` : '添加图片' }}</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- 图片预览列表 -->
+          <div v-if="imagePreviews.length > 0" class="mt-2 flex flex-wrap gap-2">
+            <div
+              v-for="(preview, index) in imagePreviews"
+              :key="index"
+              class="group relative h-16 w-16 overflow-hidden border-2 border-gray-300 rounded-lg dark:border-gray-600"
+            >
+              <img
+                :src="preview"
+                :alt="`预览图片 ${index + 1}`"
+                class="h-full w-full object-cover"
+              >
+              <button
+                class="absolute top-0.5 right-0.5 bg-red-500 hover:bg-red-600 rounded-full p-0.5 text-white shadow-lg opacity-0 transition-opacity group-hover:opacity-100"
+                @click="removeImage(index)"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" viewBox="0 0 20 20" fill="currentColor">
+                  <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" />
+                </svg>
+              </button>
+            </div>
+          </div>
         </div>
 
         <!-- 提示信息 -->
