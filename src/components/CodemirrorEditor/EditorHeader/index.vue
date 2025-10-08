@@ -31,7 +31,7 @@ import {
   Wrench,
 } from 'lucide-vue-next'
 import { storeToRefs } from 'pinia'
-import { nextTick, ref, toRaw, watch } from 'vue'
+import { nextTick, ref, toRaw } from 'vue'
 import { toast } from 'vue-sonner'
 import BeautifyDialog from '@/components/ai/BeautifyDialog.vue'
 import IndustryHotspotDialog from '@/components/ai/IndustryHotspotDialog.vue'
@@ -972,22 +972,6 @@ async function publishToWechat() {
 function showRewriteDialog() {
   rewriteDialogRef.value?.show()
 }
-
-// 监听抓取对话框显示状态，自动聚焦输入框
-watch(fetchDialogVisible, (visible: boolean) => {
-  if (visible) {
-    nextTick(() => {
-      setTimeout(() => {
-        const input = fetchUrlInput.value
-        if (input) {
-          input.focus()
-          // 在移动端，尝试触发点击以确保键盘弹出
-          input.click()
-        }
-      }, 200)
-    })
-  }
-})
 
 // 显示抓取工具对话框
 function showFetchDialog() {

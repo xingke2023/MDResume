@@ -4,7 +4,6 @@ import {
   Download,
   Image as ImageIcon,
   Loader2,
-  MessageCircle,
   RefreshCcw,
   Settings,
   Trash2,
@@ -20,7 +19,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import { Textarea } from '@/components/ui/textarea'
-import { useDisplayStore, useStore } from '@/stores'
+import { useStore } from '@/stores'
 import useAIImageConfigStore from '@/stores/AIImageConfig'
 import { copyPlain } from '@/utils/clipboard'
 import AIImageConfig from './AIImageConfig.vue'
@@ -32,8 +31,6 @@ const emit = defineEmits([`update:open`])
 /* ---------- 编辑器引用 ---------- */
 const store = useStore()
 const { editor } = storeToRefs(store)
-const displayStore = useDisplayStore()
-const { toggleAIDialog } = displayStore
 
 /* ---------- 弹窗开关 ---------- */
 const dialogVisible = ref(props.open)
@@ -184,15 +181,6 @@ onBeforeUnmount(() => {
 /* ---------- 事件处理 ---------- */
 function handleConfigSaved() {
   configVisible.value = false
-}
-
-function switchToChat() {
-  // 先关闭当前文生图对话框
-  emit(`update:open`, false)
-  // 然后打开聊天对话框
-  setTimeout(() => {
-    toggleAIDialog(true)
-  }, 100)
 }
 
 function handleKeydown(e: KeyboardEvent) {
