@@ -1062,7 +1062,7 @@ function handleCopyWithMode(mode: string) {
     <!-- 左侧操作区：所有工具按钮 -->
     <div class="space-x-1 sm:space-x-2 w-full flex items-center sm:min-w-0 sm:flex-1">
       <!-- 菜单栏 -->
-      <Menubar class="compact-mobile compact-menubar extra-compact menubar">
+      <Menubar class="compact-mobile compact-menubar extra-compact menubar h-11 border-gray-400 sm:h-10 sm:border-input dark:border-gray-600 sm:dark:border-input">
         <StyleDropdown :copy-mode="copyMode" :on-copy="handleCopyWithMode" />
       </Menubar>
 
@@ -1071,12 +1071,12 @@ function handleCopyWithMode(mode: string) {
         v-if="isMobile"
         variant="outline"
         title="编辑器"
-        class="px-2 -ml-2" :class="[
+        class="px-2 -ml-2 h-11 !text-base border-gray-400 dark:border-gray-600" :class="[
           isShowMobileToolbar ? 'bg-blue-50 dark:bg-blue-950' : '',
         ]"
         @click="isShowMobileToolbar = !isShowMobileToolbar"
       >
-        <Pencil class="mr-1 size-4" />
+        <Pencil class="mr-1 size-5" />
         编辑
       </Button>
 
@@ -1274,37 +1274,37 @@ function handleCopyWithMode(mode: string) {
       <!-- 工具 -->
       <DropdownMenu>
         <DropdownMenuTrigger as-child>
-          <Button variant="outline" class="px-2">
+          <Button variant="outline" class="px-2 h-11 !text-base border-gray-400 sm:h-10 sm:border-input dark:border-gray-600 sm:dark:border-input">
             工具🔥
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="start" class="py-2">
-          <DropdownMenuItem class="py-3" @click="showRewriteDialog()">
-            <Wand2 class="mr-2 size-4" />
+          <DropdownMenuItem class="py-3 text-base" @click="showRewriteDialog()">
+            <Wand2 class="mr-2 size-5" />
             全文一键改写
           </DropdownMenuItem>
-          <DropdownMenuItem :disabled="isBeautifying" class="py-3" @click="showBeautifyConfirm()">
-            <Sparkles class="mr-2 size-4" />
+          <DropdownMenuItem :disabled="isBeautifying" class="py-3 text-base" @click="showBeautifyConfirm()">
+            <Sparkles class="mr-2 size-5" />
             {{ isBeautifying ? '美化中...' : '全文一键排版' }}
           </DropdownMenuItem>
-          <DropdownMenuItem class="py-3" @click="showFetchDialog()">
-            <Wrench class="mr-2 size-4" />
+          <DropdownMenuItem class="py-3 text-base" @click="showFetchDialog()">
+            <Wrench class="mr-2 size-5" />
             公众号文章抓取工具
           </DropdownMenuItem>
-          <DropdownMenuItem class="py-3" @click="showIndustryInfoDialog()">
-            <Newspaper class="mr-2 size-4" />
+          <DropdownMenuItem class="py-3 text-base" @click="showIndustryInfoDialog()">
+            <Newspaper class="mr-2 size-5" />
             行业热点文案推送
           </DropdownMenuItem>
-          <DropdownMenuItem class="py-3" @click="showWritingPlanDialog()">
-            <Calendar class="mr-2 size-4" />
+          <DropdownMenuItem class="py-3 text-base" @click="showWritingPlanDialog()">
+            <Calendar class="mr-2 size-5" />
             个人写作计划✍️
           </DropdownMenuItem>
-          <DropdownMenuItem class="py-3" @click="showKnowledgeBaseDialog()">
-            <BookOpen class="mr-2 size-4" />
+          <DropdownMenuItem class="py-3 text-base" @click="showKnowledgeBaseDialog()">
+            <BookOpen class="mr-2 size-5" />
             个人知识库
           </DropdownMenuItem>
-          <DropdownMenuItem class="py-3" @click="showPosterGeneratorDialog()">
-            <ImagePlus class="mr-2 size-4" />
+          <DropdownMenuItem class="py-3 text-base" @click="showPosterGeneratorDialog()">
+            <ImagePlus class="mr-2 size-5" />
             <span class="flex items-center gap-2">
               海报制作
               <span class="rounded-full bg-red-500 px-1.5 py-0.5 text-[10px] text-white font-semibold">
@@ -1312,8 +1312,8 @@ function handleCopyWithMode(mode: string) {
               </span>
             </span>
           </DropdownMenuItem>
-          <DropdownMenuItem class="py-3" @click="showNanoBananaDialog()">
-            <Gem class="mr-2 size-4" />
+          <DropdownMenuItem class="py-3 text-base" @click="showNanoBananaDialog()">
+            <Gem class="mr-2 size-5" />
             <span class="flex items-center gap-2">
               Nano Banana图片工具
               <span class="rounded-full bg-red-500 px-1.5 py-0.5 text-[10px] text-white font-semibold">
@@ -1327,7 +1327,7 @@ function handleCopyWithMode(mode: string) {
       <!-- 主题选择 -->
       <DropdownMenu>
         <DropdownMenuTrigger as-child>
-          <Button variant="outline" class="px-2" title="主题">
+          <Button variant="outline" class="px-2 h-11 !text-base border-gray-400 sm:h-10 sm:border-input dark:border-gray-600 sm:dark:border-input" title="主题">
             主题
           </Button>
         </DropdownMenuTrigger>
@@ -1337,6 +1337,7 @@ function handleCopyWithMode(mode: string) {
               v-for="option in themeOptions"
               :key="option.value"
               :value="option.value"
+              class="text-base"
             >
               {{ option.label }}
               <span v-if="option.desc" class="text-muted-foreground ml-1 text-xs">
@@ -1348,7 +1349,7 @@ function handleCopyWithMode(mode: string) {
       </DropdownMenu>
 
       <!-- 发布菜单 -->
-      <Menubar class="menubar compact-menubar">
+      <Menubar class="menubar compact-menubar h-11 border-gray-400 sm:h-10 sm:border-input dark:border-gray-600 sm:dark:border-input">
         <FileDropdown :copy-mode="copyMode" :on-copy="handleCopyWithMode" :on-show-publish-dialog="showPublishDialog" />
       </Menubar>
 
@@ -1356,9 +1357,10 @@ function handleCopyWithMode(mode: string) {
       <Button
         variant="outline"
         size="icon"
+        class="h-11 w-11 border-gray-400 sm:h-10 sm:w-10 sm:border-input dark:border-gray-600 sm:dark:border-input"
         @click="store.isOpenRightSlider = !store.isOpenRightSlider"
       >
-        <Settings class="size-4" />
+        <Settings class="size-5 sm:size-4" />
       </Button>
     </div>
 

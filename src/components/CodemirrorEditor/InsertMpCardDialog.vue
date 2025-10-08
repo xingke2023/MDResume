@@ -95,7 +95,7 @@ function submit(formValues: any) {
 
 <template>
   <Dialog v-model:open="displayStore.isShowInsertMpCardDialog">
-    <DialogContent class="z-[70]">
+    <DialogContent class="z-[70] w-[95vw] sm:max-w-lg">
       <DialogHeader>
         <DialogTitle>插入公众号名片</DialogTitle>
       </DialogHeader>
