@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { nextTick, ref, toRaw } from 'vue'
+import { useClipboard, useStorage } from '@vueuse/core'
 import {
   Bold,
   BookOpen,
@@ -27,6 +29,7 @@ import {
   Wand2,
   Wrench,
 } from 'lucide-vue-next'
+import { storeToRefs } from 'pinia'
 import { toast } from 'vue-sonner'
 import BeautifyDialog from '@/components/ai/BeautifyDialog.vue'
 import IndustryHotspotDialog from '@/components/ai/IndustryHotspotDialog.vue'
