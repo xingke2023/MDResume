@@ -28,5 +28,5 @@
     "skipLibCheck": true
   },
   "include": ["src/**/*.ts", "src/**/*.tsx", "src/**/*.vue", "components.d.ts", "auto-imports.d.ts", "./.wxt/wxt.d.ts"],
-  "exclude": ["src/extension/**/*.ts"]
+  "exclude": ["src/extension/**/*.ts", "src/modules/build-extension.ts"]
 }
