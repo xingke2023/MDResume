@@ -142,7 +142,7 @@ onMounted(() => {
     const resizeObserver = new ResizeObserver(() => {
       updateHeaderHeight()
     })
-    if (editorHeaderRef.value) {
+    if (editorHeaderRef.value && editorHeaderRef.value instanceof Element) {
       resizeObserver.observe(editorHeaderRef.value)
     }
   })
