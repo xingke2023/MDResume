@@ -1,10 +1,11 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, onBeforeMount, ref } from 'vue'
 import { toTypedSchema } from '@vee-validate/yup'
 import { UploadCloud } from 'lucide-vue-next'
 import { toast } from 'vue-sonner'
 import { Field, Form } from 'vee-validate'
 import * as yup from 'yup'
+import { useFileDialog } from '@vueuse/core'
 import { useDisplayStore } from '@/stores'
 import { checkImage } from '@/utils'
 
@@ -330,7 +331,7 @@ const { open, reset, onChange } = useFileDialog({
   accept: `image/*`,
 })
 
-onChange((files) => {
+onChange((files: FileList | null) => {
   if (files == null) {
     return
   }
@@ -351,7 +352,7 @@ function onDrop(e: DragEvent) {
 
 <template>
   <Dialog v-model:open="displayStore.isShowUploadImgDialog">
-    <DialogContent class="z-[70] max-h-[90vh] max-w-[95vw] overflow-y-auto sm:max-w-max" @pointer-down-outside="ev => ev.preventDefault()">
+    <DialogContent class="z-[70] max-h-[90vh] max-w-[95vw] overflow-y-auto sm:max-w-max" @pointer-down-outside="(ev: Event) => ev.preventDefault()">
       <DialogHeader>
         <DialogTitle>本地图片上传</DialogTitle>
       </DialogHeader>

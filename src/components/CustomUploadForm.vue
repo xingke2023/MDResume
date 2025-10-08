@@ -1,4 +1,5 @@
 <script setup lang='ts'>
+import { onMounted } from 'vue'
 import { removeLeft } from '@/utils'
 
 // 固定的自定义上传代码

@@ -1,6 +1,9 @@
 <script setup lang="ts">
+import { computed, nextTick, ref, toRaw } from 'vue'
+import { storeToRefs } from 'pinia'
 import { Award, Briefcase, Calendar, ChevronDown, Code, FileText, Heart, Image, List, Mail, Plus, Quote, Table, Target, Type, User, UserCircle, X, Zap } from 'lucide-vue-next'
 import { toast } from 'vue-sonner'
+import { useStore } from '@/stores'
 import useAIConfigStore from '@/stores/AIConfig'
 
 interface PresetItem {

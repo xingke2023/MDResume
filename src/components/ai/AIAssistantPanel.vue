@@ -13,7 +13,8 @@ import {
   Trash2,
   X,
 } from 'lucide-vue-next'
-import { nextTick, ref, toRaw } from 'vue'
+import { nextTick, onMounted, ref, toRaw, watch } from 'vue'
+import { storeToRefs } from 'pinia'
 import PosterGeneratorDialog from '@/components/ai/PosterGeneratorDialog.vue'
 import { Button } from '@/components/ui/button'
 import {
@@ -24,7 +25,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import { Textarea } from '@/components/ui/textarea'
-import { useDisplayStore } from '@/stores'
+import { useDisplayStore, useStore } from '@/stores'
 import useAIConfigStore from '@/stores/AIConfig'
 import type { QuickCommandRuntime } from '@/stores/useQuickCommands'
 import { useQuickCommands } from '@/stores/useQuickCommands'
@@ -59,8 +60,8 @@ function switchToPoster() {
   // 打开海报制作对话框
   posterDialogVisible.value = true
 }
-watch(() => props.open, val => (dialogVisible.value = val))
-watch(dialogVisible, (val) => {
+watch(() => props.open, (val: boolean) => (dialogVisible.value = val))
+watch(dialogVisible, (val: boolean) => {
   emit(`update:open`, val)
   if (val) {
     scrollToBottom(true)
