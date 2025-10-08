@@ -1,10 +1,14 @@
+import { useFileDialog } from '@vueuse/core'
+import { toast } from 'vue-sonner'
+import { useStore } from '@/stores'
+
 export function useImportMarkdownContent() {
   const store = useStore()
   const { open, reset, onChange } = useFileDialog({
     accept: `.md`,
   })
 
-  onChange((files) => {
+  onChange((files: FileList | null) => {
     if (files == null || files.length === 0) {
       return
     }

@@ -1,5 +1,6 @@
 import type { Editor } from 'codemirror'
 import type { ComponentPublicInstance } from 'vue'
+import { nextTick, reactive, ref, watch } from 'vue'
 import AIPolishButton from './AIPolishButton.vue'
 import AIPolishPopover from './AIPolishPopover.vue'
 

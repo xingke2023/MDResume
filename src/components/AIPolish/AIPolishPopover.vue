@@ -1,4 +1,7 @@
 <script setup lang="ts">
+import { nextTick, ref, toRaw, watch } from 'vue'
+import { storeToRefs } from 'pinia'
+import { toast } from 'vue-sonner'
 import { Pause, Settings, X } from 'lucide-vue-next'
 import { Button } from '@/components/ui/button'
 import {
@@ -10,6 +13,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Textarea } from '@/components/ui/textarea'
+import { useStore } from '@/stores'
 import useAIConfigStore from '@/stores/AIConfig'
 
 /* -------------------- props / emits -------------------- */
@@ -87,7 +91,7 @@ watch(message, async () => {
   resultContainer.value?.scrollTo({ top: resultContainer.value.scrollHeight })
 })
 
-watch(selectedAction, (val) => {
+watch(selectedAction, (val: string) => {
   if (val !== `custom`) {
     customPromptText.value = ``
   }
@@ -96,7 +100,7 @@ watch(selectedAction, (val) => {
 // 当 visible 且 props.selectedText 变更时，更新原文并重置状态
 watch(
   () => props.selectedText,
-  (val) => {
+  (val: string) => {
     if (visible.value) {
       currentText.value = val
       resetState()

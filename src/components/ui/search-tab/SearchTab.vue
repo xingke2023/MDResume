@@ -1,5 +1,7 @@
 <script setup lang="ts">
 import type CodeMirror from 'codemirror'
+import { useDebounceFn } from '@vueuse/core'
+import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import { ChevronDown, ChevronRight, ChevronUp, Replace, ReplaceAll, X } from 'lucide-vue-next'
 
 const props = defineProps<{
@@ -145,7 +147,7 @@ function handleReplaceAll() {
   const editor = props.editor
   if (!currentMatchPosition.value)
     return
-  matchPositions.value.forEach((pos) => {
+  matchPositions.value.forEach((pos: CodeMirror.Position[]) => {
     editor.setSelection(pos[0], pos[1])
     editor.replaceSelection(replaceWord.value)
   })
