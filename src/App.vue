@@ -6,7 +6,6 @@ const store = useStore()
 </script>
 
 <template>
-  <AppSplash />
   <CodemirrorEditor />
   <Toaster
     rich-colors

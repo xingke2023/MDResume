@@ -831,7 +831,7 @@ function onDrop(e: DragEvent) {
                   variant="link"
                   class="p-0"
                   as="a"
-                  href="https://md-pages.doocs.org/tutorial/"
+                  href=""
                   target="_blank"
                 >
                   如何在浏览器插件中使用公众号图床？

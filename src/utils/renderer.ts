@@ -6,10 +6,18 @@ import frontMatter from 'front-matter'
 import hljs from 'highlight.js'
 import { marked } from 'marked'
 
-import mermaid from 'mermaid'
 import readingTime from 'reading-time'
 import type { ExtendedProperties, IOpts, ThemeStyles } from '@/types'
 import type { RendererAPI } from '@/types/renderer-types'
+
+// 懒加载 Mermaid
+let mermaid: any = null
+async function loadMermaid() {
+  if (!mermaid) {
+    mermaid = (await import('mermaid')).default
+  }
+  return mermaid
+}
 
 import { getStyleString } from '.'
 import markedAlert from './MDAlert'
@@ -243,8 +251,9 @@ export function initRenderer(opts: IOpts): RendererAPI {
     code({ text, lang = `` }: Tokens.Code): string {
       if (lang.startsWith(`mermaid`)) {
         clearTimeout(codeIndex)
-        codeIndex = setTimeout(() => {
-          mermaid.run()
+        codeIndex = setTimeout(async () => {
+          const mermaidLib = await loadMermaid()
+          mermaidLib.run()
         }, 0) as any as number
         return `<pre class="mermaid">${text}</pre>`
       }

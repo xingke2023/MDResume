@@ -7,6 +7,7 @@ import {
   Code,
   CreditCard,
   Eraser,
+  Gem,
   ImagePlus,
   Indent,
   Link,
@@ -29,6 +30,7 @@ import {
 import { toast } from 'vue-sonner'
 import BeautifyDialog from '@/components/ai/BeautifyDialog.vue'
 import IndustryHotspotDialog from '@/components/ai/IndustryHotspotDialog.vue'
+import NanoBananaDialog from '@/components/ai/NanoBananaDialog.vue'
 import PosterGeneratorDialog from '@/components/ai/PosterGeneratorDialog.vue'
 import WritingPlanDialog from '@/components/ai/WritingPlanDialog.vue'
 import { ctrlKey, themeOptions } from '@/config'
@@ -552,6 +554,14 @@ const posterGeneratorDialogVisible = ref(false)
 // 显示海报制作对话框
 function showPosterGeneratorDialog() {
   posterGeneratorDialogVisible.value = true
+}
+
+// Nano Banana 状态
+const nanoBananaDialogVisible = ref(false)
+
+// 显示 Nano Banana 对话框
+function showNanoBananaDialog() {
+  nanoBananaDialogVisible.value = true
 }
 
 // 发布到公众号状态
@@ -1197,6 +1207,15 @@ function handleCopyWithMode(mode: string) {
               </span>
             </span>
           </DropdownMenuItem>
+          <DropdownMenuItem class="py-3" @click="showNanoBananaDialog()">
+            <Gem class="mr-2 size-4" />
+            <span class="flex items-center gap-2">
+              Nano Banana图片工具
+              <span class="rounded-full bg-red-500 px-1.5 py-0.5 text-[10px] text-white font-semibold">
+                NEW
+              </span>
+            </span>
+          </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
 
@@ -1760,6 +1779,9 @@ function handleCopyWithMode(mode: string) {
 
   <!-- 海报制作对话框 -->
   <PosterGeneratorDialog v-model:open="posterGeneratorDialogVisible" />
+
+  <!-- Nano Banana 对话框 -->
+  <NanoBananaDialog v-model:visible="nanoBananaDialogVisible" />
 </template>
 
 <style lang="less" scoped>

@@ -5,11 +5,35 @@ import DOMPurify from 'isomorphic-dompurify'
 import juice from 'juice'
 import { Marked, marked } from 'marked'
 
-import * as prettierPluginBabel from 'prettier/plugins/babel'
-import * as prettierPluginEstree from 'prettier/plugins/estree'
-import * as prettierPluginMarkdown from 'prettier/plugins/markdown'
-import * as prettierPluginCss from 'prettier/plugins/postcss'
-import { format } from 'prettier/standalone'
+// 懒加载 Prettier
+let prettierLoaded = false
+let prettierFormat: any = null
+let prettierPlugins: any = null
+
+async function loadPrettier() {
+  if (!prettierLoaded) {
+    const [
+      { format },
+      prettierPluginBabel,
+      prettierPluginEstree,
+      prettierPluginMarkdown,
+      prettierPluginCss,
+    ] = await Promise.all([
+      import('prettier/standalone'),
+      import('prettier/plugins/babel'),
+      import('prettier/plugins/estree'),
+      import('prettier/plugins/markdown'),
+      import('prettier/plugins/postcss'),
+    ])
+    prettierFormat = format
+    prettierPlugins = {
+      markdown: [prettierPluginMarkdown, prettierPluginBabel, prettierPluginEstree],
+      css: [prettierPluginCss],
+    }
+    prettierLoaded = true
+  }
+  return { format: prettierFormat, plugins: prettierPlugins }
+}
 import { prefix } from '@/config/prefix'
 import type { Block, ExtendedProperties, Inline, Theme } from '@/types'
 import type { RendererAPI } from '@/types/renderer-types'
@@ -158,10 +182,7 @@ export function getStyleString(style: ExtendedProperties): string {
  * @returns {Promise<string>} - 格式化后的内容
  */
 export async function formatDoc(content: string, type: `markdown` | `css` = `markdown`): Promise<string> {
-  const plugins = {
-    markdown: [prettierPluginMarkdown, prettierPluginBabel, prettierPluginEstree],
-    css: [prettierPluginCss],
-  }
+  const { format, plugins } = await loadPrettier()
   const addSpaceContent = await addSpacingToMarkdown(content)
 
   const parser = type in plugins ? type : `markdown`

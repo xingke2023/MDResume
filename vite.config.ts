@@ -8,7 +8,6 @@ import AutoImport from 'unplugin-auto-import/vite'
 import Components from 'unplugin-vue-components/vite'
 import { defineConfig } from 'vite'
 import { nodePolyfills } from 'vite-plugin-node-polyfills'
-import { VitePluginRadar } from 'vite-plugin-radar'
 
 export default defineConfig({
   base: `/`,
@@ -34,9 +33,6 @@ export default defineConfig({
         // fs: 'memfs',
       },
     }),
-    VitePluginRadar({
-      analytics: { id: `G-7NZL3PZ0NK` },
-    }),
     process.env.ANALYZE === `true`
     && visualizer({ emitFile: true, filename: `stats.html` }),
     AutoImport({
@@ -59,6 +55,7 @@ export default defineConfig({
         assetFileNames: `static/[ext]/md-[name]-[hash].[ext]`,
         manualChunks(id) {
           if (id.includes(`node_modules`)) {
+            // 大型库单独分包，实现懒加载
             if (id.includes(`katex`))
               return `katex`
             if (id.includes(`mermaid`))
@@ -71,6 +68,12 @@ export default defineConfig({
               return `prettier`
             if (id.includes(`codemirror`))
               return `codemirror`
+            // Vue 生态单独分包
+            if (id.includes(`@vue`) || id.includes(`vue-router`))
+              return `vue-eco`
+            // UI 组件库单独分包
+            if (id.includes(`radix-vue`) || id.includes(`reka-ui`))
+              return `ui-libs`
             const pkg = id
               .split(`node_modules/`)[1]
               .split(`/`)[0]
