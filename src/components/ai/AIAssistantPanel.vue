@@ -13,8 +13,8 @@ import {
   Trash2,
   X,
 } from 'lucide-vue-next'
-import { nextTick, onMounted, ref, toRaw, watch } from 'vue'
 import { storeToRefs } from 'pinia'
+import { nextTick, onMounted, ref, toRaw, watch } from 'vue'
 import PosterGeneratorDialog from '@/components/ai/PosterGeneratorDialog.vue'
 import { Button } from '@/components/ui/button'
 import {
@@ -604,10 +604,11 @@ async function sendMessage() {
       buffer = lines.pop() || ``
 
       for (const line of lines) {
-        if (!line.trim() || line.trim() === `data: [DONE]`)
+        if (!line.trim() || line.trim() === `data: [DONE]` || line.trim() === `data:[DONE]`)
           continue
         try {
-          const json = JSON.parse(line.replace(/^data: /, ``))
+          // 支持 "data: " 和 "data:" 两种格式
+          const json = JSON.parse(line.replace(/^data:\s*/, ``))
           const delta = json.choices?.[0]?.delta || {}
           const last = messages.value[messages.value.length - 1]
           if (last !== replyMessageProxy)
@@ -646,7 +647,7 @@ async function sendMessage() {
 <template>
   <Dialog v-model:open="dialogVisible">
     <DialogContent
-      class="bg-card text-card-foreground h-dvh max-h-dvh w-full flex flex-col rounded-none shadow-xl sm:max-h-[80vh] sm:max-w-2xl sm:rounded-xl"
+      class="bg-card text-card-foreground h-[98dvh] max-h-[98dvh] w-[98%] flex flex-col rounded-lg shadow-xl sm:max-h-[80vh] sm:max-w-2xl sm:rounded-xl"
     >
       <!-- ============ 头部 ============ -->
       <DialogHeader class="space-y-3 flex flex-col items-start">

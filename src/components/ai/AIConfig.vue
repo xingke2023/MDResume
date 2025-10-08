@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, reactive, ref, watch } from 'vue'
+import { computed, nextTick, reactive, ref, watch } from 'vue'
 import { storeToRefs } from 'pinia'
 import { Info } from 'lucide-vue-next'
 import { serviceOptions } from '@/config/ai-services'
@@ -38,7 +38,13 @@ const currentService = computed(
 function pullFromStore() {
   config.type = type.value
   config.endpoint = endpoint.value
-  config.apiKey = apiKey.value
+  // 对于 deepseek 服务，如果使用的是系统默认密钥，界面显示空值
+  const currentKey = apiKey.value
+  if (config.type === 'deepseek' && currentKey === 'sk-f7fccdf51bda44ff8830dc18b8b5bf6e') {
+    config.apiKey = ''
+  } else {
+    config.apiKey = currentKey
+  }
   config.model = model.value
   config.temperature = temperature.value
   config.maxToken = maxToken.value
@@ -49,11 +55,23 @@ pullFromStore() // 首屏同步一次
 
 watch(
   () => config.type,
-  () => {
-    config.endpoint = currentService.value.endpoint
-    if (!currentService.value.models.includes(config.model)) {
-      config.model = currentService.value.models[0] || ``
+  async () => {
+    // 先更新 store 的 type，触发 store 内部的响应式更新
+    type.value = config.type
+    // 等待下一个 tick，确保 store 的 watch(type) 已执行完毕
+    await nextTick()
+    // 然后从 store 同步所有参数到本地配置
+    config.endpoint = endpoint.value
+    // 对于 deepseek 服务，如果使用的是系统默认密钥，界面显示空值
+    const currentKey = apiKey.value
+    if (config.type === 'deepseek' && currentKey === 'sk-f7fccdf51bda44ff8830dc18b8b5bf6e') {
+      config.apiKey = ''
+    } else {
+      config.apiKey = currentKey
     }
+    config.model = model.value
+    config.temperature = temperature.value
+    config.maxToken = maxToken.value
     testResult.value = ``
   },
 )
@@ -63,14 +81,21 @@ watch(() => config.model, () => (testResult.value = ``))
 /* -------------------------- 操作 -------------------------- */
 
 function saveConfig(emitEvent = true) {
-  AIConfigStore.$patch({
-    type: config.type,
-    endpoint: config.endpoint,
-    model: config.model,
-    temperature: config.temperature,
-    maxToken: config.maxToken,
-  })
-  apiKey.value = config.apiKey
+  // 先确保 store 的 type 是最新的
+  type.value = config.type
+
+  // 然后设置其他参数，这样会保存到正确的服务类型下
+  endpoint.value = config.endpoint
+  model.value = config.model
+  temperature.value = config.temperature
+  maxToken.value = config.maxToken
+
+  // 对于 deepseek 服务，如果用户输入为空，则保存系统默认密钥
+  if (config.type === 'deepseek' && !config.apiKey.trim()) {
+    apiKey.value = 'sk-f7fccdf51bda44ff8830dc18b8b5bf6e'
+  } else {
+    apiKey.value = config.apiKey
+  }
 
   if (emitEvent) {
     testResult.value = `✅ 配置已保存`
@@ -170,7 +195,7 @@ async function testConnection() {
     </div>
 
     <!-- API 端点 -->
-    <div v-if="config.type !== DEFAULT_SERVICE_TYPE">
+    <div v-if="config.type !== 'default'">
       <Label class="mb-1 block text-sm font-medium">API 端点</Label>
       <Input
         v-model="config.endpoint"
@@ -180,7 +205,7 @@ async function testConnection() {
     </div>
 
     <!-- API 密钥，仅非 default 显示 -->
-    <div v-if="config.type !== DEFAULT_SERVICE_TYPE">
+    <div v-if="config.type !== 'default'">
       <Label class="mb-1 block text-sm font-medium">API 密钥</Label>
       <Input
         v-model="config.apiKey"
