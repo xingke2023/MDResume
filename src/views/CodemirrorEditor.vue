@@ -1,6 +1,9 @@
 <script setup lang="ts">
 import type { Editor } from 'codemirror'
 import type { ComponentPublicInstance } from 'vue'
+import { nextTick, onMounted, onUnmounted, ref, toRaw, useTemplateRef, watch } from 'vue'
+import { storeToRefs } from 'pinia'
+import { toast } from 'vue-sonner'
 import { fromTextArea } from 'codemirror'
 import {
   AIPolishButton,
@@ -14,6 +17,7 @@ import {
   ResizablePanelGroup,
 } from '@/components/ui/resizable'
 import { SearchTab } from '@/components/ui/search-tab'
+import { useDisplayStore, useStore } from '@/stores'
 import { checkImage, toBase64 } from '@/utils'
 import { createExtraKeys } from '@/utils/editor'
 import { fileUpload } from '@/utils/file'
@@ -408,14 +412,14 @@ const codeMirrorWrapper = useTemplateRef<ComponentPublicInstance<HTMLDivElement>
 function mdLocalToRemote() {
   const dom = codeMirrorWrapper.value!
 
-  dom.ondragover = evt => evt.preventDefault()
-  dom.ondrop = async (evt) => {
+  dom.ondragover = (evt: DragEvent) => evt.preventDefault()
+  dom.ondrop = async (evt: DragEvent) => {
     evt.preventDefault()
     if (evt.dataTransfer == null || !Array.isArray(evt.dataTransfer.items)) {
       return
     }
 
-    for (const item of evt.dataTransfer.items.filter(item => item.kind === `file`)) {
+    for (const item of evt.dataTransfer.items.filter((item: DataTransferItem) => item.kind === `file`)) {
       item
         .getAsFileSystemHandle()
         .then(async (handle: { kind: string, getFile: () => any }) => {

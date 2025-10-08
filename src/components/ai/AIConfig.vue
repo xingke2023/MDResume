@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { computed, reactive, ref } from 'vue'
+import { storeToRefs } from 'pinia'
 import { Info } from 'lucide-vue-next'
 import { serviceOptions } from '@/config/ai-services'
 import { DEFAULT_SERVICE_TYPE } from '@/constants/AIConfig'

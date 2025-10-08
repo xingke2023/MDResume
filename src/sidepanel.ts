@@ -14,6 +14,17 @@ declare namespace chrome {
   }
 }
 
+declare namespace browser {
+  namespace tabs {
+    interface Tab {
+      id?: number
+      index: number
+      windowId: number
+    }
+    function query(queryOptions: { active: boolean, lastFocusedWindow: boolean }): Promise<[browser.tabs.Tab]>
+  }
+}
+
 const isInExtension = typeof chrome !== `undefined` && chrome.runtime && chrome.runtime.id
 console.log(`Running in extension context?`, isInExtension)
 

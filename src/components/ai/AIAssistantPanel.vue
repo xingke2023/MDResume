@@ -13,7 +13,7 @@ import {
   Trash2,
   X,
 } from 'lucide-vue-next'
-import { nextTick, ref } from 'vue'
+import { nextTick, ref, toRaw } from 'vue'
 import PosterGeneratorDialog from '@/components/ai/PosterGeneratorDialog.vue'
 import { Button } from '@/components/ui/button'
 import {
