@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 import { toTypedSchema } from '@vee-validate/yup'
 import { UploadCloud } from 'lucide-vue-next'
 import { toast } from 'vue-sonner'

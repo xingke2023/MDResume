@@ -1,5 +1,5 @@
-import { computed, ref, watch } from 'vue'
 <script setup lang="ts">
+import { computed, ref, watch } from 'vue'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import type { Post } from '@/types'
 

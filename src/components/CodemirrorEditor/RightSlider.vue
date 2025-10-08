@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { ref, useTemplateRef, watch } from 'vue'
+import { storeToRefs } from 'pinia'
 import { X } from 'lucide-vue-next'
 import PickColors, { type Format } from 'vue-pick-colors'
 import {

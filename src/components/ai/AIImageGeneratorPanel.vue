@@ -11,6 +11,7 @@ import {
 } from 'lucide-vue-next'
 import { storeToRefs } from 'pinia'
 import { onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { toast } from 'vue-sonner'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,

@@ -1,7 +1,7 @@
-import { storeToRefs } from 'pinia'
 <script setup lang="ts">
-import { Wand2 } from 'lucide-vue-next'
 import { ref, toRaw } from 'vue'
+import { storeToRefs } from 'pinia'
+import { Wand2 } from 'lucide-vue-next'
 import { toast } from 'vue-sonner'
 import { Button } from '@/components/ui/button'
 import { useStore } from '@/stores'

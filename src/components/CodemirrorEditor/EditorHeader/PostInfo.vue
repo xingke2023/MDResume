@@ -1,6 +1,6 @@
+<script setup lang="ts">
 import { computed, onBeforeMount, ref } from 'vue'
 import { storeToRefs } from 'pinia'
-<script setup lang="ts">
 import { Check, Info } from 'lucide-vue-next'
 import { CheckboxIndicator, CheckboxRoot, Primitive } from 'radix-vue'
 import { useStore } from '@/stores'
