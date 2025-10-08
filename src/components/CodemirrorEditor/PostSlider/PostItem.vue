@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { ref, watch } from 'vue'
 import {
   ChevronRight,
   Edit3,
@@ -55,7 +56,7 @@ const store = useStore()
 /* ============ 新增内容 ============ */
 const isOpenAddDialog = ref(false)
 const addPostInputVal = ref(``)
-watch(isOpenAddDialog, (o) => {
+watch(isOpenAddDialog, (o: boolean) => {
   if (o)
     addPostInputVal.value = ``
 })
@@ -69,7 +70,7 @@ function handleDragStart(id: string, e: DragEvent) {
 
 /* ============ 折叠展开 ============ */
 function togglePostExpanded(postId: string) {
-  const targetPost = store.posts.find(p => p.id === postId)
+  const targetPost = store.posts.find((p: Post) => p.id === postId)
   if (targetPost) {
     targetPost.collapsed = !targetPost.collapsed
   }

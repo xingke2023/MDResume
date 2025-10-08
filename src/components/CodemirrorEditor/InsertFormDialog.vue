@@ -1,5 +1,5 @@
-import { ref } from 'vue'
 <script setup lang="ts">
+import { ref, toRaw } from 'vue'
 import { useDisplayStore, useStore } from '@/stores'
 import { createTable } from '@/utils'
 

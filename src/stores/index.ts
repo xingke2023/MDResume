@@ -1,8 +1,8 @@
-import { useStorage, useToggle } from '@vueuse/core'
+import { useDark, useStorage, useToggle } from '@vueuse/core'
 import CodeMirror from 'codemirror'
 import { toPng } from 'html-to-image'
 import { defineStore } from 'pinia'
-import { computed, onMounted, reactive, ref, toRaw, watch } from 'vue'
+import { computed, markRaw, onBeforeMount, onBeforeUnmount, onMounted, reactive, ref, toRaw, watch } from 'vue'
 import { v4 as uuid } from 'uuid'
 import { toast } from 'vue-sonner'
 import DEFAULT_CONTENT from '@/assets/example/markdown.md?raw'
@@ -459,14 +459,14 @@ export const useStore = defineStore(`store`, () => {
     )
 
     // 自动提示
-    cssEditor.value.on(`keyup`, (cm, e) => {
+    cssEditor.value?.on(`keyup`, (cm, e) => {
       if ((e.keyCode >= 65 && e.keyCode <= 90) || e.keyCode === 189) {
         (cm as any).showHint(e)
       }
     })
 
     // 实时保存
-    cssEditor.value.on(`update`, () => {
+    cssEditor.value?.on(`update`, () => {
       updateCss()
       getCurrentTab().content = cssEditor.value!.getValue()
     })

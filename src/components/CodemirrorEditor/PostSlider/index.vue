@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { computed, nextTick, ref, watch } from 'vue'
+import { computed, nextTick, ref, toRaw, watch } from 'vue'
+import { useStorage } from '@vueuse/core'
 import { ArrowUpNarrowWide, ChevronsDownUp, ChevronsUpDown, PlusSquare, X } from 'lucide-vue-next'
 import { toast } from 'vue-sonner'
 import { useStore } from '@/stores'
@@ -44,7 +45,7 @@ function openAddPostDialog(id: string) {
 function addPost() {
   if (!addPostInputVal.value.trim())
     return toast.error(`内容标题不可为空`)
-  if (store.posts.some(post => post.title === addPostInputVal.value.trim()))
+  if (store.posts.some((post: any) => post.title === addPostInputVal.value.trim()))
     return toast.error(`内容标题已存在`)
   store.addPost(addPostInputVal.value.trim(), parentId.value)
   isOpenAddDialog.value = false
@@ -68,7 +69,7 @@ function renamePost() {
 
   if (
     store.posts.some(
-      post => post.title === renamePostInputVal.value.trim() && post.id !== editId.value,
+      (post: any) => post.title === renamePostInputVal.value.trim() && post.id !== editId.value,
     )
   ) {
     return toast.error(`内容标题已存在`)

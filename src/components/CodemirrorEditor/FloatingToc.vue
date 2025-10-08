@@ -1,5 +1,7 @@
 <script setup lang='ts'>
+import { ref } from 'vue'
 import { List } from 'lucide-vue-next'
+import { useStore } from '@/stores'
 
 const store = useStore()
 

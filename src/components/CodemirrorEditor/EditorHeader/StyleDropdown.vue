@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { storeToRefs } from 'pinia'
 import {
   Bold,
   ChartPie,
@@ -30,6 +31,7 @@ import {
   legendOptions,
   themeOptions,
 } from '@/config'
+import { useImportMarkdownContent } from '@/composables'
 import { useDisplayStore, useStore } from '@/stores'
 
 const { onCopy } = defineProps<{
