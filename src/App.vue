@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { Toaster } from '@/components/ui/sonner'
+import { useStore } from '@/stores'
 import CodemirrorEditor from '@/views/CodemirrorEditor.vue'
 
 const store = useStore()

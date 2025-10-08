@@ -76,7 +76,7 @@ function delTab() {
 
   let activeName = store.cssContentConfig.active
   if (activeName === delTargetName.value) {
-    tabs.forEach((tab, index) => {
+    tabs.forEach((tab: any, index: number) => {
       if (tab.name === delTargetName.value) {
         const nextTab = tabs[index + 1] || tabs[index - 1]
         if (nextTab) {
@@ -87,7 +87,7 @@ function delTab() {
   }
 
   store.tabChanged(activeName)
-  store.cssContentConfig.tabs = tabs.filter(tab => tab.name !== delTargetName.value)
+  store.cssContentConfig.tabs = tabs.filter((tab: any) => tab.name !== delTargetName.value)
 
   toast.success(`删除成功`)
 }
