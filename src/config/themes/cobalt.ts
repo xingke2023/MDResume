@@ -140,14 +140,18 @@ export const cobaltTheme: Theme = {
     },
     ol: {
       'list-style': `none`,
-      'padding-left': `0.5em`,
-      'counter-reset': `ol_counter`,
+      'display': `flex`,
+      'flex-direction': `column`,
+      'counter-reset': `list-counter`,
       'margin': `0.75em 0 0.45em`,
+      'margin-left': `-1.7em`,
     },
     ul: {
       'list-style': `none`,
-      'padding-left': `0.5em`,
+      'display': `flex`,
+      'flex-direction': `column`,
       'margin': `0em 0 0em`,
+      'margin-left': `-1.7em`,
     },
     hr: {
       'margin': `0.75em auto`,
@@ -184,10 +188,21 @@ export const cobaltTheme: Theme = {
   },
   inline: {
     listitem: {
-      'text-indent': `-1em`,
-      'display': `block`,
+      'display': `flex`,
+      'align-items': `flex-start`,
       'margin': `0.2em 8px`,
       'padding': `0`,
+    },
+
+    listitem_marker: {
+      'width': `2em`,
+      'text-align': `right`,
+      'margin-right': `0.5em`,
+      'flex-shrink': `0`,
+    },
+
+    listitem_content: {
+      'flex': `1`,
     },
     codespan: {
       'display': `inline`,

@@ -96,15 +96,20 @@ export const graceTheme: Theme = toMerged(defaultTheme, {
 
     'ol': {
       'list-style': `none`,
-      'padding-left': `1em`,
       'margin-bottom': `1em`,
+      'margin-left': `-1.4em`,
+      'display': `flex`,
+      'flex-direction': `column`,
+      'counter-reset': `list-counter`,
       'font-family': `PingFang SC, Lantinghei SC, Microsoft Yahei, Hiragino Sans GB, Microsoft Sans Serif, WenQuanYi Micro Hei, sans-serif`,
     },
 
     'ul': {
       'list-style': `none`,
-      'padding-left': `1em`,
       'margin-bottom': `1em`,
+      'margin-left': `-1.4em`,
+      'display': `flex`,
+      'flex-direction': `column`,
       'font-family': `PingFang SC, Lantinghei SC, Microsoft Yahei, Hiragino Sans GB, Microsoft Sans Serif, WenQuanYi Micro Hei, sans-serif`,
     },
 
@@ -125,7 +130,22 @@ export const graceTheme: Theme = toMerged(defaultTheme, {
   },
   inline: {
     listitem: {
+      'display': `flex`,
+      'align-items': `flex-start`,
       'margin': `0.5em 8px`,
+      'font-family': `PingFang SC, Lantinghei SC, Microsoft Yahei, Hiragino Sans GB, Microsoft Sans Serif, WenQuanYi Micro Hei, sans-serif`,
+    },
+
+    listitem_marker: {
+      'width': `2em`,
+      'text-align': `right`,
+      'margin-right': `0.5em`,
+      'flex-shrink': `0`,
+      'font-family': `PingFang SC, Lantinghei SC, Microsoft Yahei, Hiragino Sans GB, Microsoft Sans Serif, WenQuanYi Micro Hei, sans-serif`,
+    },
+
+    listitem_content: {
+      'flex': `1`,
       'font-family': `PingFang SC, Lantinghei SC, Microsoft Yahei, Hiragino Sans GB, Microsoft Sans Serif, WenQuanYi Micro Hei, sans-serif`,
     },
 

@@ -153,14 +153,19 @@ export const vueTheme: Theme = {
 
     ol: {
       'list-style': `none`,
-      'padding-left': `1.875rem`, // 30px converted to rem
+      'display': `flex`,
+      'flex-direction': `column`,
+      'counter-reset': `list-counter`,
       'margin': `0.8rem 0`,
+      'margin-left': `-1.7em`,
     },
 
     ul: {
       'list-style': `none`,
-      'padding-left': `1.875rem`, // 30px converted to rem
+      'display': `flex`,
+      'flex-direction': `column`,
       'margin': `0.8rem 0`,
+      'margin-left': `-1.7em`,
     },
 
     hr: {
@@ -199,7 +204,19 @@ export const vueTheme: Theme = {
       'margin': `0`,
       'padding': `0`,
       'list-style-type': `none`,
-      'text-indent': `-1.5rem`,
+      'display': `flex`,
+      'align-items': `flex-start`,
+    },
+
+    listitem_marker: {
+      'width': `2em`,
+      'text-align': `right`,
+      'margin-right': `0.5em`,
+      'flex-shrink': `0`,
+    },
+
+    listitem_content: {
+      'flex': `1`,
     },
 
     codespan: {

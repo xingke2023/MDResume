@@ -141,14 +141,19 @@ export const rainbowTheme: Theme = {
 
     ol: {
       'list-style': `none`,
-      'padding-left': `1em`,
+      'display': `flex`,
+      'flex-direction': `column`,
+      'counter-reset': `list-counter`,
       'margin': `1rem 0`,
+      'margin-left': `-1.4em`,
     },
 
     ul: {
       'list-style': `none`,
-      'padding-left': `1em`,
+      'display': `flex`,
+      'flex-direction': `column`,
       'margin': `1rem 0`,
+      'margin-left': `-1.4em`,
     },
 
     hr: {
@@ -183,10 +188,23 @@ export const rainbowTheme: Theme = {
 
   inline: {
     listitem: {
-      'text-indent': `-1em`,
-      'display': `block`,
+      'display': `flex`,
+      'align-items': `flex-start`,
       'margin': `0.2em 0`,
       'padding': `0`,
+      'color': `#000`,
+    },
+
+    listitem_marker: {
+      'width': `2em`,
+      'text-align': `right`,
+      'margin-right': `0.5em`,
+      'flex-shrink': `0`,
+      'color': `#000`,
+    },
+
+    listitem_content: {
+      'flex': `1`,
       'color': `#000`,
     },
 

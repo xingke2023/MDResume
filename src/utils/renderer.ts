@@ -316,9 +316,13 @@ export function initRenderer(opts: IOpts): RendererAPI {
           .replace(/^<p(?:\s[^>]*)?>([\s\S]*?)<\/p>/, `$1`)
       }
 
+      // 使用 Flexbox 布局：将前缀和内容分离
+      const markerSpan = `<span ${styles(`listitem_marker`)}>${prefix}</span>`
+      const contentSpan = `<span ${styles(`listitem_content`)}>${content}</span>`
+
       return styledContent(
         `listitem`,
-        `${prefix}${content}`,
+        `${markerSpan}${contentSpan}`,
         `li`,
       )
     },

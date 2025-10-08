@@ -158,16 +158,21 @@ export const mwebCleanTheme: Theme = {
       'margin': `0`,
       'padding': `0`,
       'list-style': `none`,
-      'padding-left': `0.5em`,
+      'display': `flex`,
+      'flex-direction': `column`,
+      'counter-reset': `list-counter`,
       'margin-bottom': `1.2em`,
+      'margin-left': `-1.7em`,
     },
 
     ul: {
       'margin': `0`,
       'padding': `0`,
       'list-style': `none`,
-      'padding-left': `0.5em`,
+      'display': `flex`,
+      'flex-direction': `column`,
       'margin-bottom': `1.2em`,
+      'margin-left': `-1.7em`,
     },
 
     hr: {
@@ -199,10 +204,21 @@ export const mwebCleanTheme: Theme = {
 
   inline: {
     listitem: {
-      'text-indent': `-1em`,
-      'display': `block`,
+      'display': `flex`,
+      'align-items': `flex-start`,
       'margin': `0.2em 8px`,
       'padding': `0`,
+    },
+
+    listitem_marker: {
+      'width': `2em`,
+      'text-align': `right`,
+      'margin-right': `0.5em`,
+      'flex-shrink': `0`,
+    },
+
+    listitem_content: {
+      'flex': `1`,
     },
 
     codespan: {

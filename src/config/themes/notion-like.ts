@@ -144,14 +144,19 @@ export const notionLikeTheme: Theme = {
 
     ol: {
       'list-style': `none`,
-      'padding-left': `0.5em`,
+      'display': `flex`,
+      'flex-direction': `column`,
+      'counter-reset': `list-counter`,
       'margin': `0.8em 0`,
+      'margin-left': `-1.7em`,
     },
 
     ul: {
       'list-style': `none`,
-      'padding-left': `0.5em`,
+      'display': `flex`,
+      'flex-direction': `column`,
       'margin': `0.8em 0`,
+      'margin-left': `-1.7em`,
     },
 
     hr: {
@@ -186,10 +191,21 @@ export const notionLikeTheme: Theme = {
 
   inline: {
     listitem: {
-      'text-indent': `-1em`,
-      'display': `block`,
+      'display': `flex`,
+      'align-items': `flex-start`,
       'margin': `0.2em 8px`,
       'padding': `0`,
+    },
+
+    listitem_marker: {
+      'width': `2em`,
+      'text-align': `right`,
+      'margin-right': `0.5em`,
+      'flex-shrink': `0`,
+    },
+
+    listitem_content: {
+      flex: `1`,
     },
 
     codespan: {
@@ -222,7 +238,7 @@ export const notionLikeTheme: Theme = {
       'font-weight': `700`,
       'color': `#4f3b2a`,
       'background-color': `#feecc8`,
-      'padding': `2px 4px`,
+      'padding': `2px 0px`,
       'border-radius': `4px`,
       'margin': `0 2px`,
     },

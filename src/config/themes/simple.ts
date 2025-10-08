@@ -133,14 +133,19 @@ export const simpleTheme: Theme = toMerged(defaultTheme, {
 
     ol: {
       'list-style': `none`,
-      'padding-left': `1em`,
       'margin-bottom': `1em`,
+      'margin-left': `-1.4em`,
+      'display': `flex`,
+      'flex-direction': `column`,
+      'counter-reset': `list-counter`,
     },
 
     ul: {
       'list-style': `none`,
-      'padding-left': `1em`,
       'margin-bottom': `1em`,
+      'margin-left': `-1.4em`,
+      'display': `flex`,
+      'flex-direction': `column`,
     },
 
     hr: {
@@ -152,7 +157,20 @@ export const simpleTheme: Theme = toMerged(defaultTheme, {
   },
   inline: {
     listitem: {
-      margin: `0.5em 8px`,
+      'display': `flex`,
+      'align-items': `flex-start`,
+      'margin': `0.5em 8px`,
+    },
+
+    listitem_marker: {
+      'width': `2em`,
+      'text-align': `right`,
+      'margin-right': `0.5em`,
+      'flex-shrink': `0`,
+    },
+
+    listitem_content: {
+      'flex': `1`,
     },
   },
 })

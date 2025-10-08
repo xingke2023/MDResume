@@ -189,16 +189,21 @@ export const defaultTheme: Theme = {
     // 有序列表
     ol: {
       'list-style': `none`,
-      'padding-left': `1em`,
       'margin-bottom': `1em`,
+      'margin-left': `-1.4em`,
+      'display': `flex`,
+      'flex-direction': `column`,
+      'counter-reset': `list-counter`,
       'color': `hsl(var(--foreground))`,
     },
 
     // 无序列表
     ul: {
       'list-style': `none`,
-      'padding-left': `1em`,
       'margin-bottom': `1em`,
+      'margin-left': `-1.4em`,
+      'display': `flex`,
+      'flex-direction': `column`,
       'color': `hsl(var(--foreground))`,
     },
 
@@ -234,10 +239,23 @@ export const defaultTheme: Theme = {
   },
   inline: {
     listitem: {
-      'text-indent': `-1em`,
-      'display': `block`,
+      'display': `flex`,
+      'align-items': `flex-start`,
       'margin': `0.2em 8px`,
       'color': `hsl(var(--foreground))`,
+    },
+
+    listitem_marker: {
+      'width': `2em`,
+      'text-align': `right`,
+      'margin-right': `0.5em`,
+      'flex-shrink': `0`,
+      'color': `hsl(var(--foreground))`,
+    },
+
+    listitem_content: {
+      flex: `1`,
+      color: `hsl(var(--foreground))`,
     },
 
     codespan: {

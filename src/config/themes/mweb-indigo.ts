@@ -192,16 +192,21 @@ export const mwebIndigoTheme: Theme = {
       'margin': `0`,
       'padding': `0`,
       'list-style': `none`,
-      'padding-left': `0.5em`,
       'margin-bottom': `1rem`,
+      'margin-left': `-1.3em`,
+      'display': `flex`,
+      'flex-direction': `column`,
+      'counter-reset': `list-counter`,
     },
 
     ul: {
       'margin': `0`,
       'padding': `0`,
       'list-style': `none`,
-      'padding-left': `0.5em`,
       'margin-bottom': `1rem`,
+      'margin-left': `-1.3em`,
+      'display': `flex`,
+      'flex-direction': `column`,
     },
 
     hr: {
@@ -235,10 +240,22 @@ export const mwebIndigoTheme: Theme = {
 
   inline: {
     listitem: {
-      'text-indent': `-1em`,
-      'display': `block`,
-      'margin': `0.2em 8px`,
-      'padding': `0`,
+      'display': `flex`,
+      'align-items': `flex-start`,
+      'margin': `0.2em 0`,
+    },
+
+    listitem_marker: {
+      'width': `2em`,
+      'text-align': `right`,
+      'margin-right': `0.5em`,
+      'flex-shrink': `0`,
+      'color': `#595959`,
+    },
+
+    listitem_content: {
+      flex: `1`,
+      color: `#595959`,
     },
 
     codespan: {
