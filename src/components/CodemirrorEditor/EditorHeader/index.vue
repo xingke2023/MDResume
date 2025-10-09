@@ -47,7 +47,7 @@ import RewriteDialog from './RewriteDialog.vue'
 import MpConfigDialog from './WechatPublish/MpConfigDialog.vue'
 import PublishDialog from './WechatPublish/PublishDialog.vue'
 
-const emit = defineEmits([`startCopy`, `endCopy`])
+const emit = defineEmits([`startCopy`, `endCopy`, `switchToEditor`])
 
 const store = useStore()
 const displayStore = useDisplayStore()
@@ -132,24 +132,24 @@ function insertQuote() {
 
   if (selection) {
     // 有选中文本，为每行添加引用符号
-    const lines = selection.split('\n')
-    const quoted = lines.map(line => `> ${line}`).join('\n')
+    const lines = selection.split(`\n`)
+    const quoted = lines.map(line => `> ${line}`).join(`\n`)
     editorInstance.replaceSelection(quoted)
   }
   else {
     // 无选中文本，插入引用前缀
     const line = editorInstance.getLine(cursor.line)
-    if (line.startsWith('> ')) {
+    if (line.startsWith(`> `)) {
       // 如果已经是引用，移除引用符号
       editorInstance.replaceRange(
         line.substring(2),
         { line: cursor.line, ch: 0 },
-        { line: cursor.line, ch: line.length }
+        { line: cursor.line, ch: line.length },
       )
     }
     else {
       // 添加引用符号
-      editorInstance.replaceRange('> ', { line: cursor.line, ch: 0 })
+      editorInstance.replaceRange(`> `, { line: cursor.line, ch: 0 })
       editorInstance.setCursor({ line: cursor.line, ch: cursor.ch + 2 })
     }
   }
@@ -162,7 +162,7 @@ function insertIndent() {
     return
   const editorInstance = toRaw(editor.value)
   const cursor = editorInstance.getCursor()
-  editorInstance.replaceRange('　　', cursor) // 两个全角空格
+  editorInstance.replaceRange(`　　`, cursor) // 两个全角空格
   editorInstance.setCursor({ line: cursor.line, ch: cursor.ch + 2 })
   setTimeout(() => editorInstance.focus(), 100)
 }
@@ -175,9 +175,9 @@ function deleteLine() {
   const cursor = editorInstance.getCursor()
   const line = cursor.line
   editorInstance.replaceRange(
-    '',
+    ``,
     { line, ch: 0 },
-    { line: line + 1, ch: 0 }
+    { line: line + 1, ch: 0 },
   )
   setTimeout(() => editorInstance.focus(), 100)
 }
@@ -186,9 +186,12 @@ function deleteLine() {
 function clearEditor() {
   if (!editor.value)
     return
-  const editorInstance = toRaw(editor.value)
-  editorInstance.setValue('')
-  setTimeout(() => editorInstance.focus(), 100)
+  // eslint-disable-next-line no-alert
+  if (window.confirm(`确定要清空编辑器内容吗？`)) {
+    const editorInstance = toRaw(editor.value)
+    editorInstance.setValue(``)
+    setTimeout(() => editorInstance.focus(), 100)
+  }
 }
 
 // 工具函数，添加格式
@@ -332,7 +335,7 @@ function insertHorizontalRule() {
   if (!editor.value)
     return
 
-  const editorInstance = editor.value
+  const editorInstance = toRaw(editor.value)
   const cursor = editorInstance.getCursor()
   // 插入分割线，前后添加空行
   const hrText = `\n---\n`
@@ -342,7 +345,19 @@ function insertHorizontalRule() {
     line: cursor.line + 2,
     ch: 0,
   })
-  editorInstance.focus()
+
+  // 移动端需要刷新编辑器以确保光标正确定位
+  if (isMobile.value) {
+    nextTick(() => {
+      editorInstance.refresh()
+      setTimeout(() => {
+        editorInstance.focus()
+      }, 100)
+    })
+  }
+  else {
+    editorInstance.focus()
+  }
 }
 
 // 插入 Mermaid 图表
@@ -396,9 +411,19 @@ function handleClearContent() {
     return
   // eslint-disable-next-line no-alert
   if (window.confirm(`确定要清空编辑器内容吗？`)) {
-    editor.value.setValue(``)
-    editor.value.focus()
-    toast.success(`已清空内容`)
+    const editorInstance = toRaw(editor.value)
+    editorInstance.setValue(``)
+    // 设置光标到起始位置
+    editorInstance.setCursor({ line: 0, ch: 0 })
+
+    // 移动端：切换到编辑模式并聚焦（由父组件处理）
+    if (isMobile.value) {
+      emit(`switchToEditor`)
+    }
+    else {
+      toast.success(`已清空内容`)
+      setTimeout(() => editorInstance.focus(), 300)
+    }
   }
 }
 
@@ -1062,7 +1087,7 @@ function handleCopyWithMode(mode: string) {
     <!-- 左侧操作区：所有工具按钮 -->
     <div class="space-x-1 sm:space-x-2 w-full flex items-center sm:min-w-0 sm:flex-1">
       <!-- 菜单栏 -->
-      <Menubar class="compact-mobile compact-menubar extra-compact menubar h-11 border-gray-400 sm:h-10 sm:border-input dark:border-gray-600 sm:dark:border-input">
+      <Menubar class="compact-mobile compact-menubar extra-compact menubar sm:border-input sm:dark:border-input h-11 border-gray-400 sm:h-10 dark:border-gray-600">
         <StyleDropdown :copy-mode="copyMode" :on-copy="handleCopyWithMode" />
       </Menubar>
 
@@ -1071,7 +1096,7 @@ function handleCopyWithMode(mode: string) {
         v-if="isMobile"
         variant="outline"
         title="编辑器"
-        class="px-2 -ml-2 h-11 !text-base border-gray-400 dark:border-gray-600" :class="[
+        class="h-11 border-gray-400 px-2 -ml-2 dark:border-gray-600 !text-base" :class="[
           isShowMobileToolbar ? 'bg-blue-50 dark:bg-blue-950' : '',
         ]"
         @click="isShowMobileToolbar = !isShowMobileToolbar"
@@ -1274,7 +1299,7 @@ function handleCopyWithMode(mode: string) {
       <!-- 工具 -->
       <DropdownMenu>
         <DropdownMenuTrigger as-child>
-          <Button variant="outline" class="px-2 h-11 !text-base border-gray-400 sm:h-10 sm:border-input dark:border-gray-600 sm:dark:border-input">
+          <Button variant="outline" class="sm:border-input sm:dark:border-input h-11 border-gray-400 px-2 sm:h-10 dark:border-gray-600 !text-base">
             工具🔥
           </Button>
         </DropdownMenuTrigger>
@@ -1327,7 +1352,7 @@ function handleCopyWithMode(mode: string) {
       <!-- 主题选择 -->
       <DropdownMenu>
         <DropdownMenuTrigger as-child>
-          <Button variant="outline" class="px-2 h-11 !text-base border-gray-400 sm:h-10 sm:border-input dark:border-gray-600 sm:dark:border-input" title="主题">
+          <Button variant="outline" class="sm:border-input sm:dark:border-input h-11 border-gray-400 px-2 sm:h-10 dark:border-gray-600 !text-base" title="主题">
             主题
           </Button>
         </DropdownMenuTrigger>
@@ -1349,7 +1374,7 @@ function handleCopyWithMode(mode: string) {
       </DropdownMenu>
 
       <!-- 发布菜单 -->
-      <Menubar class="menubar compact-menubar h-11 border-gray-400 sm:h-10 sm:border-input dark:border-gray-600 sm:dark:border-input">
+      <Menubar class="menubar compact-menubar sm:border-input sm:dark:border-input h-11 border-gray-400 sm:h-10 dark:border-gray-600">
         <FileDropdown :copy-mode="copyMode" :on-copy="handleCopyWithMode" :on-show-publish-dialog="showPublishDialog" />
       </Menubar>
 
@@ -1357,7 +1382,7 @@ function handleCopyWithMode(mode: string) {
       <Button
         variant="outline"
         size="icon"
-        class="h-11 w-11 border-gray-400 sm:h-10 sm:w-10 sm:border-input dark:border-gray-600 sm:dark:border-input"
+        class="sm:border-input sm:dark:border-input h-11 w-11 border-gray-400 sm:h-10 sm:w-10 dark:border-gray-600"
         @click="store.isOpenRightSlider = !store.isOpenRightSlider"
       >
         <Settings class="size-5 sm:size-4" />
@@ -1379,9 +1404,9 @@ function handleCopyWithMode(mode: string) {
     >
       <div
         v-if="isMobile && isShowMobileToolbar"
-        class="w-full bg-white p-3 dark:bg-[#191c20]"
+        class="w-full bg-white pr-5 dark:bg-[#191c20]"
       >
-        <div class="flex flex-wrap items-center justify-start gap-1.5">
+        <div class="flex flex-wrap items-center justify-start gap-1">
           <!-- 简历预设模块 -->
           <Button
             variant="outline"
@@ -1587,16 +1612,6 @@ function handleCopyWithMode(mode: string) {
           >
             <Table class="size-4" />
           </Button>
-          <!-- 插入公众号名片 -->
-          <Button
-            variant="outline"
-            size="sm"
-            class="flex-shrink-0"
-            title="插入公众号名片"
-            @click="displayStore.toggleShowInsertMpCardDialog()"
-          >
-            <CreditCard class="size-4" />
-          </Button>
           <!-- 删除当前行 -->
           <Button
             variant="outline"
@@ -1605,7 +1620,8 @@ function handleCopyWithMode(mode: string) {
             title="删除当前行"
             @click="handleDeleteCurrentLine"
           >
-            <Trash2 class="size-4" />
+            <Trash2 class="mr-1 size-4" />
+            删除行
           </Button>
           <!-- 格式化 -->
           <Button
