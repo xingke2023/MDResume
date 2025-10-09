@@ -5,6 +5,7 @@ import { X } from 'lucide-vue-next'
 import PickColors, { type Format } from 'vue-pick-colors'
 import {
   colorOptions,
+  editorFontSizeOptions,
   fontFamilyOptions,
   fontSizeOptions,
   legendOptions,
@@ -71,12 +72,24 @@ const formatOptions = ref<Format[]>([`rgb`, `hex`, `hsl`, `hsv`])
           </div>
         </div>
         <div class="flex items-center gap-2">
-          <h2 class="whitespace-nowrap text-xs" style="font-weight: 600;">字号</h2>
+          <h2 class="whitespace-nowrap text-xs" style="font-weight: 600;">预览字号</h2>
           <div class="grid flex-1 grid-cols-5 justify-items-center gap-1">
             <Button
               v-for="{ value, desc } in fontSizeOptions" :key="value" variant="outline" size="sm" class="h-7 w-full text-xs" :class="{
                 'border-black dark:border-white border-2': store.fontSize === value,
               }" @click="store.sizeChanged(value)"
+            >
+              {{ desc }}
+            </Button>
+          </div>
+        </div>
+        <div class="flex items-center gap-2">
+          <h2 class="whitespace-nowrap text-xs" style="font-weight: 600;">编辑区字号</h2>
+          <div class="grid flex-1 grid-cols-5 justify-items-center gap-1">
+            <Button
+              v-for="{ value, desc } in editorFontSizeOptions" :key="value" variant="outline" size="sm" class="h-7 w-full text-xs" :class="{
+                'border-black dark:border-white border-2': store.editorFontSize === value,
+              }" @click="store.editorFontSizeChanged(value)"
             >
               {{ desc }}
             </Button>
@@ -231,12 +244,24 @@ const formatOptions = ref<Format[]>([`rgb`, `hex`, `hsl`, `hsv`])
         </div>
       </div>
       <div class="flex items-center gap-2">
-        <h2 class="whitespace-nowrap text-sm" style="font-weight: 600;">字号</h2>
+        <h2 class="whitespace-nowrap text-sm" style="font-weight: 600;">预览字号</h2>
         <div class="grid flex-1 grid-cols-5 justify-items-center gap-1">
           <Button
             v-for="{ value, desc } in fontSizeOptions" :key="value" variant="outline" size="sm" class="h-7 w-full text-xs" :class="{
               'border-black dark:border-white border-2': store.fontSize === value,
             }" @click="store.sizeChanged(value)"
+          >
+            {{ desc }}
+          </Button>
+        </div>
+      </div>
+      <div class="flex items-center gap-2">
+        <h2 class="whitespace-nowrap text-sm" style="font-weight: 600;">编辑区字号</h2>
+        <div class="grid flex-1 grid-cols-5 justify-items-center gap-1">
+          <Button
+            v-for="{ value, desc } in editorFontSizeOptions" :key="value" variant="outline" size="sm" class="h-7 w-full text-xs" :class="{
+              'border-black dark:border-white border-2': store.editorFontSize === value,
+            }" @click="store.editorFontSizeChanged(value)"
           >
             {{ desc }}
           </Button>

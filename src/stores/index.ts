@@ -86,6 +86,8 @@ export const useStore = defineStore(`store`, () => {
   const fontFamily = useStorage(`fonts`, defaultStyleConfig.fontFamily)
   // 文本大小
   const fontSize = useStorage(`size`, defaultStyleConfig.fontSize)
+  // 编辑区字体大小
+  const editorFontSize = useStorage(`editorFontSize`, defaultStyleConfig.editorFontSize)
   // 主色
   const primaryColor = useStorage(`color`, defaultStyleConfig.primaryColor)
   // 代码块主题
@@ -141,6 +143,9 @@ export const useStore = defineStore(`store`, () => {
   onMounted(() => {
     handleResize()
     window.addEventListener(`resize`, handleResize)
+    // 初始化编辑区字体大小 CSS 变量
+    const style = document.documentElement.style
+    style.setProperty('--editor-font-size', editorFontSize.value)
   })
 
   onBeforeUnmount(() => {
@@ -563,6 +568,13 @@ export const useStore = defineStore(`store`, () => {
     fontSize.value = size
   })
 
+  const editorFontSizeChanged = (size: string) => {
+    editorFontSize.value = size
+    // 动态更新 CodeMirror 字体大小
+    const style = document.documentElement.style
+    style.setProperty('--editor-font-size', size)
+  }
+
   const colorChanged = withAfterRefresh((newColor) => {
     const theme = getTheme(fontSize.value, newColor)
     renderer.setOptions({
@@ -724,6 +736,7 @@ export const useStore = defineStore(`store`, () => {
     theme,
     fontFamily,
     fontSize,
+    editorFontSize,
     primaryColor,
     codeBlockTheme,
     legend,
@@ -736,6 +749,7 @@ export const useStore = defineStore(`store`, () => {
     themeChanged,
     fontChanged,
     sizeChanged,
+    editorFontSizeChanged,
     colorChanged,
     codeBlockThemeChanged,
     legendChanged,

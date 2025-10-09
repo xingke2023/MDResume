@@ -47,6 +47,34 @@ export const fontSizeOptions: IConfigOption[] = [
   },
 ]
 
+export const editorFontSizeOptions: IConfigOption[] = [
+  {
+    label: `14px`,
+    value: `14px`,
+    desc: `更小`,
+  },
+  {
+    label: `15px`,
+    value: `15px`,
+    desc: `稍小`,
+  },
+  {
+    label: `16px`,
+    value: `16px`,
+    desc: `推荐`,
+  },
+  {
+    label: `17px`,
+    value: `17px`,
+    desc: `稍大`,
+  },
+  {
+    label: `18px`,
+    value: `18px`,
+    desc: `更大`,
+  },
+]
+
 export const colorOptions: IConfigOption[] = [
   {
     label: `经典蓝`,
@@ -236,6 +264,7 @@ export const defaultStyleConfig = {
   theme: themeOptions[0].value,
   fontFamily: fontFamilyOptions[0].value,
   fontSize: fontSizeOptions[2].value,
+  editorFontSize: editorFontSizeOptions[2].value,
   primaryColor: colorOptions[0].value,
   codeBlockTheme: codeBlockThemeOptions[23].value,
   legend: legendOptions[3].value,

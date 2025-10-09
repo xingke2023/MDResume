@@ -73,6 +73,66 @@ function toggleView() {
   else if (!showEditor.value && isShowMobileToolbar.value) {
     isShowMobileToolbar.value = false
   }
+
+  // 如果切换到编辑模式，聚焦到编辑器
+  if (showEditor.value) {
+    nextTick(() => {
+      setTimeout(() => {
+        if (editor.value) {
+          const editorInstance = toRaw(editor.value)
+          editorInstance.refresh()
+          editorInstance.focus()
+        }
+      }, 300)
+    })
+  }
+}
+
+// 切换到编辑模式并聚焦（用于清空等操作）
+function switchToEditorAndFocus() {
+  const wasInEditorMode = showEditor.value
+
+  // 如果当前是预览模式，先切换到编辑模式
+  if (!showEditor.value) {
+    showEditor.value = true
+    // 展开工具栏
+    if (!isShowMobileToolbar.value) {
+      isShowMobileToolbar.value = true
+    }
+  }
+
+  // 如果已经在编辑模式，先切换到预览再切回来，强制刷新视图
+  if (wasInEditorMode) {
+    showEditor.value = false
+    nextTick(() => {
+      showEditor.value = true
+      // 展开工具栏
+      if (!isShowMobileToolbar.value) {
+        isShowMobileToolbar.value = true
+      }
+      // 等待视图切换完成后聚焦
+      nextTick(() => {
+        setTimeout(() => {
+          if (editor.value) {
+            const editorInstance = toRaw(editor.value)
+            editorInstance.refresh()
+            editorInstance.focus()
+          }
+        }, 800)
+      })
+    })
+  } else {
+    // 如果是从预览模式切换过来，使用标准延迟聚焦
+    nextTick(() => {
+      setTimeout(() => {
+        if (editor.value) {
+          const editorInstance = toRaw(editor.value)
+          editorInstance.refresh()
+          editorInstance.focus()
+        }
+      }, 800)
+    })
+  }
 }
 
 // 监听主题切换事件（手机端）
@@ -550,6 +610,7 @@ onUnmounted(() => {
       ref="editorHeaderRef"
       @start-copy="startCopy"
       @end-copy="endCopy"
+      @switch-to-editor="switchToEditorAndFocus"
     />
 
     <main
