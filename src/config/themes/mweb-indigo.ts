@@ -300,10 +300,21 @@ export const mwebIndigoTheme: Theme = {
       'margin-bottom': `1rem`,
       'border-collapse': `collapse`,
       'border-spacing': `0`,
+      'table-layout': `auto`,
+      'width': `100%`,
     },
 
     thead: {
       'background-color': `#f8f9fa`,
+    },
+
+    th: {
+      border: `1px solid #dee2e6`,
+      padding: `0.5rem`,
+      color: `#2d3748`,
+      'font-weight': `600`,
+      'text-align': `left`,
+      'white-space': `nowrap`,
     },
 
     td: {

@@ -368,7 +368,10 @@ export function initRenderer(opts: IOpts): RendererAPI {
 
     table({ header, rows }: Tokens.Table): string {
       const headerRow = header
-        .map(cell => this.tablecell(cell))
+        .map((cell) => {
+          const text = this.parser.parseInline(cell.tokens)
+          return styledContent(`th`, text)
+        })
         .join(``)
       const body = rows
         .map((row) => {
@@ -380,7 +383,7 @@ export function initRenderer(opts: IOpts): RendererAPI {
         .join(``)
       return `
         <section style="padding:0 8px; max-width: 100%; overflow: auto">
-          <table class="preview-table">
+          <table class="preview-table" ${styles(`table`)}>
             <thead ${styles(`thead`)}>${headerRow}</thead>
             <tbody>${body}</tbody>
           </table>

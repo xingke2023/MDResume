@@ -2,6 +2,13 @@ import { createPinia } from 'pinia'
 import { createApp } from 'vue'
 import App from './App.vue'
 import { setupComponents } from './utils/setup-components'
+import VConsole from 'vconsole'
+
+// 移动端调试工具 - 仅在开发环境启用
+if (import.meta.env.DEV) {
+  const vConsole = new VConsole()
+  console.log('vConsole 已启用 - 点击右下角绿色按钮查看控制台')
+}
 
 import 'virtual:uno.css'
 import 'codemirror/lib/codemirror.css'

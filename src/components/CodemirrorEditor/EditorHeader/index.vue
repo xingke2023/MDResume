@@ -9,6 +9,7 @@ import {
   CreditCard,
   FileX2,
   Gem,
+  Grid3x3,
   Heading,
   ImagePlus,
   Indent,
@@ -21,7 +22,6 @@ import {
   Pencil,
   Quote,
   Redo,
-  Settings,
   Sparkles,
   Strikethrough,
   Table,
@@ -47,7 +47,7 @@ import RewriteDialog from './RewriteDialog.vue'
 import MpConfigDialog from './WechatPublish/MpConfigDialog.vue'
 import PublishDialog from './WechatPublish/PublishDialog.vue'
 
-const emit = defineEmits([`startCopy`, `endCopy`, `switchToEditor`])
+const emit = defineEmits([`startCopy`, `endCopy`, `switchToEditor`, `navigate`])
 
 const store = useStore()
 const displayStore = useDisplayStore()
@@ -1078,6 +1078,21 @@ function handleCopyWithMode(mode: string) {
   copyMode.value = mode
   copy()
 }
+
+// 处理移动端编辑按钮点击
+function handleMobileEditButtonClick() {
+  // 如果当前工具栏是收起状态，准备展开
+  if (!isShowMobileToolbar.value) {
+    // 展开工具栏
+    isShowMobileToolbar.value = true
+    // 如果当前在预览模式，切换到编辑模式
+    emit(`switchToEditor`)
+  }
+  else {
+    // 收起工具栏
+    isShowMobileToolbar.value = false
+  }
+}
 </script>
 
 <template>
@@ -1086,10 +1101,16 @@ function handleCopyWithMode(mode: string) {
   >
     <!-- 左侧操作区：所有工具按钮 -->
     <div class="space-x-1 sm:space-x-2 w-full flex items-center sm:min-w-0 sm:flex-1">
-      <!-- 菜单栏 -->
-      <Menubar class="compact-mobile compact-menubar extra-compact menubar sm:border-input sm:dark:border-input h-11 border-gray-400 sm:h-10 dark:border-gray-600">
-        <StyleDropdown :copy-mode="copyMode" :on-copy="handleCopyWithMode" />
-      </Menubar>
+      <!-- 卡片视图按钮 - 移到最左边 -->
+      <Button
+        variant="outline"
+        size="icon"
+        class="sm:border-input sm:dark:border-input h-11 w-11 border-gray-400 sm:h-10 sm:w-10 dark:border-gray-600"
+        title="卡片视图"
+        @click="$emit('navigate', 'cards')"
+      >
+        <Grid3x3 class="size-5 sm:size-4" />
+      </Button>
 
       <!-- 移动端工具栏切换 -->
       <Button
@@ -1099,7 +1120,7 @@ function handleCopyWithMode(mode: string) {
         class="h-11 border-gray-400 px-2 -ml-2 dark:border-gray-600 !text-base" :class="[
           isShowMobileToolbar ? 'bg-blue-50 dark:bg-blue-950' : '',
         ]"
-        @click="isShowMobileToolbar = !isShowMobileToolbar"
+        @click="handleMobileEditButtonClick"
       >
         <Pencil class="mr-1 size-5" />
         编辑
@@ -1378,15 +1399,10 @@ function handleCopyWithMode(mode: string) {
         <FileDropdown :copy-mode="copyMode" :on-copy="handleCopyWithMode" :on-show-publish-dialog="showPublishDialog" />
       </Menubar>
 
-      <!-- 设置按钮 -->
-      <Button
-        variant="outline"
-        size="icon"
-        class="sm:border-input sm:dark:border-input h-11 w-11 border-gray-400 sm:h-10 sm:w-10 dark:border-gray-600"
-        @click="store.isOpenRightSlider = !store.isOpenRightSlider"
-      >
-        <Settings class="size-5 sm:size-4" />
-      </Button>
+      <!-- 菜单栏 - 移到最右边 -->
+      <Menubar class="compact-mobile compact-menubar extra-compact menubar sm:border-input sm:dark:border-input h-11 border-gray-400 sm:h-10 dark:border-gray-600">
+        <StyleDropdown :copy-mode="copyMode" :on-copy="handleCopyWithMode" />
+      </Menubar>
     </div>
 
     <!-- 右侧操作区：手机端第二行显示 -->
@@ -1592,6 +1608,16 @@ function handleCopyWithMode(mode: string) {
           >
             <Redo class="size-4" />
           </Button>
+          <!-- 表格 -->
+          <Button
+            variant="outline"
+            size="sm"
+            class="flex-shrink-0"
+            title="插入表格"
+            @click="displayStore.toggleShowInsertFormDialog()"
+          >
+            <Table class="size-4" />
+          </Button>
           <!-- 上传图片 -->
           <Button
             variant="outline"
@@ -1602,15 +1628,16 @@ function handleCopyWithMode(mode: string) {
           >
             <ImagePlus class="size-4" />
           </Button>
-          <!-- 表格 -->
+          <!-- 清空内容 -->
           <Button
             variant="outline"
             size="sm"
             class="flex-shrink-0"
-            title="插入表格"
-            @click="displayStore.toggleShowInsertFormDialog()"
+            title="清空内容"
+            @click="handleClearContent"
           >
-            <Table class="size-4" />
+            <FileX2 class="mr-1 size-4" />
+            清空
           </Button>
           <!-- 删除当前行 -->
           <Button
@@ -1633,17 +1660,6 @@ function handleCopyWithMode(mode: string) {
           >
             <Wand2 class="mr-1 size-4" />
             格式化
-          </Button>
-          <!-- 清空内容 -->
-          <Button
-            variant="outline"
-            size="sm"
-            class="flex-shrink-0"
-            title="清空内容"
-            @click="handleClearContent"
-          >
-            <FileX2 class="mr-1 size-4" />
-            清空
           </Button>
         </div>
       </div>

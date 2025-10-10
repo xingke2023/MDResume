@@ -22,6 +22,10 @@ import { checkImage, toBase64 } from '@/utils'
 import { createExtraKeys } from '@/utils/editor'
 import { fileUpload } from '@/utils/file'
 
+defineEmits<{
+  navigate: [view: 'editor' | 'cards']
+}>()
+
 const store = useStore()
 const displayStore = useDisplayStore()
 
@@ -611,6 +615,7 @@ onUnmounted(() => {
       @start-copy="startCopy"
       @end-copy="endCopy"
       @switch-to-editor="switchToEditorAndFocus"
+      @navigate="(view) => $emit('navigate', view)"
     />
 
     <main

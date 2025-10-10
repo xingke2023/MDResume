@@ -17,6 +17,7 @@ import {
   MinusSquare,
   Quote,
   Redo,
+  Settings,
   Strikethrough,
   Table,
   Trash2,
@@ -29,7 +30,6 @@ import {
   fontFamilyOptions,
   fontSizeOptions,
   legendOptions,
-  themeOptions,
 } from '@/config'
 import { useImportMarkdownContent } from '@/composables'
 import { useDisplayStore, useStore } from '@/stores'
@@ -43,7 +43,6 @@ const store = useStore()
 const { toggleShowCssEditor } = useDisplayStore()
 
 const {
-  theme,
   fontFamily,
   fontSize,
   primaryColor,
@@ -57,7 +56,6 @@ const {
 
 const {
   resetStyleConfirm,
-  themeChanged,
   fontChanged,
   sizeChanged,
   colorChanged,
@@ -80,6 +78,11 @@ function customStyle() {
   setTimeout(() => {
     cssEditor.value!.refresh()
   }, 50)
+}
+
+// 打开设置页
+function openSettings() {
+  store.isOpenRightSlider = true
 }
 </script>
 
@@ -130,13 +133,6 @@ function customStyle() {
       <MenubarCheckboxItem class="py-2" :checked="isDark" @click="toggleDark()">
         暗色模式
       </MenubarCheckboxItem>
-      <MenubarSeparator />
-      <StyleOptionMenu
-        title="主题"
-        :options="themeOptions"
-        :current="theme"
-        :change="themeChanged"
-      />
       <MenubarSeparator />
       <MenubarSub>
         <MenubarSubTrigger class="py-2" inset>
@@ -272,6 +268,11 @@ function customStyle() {
       <MenubarCheckboxItem divided @click="resetStyleConfirm">
         重置自定义样式
       </MenubarCheckboxItem>
+      <MenubarSeparator />
+      <MenubarItem class="py-2" @click="openSettings">
+        <Settings class="mr-2 size-4" />
+        设置
+      </MenubarItem>
     </MenubarContent>
   </MenubarMenu>
 </template>
