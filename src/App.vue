@@ -28,6 +28,7 @@ const navigateTo = (view: 'editor' | 'cards') => {
     rich-colors
     position="top-center"
     :theme="store.isDark ? 'dark' : 'light'"
+    close-button
   />
 </template>
 
@@ -108,5 +109,35 @@ body {
 .page-slide-enter-active,
 .page-slide-leave-active {
   transition: none;
+}
+
+/* Toast 关闭按钮样式 */
+:deep(.toast) {
+  position: relative !important;
+  padding-right: 2.5rem !important;
+}
+
+:deep(.custom-close-button) {
+  position: absolute !important;
+  right: 0.5rem !important;
+  left: auto !important;
+  top: 0.5rem !important;
+  bottom: auto !important;
+  transform: none !important;
+  margin: 0 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 1.5rem !important;
+  height: 1.5rem !important;
+  opacity: 1 !important;
+}
+
+/* 手机端 Toast 关闭按钮垂直居中 */
+@media (max-width: 768px) {
+  :deep(.custom-close-button) {
+    top: 50% !important;
+    transform: translateY(-50%) !important;
+  }
 }
 </style>

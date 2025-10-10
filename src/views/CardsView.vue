@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
+import { toast } from 'vue-sonner'
 import PostCard from '@/components/Cards/PostCard.vue'
 import PostDetailDialog from '@/components/Cards/PostDetailDialog.vue'
 import { useStore } from '@/stores'
@@ -358,6 +359,12 @@ onUnmounted(() => {
 
 // 切换标签管理模式
 function toggleManageMode() {
+  // 如果没有标签，提示用户
+  if (!isManagingTags.value && tagsWithCount.value.length === 0) {
+    toast.info('暂无标签可以修改')
+    return
+  }
+
   isManagingTags.value = !isManagingTags.value
   if (!isManagingTags.value) {
     // 退出管理模式时，清除编辑状态

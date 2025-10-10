@@ -261,7 +261,7 @@ export const defaultStyleConfig = {
   isCiteStatus: false,
   isMacCodeBlock: true,
   isCountStatus: false,
-  theme: themeOptions[0].value,
+  theme: themeOptions[5].value, // MWeb 简洁主题
   fontFamily: fontFamilyOptions[0].value,
   fontSize: fontSizeOptions[2].value,
   editorFontSize: editorFontSizeOptions[2].value,
