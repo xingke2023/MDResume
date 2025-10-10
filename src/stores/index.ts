@@ -47,6 +47,8 @@ interface Post {
   parentId?: string | null
   // 展开状态
   collapsed?: boolean
+  // 标签（支持中文和英文）
+  tags?: string[]
 }
 
 export const useStore = defineStore(`store`, () => {
@@ -117,6 +119,9 @@ export const useStore = defineStore(`store`, () => {
   /*******************************
    * 内容列表 posts：默认就带 id
    ******************************/
+  // 笔记父文章的固定 ID（用于卡片视图筛选）
+  const NOTES_PARENT_ID = `notes-parent`
+
   const posts = useStorage<Post[]>(addPrefix(`posts`), [
     {
       id: uuid(),
@@ -127,6 +132,19 @@ export const useStore = defineStore(`store`, () => {
       ],
       createDatetime: new Date(),
       updateDatetime: new Date(),
+      tags: [],
+    },
+    {
+      id: NOTES_PARENT_ID,
+      title: `笔记`,
+      content: `# 笔记\n\n这是笔记的根目录，所有笔记将作为子文章显示在卡片视图中。`,
+      history: [
+        { datetime: new Date().toLocaleString(`zh-cn`), content: `# 笔记\n\n这是笔记的根目录，所有笔记将作为子文章显示在卡片视图中。` },
+      ],
+      createDatetime: new Date(),
+      updateDatetime: new Date(),
+      parentId: null,
+      tags: [],
     },
   ])
 
@@ -199,6 +217,7 @@ export const useStore = defineStore(`store`, () => {
       createDatetime: new Date(),
       updateDatetime: new Date(),
       parentId,
+      tags: [],
     }
     posts.value.push(newPost)
     currentPostId.value = newPost.id
@@ -712,6 +731,17 @@ export const useStore = defineStore(`store`, () => {
     isOpenConfirmDialog.value = true
   }
 
+  // 获取所有唯一标签
+  const allTags = computed(() => {
+    const tagsSet = new Set<string>()
+    posts.value.forEach((post) => {
+      post.tags?.forEach((tag) => {
+        tagsSet.add(tag)
+      })
+    })
+    return Array.from(tagsSet).sort()
+  })
+
   return {
     isDark,
     toggleDark,
@@ -800,6 +830,8 @@ export const useStore = defineStore(`store`, () => {
     updatePostParentId,
     collapseAllPosts,
     expandAllPosts,
+    NOTES_PARENT_ID,
+    allTags,
   }
 })
 

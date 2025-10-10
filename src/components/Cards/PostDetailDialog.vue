@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { onMounted, onUnmounted, ref, watch } from 'vue'
 import { useStore } from '@/stores'
+import TagSelectorDialog from './TagSelectorDialog.vue'
 
 interface Post {
   id: string
@@ -9,6 +10,7 @@ interface Post {
   createDatetime: Date
   updateDatetime: Date
   parentId?: string | null
+  tags?: string[]
 }
 
 const props = defineProps<{
@@ -44,12 +46,15 @@ function generateUUID(): string {
 const isEditing = ref(false)
 const editTitle = ref(``)
 const editContent = ref(``)
+const editTags = ref<string[]>([])
 
 // 新建文章时，是否已经创建了文章
 const hasCreatedPost = ref(false)
 // 新创建的文章ID
 const newPostId = ref<string | null>(null)
 
+// 标签选择器状态
+const isTagSelectorOpen = ref(false)
 
 // 监听打开状态，渲染内容
 watch(() => props.open, (isOpen) => {
@@ -59,6 +64,7 @@ watch(() => props.open, (isOpen) => {
       isEditing.value = true
       editTitle.value = ``
       editContent.value = ``
+      editTags.value = []
       hasCreatedPost.value = false
       newPostId.value = null
     }
@@ -67,6 +73,7 @@ watch(() => props.open, (isOpen) => {
       isEditing.value = true
       editTitle.value = props.post.title
       editContent.value = props.post.content
+      editTags.value = props.post.tags ? [...props.post.tags] : []
       hasCreatedPost.value = false
       newPostId.value = null
     }
@@ -100,7 +107,8 @@ function createNewPostIfNeeded() {
     ],
     createDatetime: now,
     updateDatetime: now,
-    parentId: null, // 根级别文章，没有父节点
+    parentId: store.NOTES_PARENT_ID, // 所有卡片视图创建的文章都是"笔记"的子文章
+    tags: [...editTags.value], // 包含标签
   }
 
   store.posts.push(newPost)
@@ -180,7 +188,33 @@ watch(editContent, (newContent) => {
   }
 })
 
-// 已经不需要手动保存按钮了，因为都是自动保存
+// 自动保存 - 监听标签变化
+watch(editTags, (newTags) => {
+  console.log(`标签变化:`, newTags)
+  if (!props.open)
+    return
+
+  if (props.isNew) {
+    // 新建模式：如果已经创建了文章，更新标签
+    if (hasCreatedPost.value && newPostId.value) {
+      const post = store.getPostById(newPostId.value)
+      if (post) {
+        post.tags = [...newTags]
+        post.updateDatetime = new Date()
+        console.log(`标签已更新:`, post.tags)
+      }
+    }
+  }
+  else if (props.post) {
+    // 编辑模式：直接更新
+    const post = store.getPostById(props.post.id)
+    if (post) {
+      post.tags = [...newTags]
+      post.updateDatetime = new Date()
+      console.log(`标签已更新 (编辑):`, post.tags)
+    }
+  }
+}, { deep: true })
 
 // 处理 ESC 键关闭
 function handleKeyDown(e: KeyboardEvent) {
@@ -251,14 +285,16 @@ function handleDelete() {
 function handlePalette() {
   // TODO: 实现调色板功能
   console.log(`调色板功能待实现`)
-  alert(`调色板功能即将推出`)
 }
 
-// 处理标签点击
+// 处理标签按钮点击 - 打开标签选择器
 function handleTag() {
-  // TODO: 实现标签功能
-  console.log(`标签功能待实现`)
-  alert(`标签功能即将推出`)
+  isTagSelectorOpen.value = true
+}
+
+// 处理标签选择器更新
+function handleTagsUpdate(tags: string[]) {
+  editTags.value = tags
 }
 
 onMounted(() => {
@@ -308,6 +344,16 @@ function handleContentClick(e: MouseEvent) {
                 placeholder="内容（支持 Markdown 语法）"
                 rows="10"
               />
+              <!-- 标签显示区域 -->
+              <div v-if="editTags.length > 0" class="tags-display">
+                <span
+                  v-for="(tag, index) in editTags"
+                  :key="index"
+                  class="tag-badge"
+                >
+                  {{ tag }}
+                </span>
+              </div>
             </div>
           </div>
 
@@ -382,6 +428,14 @@ function handleContentClick(e: MouseEvent) {
         </div>
       </div>
     </Transition>
+
+    <!-- 标签选择器 -->
+    <TagSelectorDialog
+      :open="isTagSelectorOpen"
+      :selected-tags="editTags"
+      @close="isTagSelectorOpen = false"
+      @update="handleTagsUpdate"
+    />
   </Teleport>
 </template>
 
@@ -402,9 +456,8 @@ function handleContentClick(e: MouseEvent) {
   background-color: var(--dialog-bg, #ffffff);
   border-radius: 16px;
   box-shadow: 0 24px 48px rgba(0, 0, 0, 0.2);
-  max-width: 800px;
-  width: 100%;
-  max-height: 85vh;
+  width: 98vw;
+  height: 98vh;
   display: flex;
   flex-direction: column;
   position: relative;
@@ -677,6 +730,29 @@ function handleContentClick(e: MouseEvent) {
   }
 }
 
+// 标签样式
+.tags-display {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+  margin-left: -8px;
+}
+
+.tag-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.25rem 0.625rem;
+  background-color: var(--tag-bg, #f5f5f5);
+  color: var(--text-secondary, #6b7280);
+  border-radius: 12px;
+  border: 1px solid var(--tag-border, #d1d5db);
+  font-size: 0.75rem;
+  font-weight: 500;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+
 // 深色模式
 @media (prefers-color-scheme: dark) {
   .dialog-container {
@@ -693,6 +769,8 @@ function handleContentClick(e: MouseEvent) {
     --link-color: #64b5f6;
     --primary-color: #1976d2;
     --primary-hover: #1565c0;
+    --tag-bg: #3c3c3c;
+    --tag-border: #525252;
   }
 }
 
@@ -708,6 +786,7 @@ function handleContentClick(e: MouseEvent) {
 
   .dialog-body {
     padding: 1.5rem;
+    padding-bottom: 0rem;
   }
 
   .dialog-footer {

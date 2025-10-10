@@ -17,10 +17,13 @@ const navigateTo = (view: 'editor' | 'cards') => {
 </script>
 
 <template>
-  <component
-    :is="currentView === 'editor' ? CodemirrorEditor : CardsView"
-    @navigate="navigateTo"
-  />
+  <Transition name="page-slide" mode="out-in">
+    <component
+      :is="currentView === 'editor' ? CodemirrorEditor : CardsView"
+      :key="currentView"
+      @navigate="navigateTo"
+    />
+  </Transition>
   <Toaster
     rich-colors
     position="top-center"
@@ -99,5 +102,11 @@ body {
 }
 .current-match {
   background-color: #ff5722; /* 当前匹配项更鲜艳的颜色 */
+}
+
+/* 页面切换转场动画 - 已禁用 */
+.page-slide-enter-active,
+.page-slide-leave-active {
+  transition: none;
 }
 </style>

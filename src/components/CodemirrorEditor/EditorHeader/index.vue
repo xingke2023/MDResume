@@ -1101,16 +1101,6 @@ function handleMobileEditButtonClick() {
     <div class="w-full flex items-center gap-1 sm:gap-2 sm:min-w-0 sm:flex-1">
       <!-- 左侧按钮组 - 占满剩余空间,所有按钮等宽 -->
       <div class="flex items-center gap-1 flex-1 min-w-0">
-        <!-- 记事本按钮 - 移到最左边 -->
-        <Button
-          variant="outline"
-          class="sm:border-input sm:dark:border-input h-11 flex-1 min-w-0 border-gray-400 px-1 sm:px-2 sm:h-10 dark:border-gray-600 !text-sm sm:!text-base"
-          title="记事本"
-          @click="$emit('navigate', 'cards')"
-        >
-          记事本
-        </Button>
-
         <!-- 移动端工具栏切换 -->
         <Button
           v-if="isMobile"
@@ -1367,6 +1357,16 @@ function handleMobileEditButtonClick() {
           </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
+
+        <!-- 笔记按钮 -->
+        <Button
+          variant="outline"
+          class="sm:border-input sm:dark:border-input h-11 flex-1 min-w-0 border-gray-400 px-1 sm:px-2 sm:h-10 dark:border-gray-600 !text-sm sm:!text-base"
+          title="笔记"
+          @click="$emit('navigate', 'cards')"
+        >
+          笔记
+        </Button>
 
         <!-- 主题选择 -->
         <DropdownMenu>
