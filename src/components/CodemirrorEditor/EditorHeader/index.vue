@@ -9,7 +9,6 @@ import {
   CreditCard,
   FileX2,
   Gem,
-  Grid3x3,
   Heading,
   ImagePlus,
   Indent,
@@ -19,7 +18,6 @@ import {
   Minus,
   MinusSquare,
   Newspaper,
-  Pencil,
   Quote,
   Redo,
   Sparkles,
@@ -1100,31 +1098,31 @@ function handleMobileEditButtonClick() {
     class="backdrop-blur-sm header-container fixed left-0 right-0 top-0 z-50 min-h-15 flex flex-wrap items-center bg-white px-2 py-1 sm:h-15 dark:bg-[#191c20] sm:px-5"
   >
     <!-- 左侧操作区：所有工具按钮 -->
-    <div class="space-x-1 sm:space-x-2 w-full flex items-center sm:min-w-0 sm:flex-1">
-      <!-- 卡片视图按钮 - 移到最左边 -->
-      <Button
-        variant="outline"
-        size="icon"
-        class="sm:border-input sm:dark:border-input h-11 w-11 border-gray-400 sm:h-10 sm:w-10 dark:border-gray-600"
-        title="卡片视图"
-        @click="$emit('navigate', 'cards')"
-      >
-        <Grid3x3 class="size-5 sm:size-4" />
-      </Button>
+    <div class="w-full flex items-center gap-1 sm:gap-2 sm:min-w-0 sm:flex-1">
+      <!-- 左侧按钮组 - 占满剩余空间,所有按钮等宽 -->
+      <div class="flex items-center gap-1 flex-1 min-w-0">
+        <!-- 记事本按钮 - 移到最左边 -->
+        <Button
+          variant="outline"
+          class="sm:border-input sm:dark:border-input h-11 flex-1 min-w-0 border-gray-400 px-1 sm:px-2 sm:h-10 dark:border-gray-600 !text-sm sm:!text-base"
+          title="记事本"
+          @click="$emit('navigate', 'cards')"
+        >
+          记事本
+        </Button>
 
-      <!-- 移动端工具栏切换 -->
-      <Button
-        v-if="isMobile"
-        variant="outline"
-        title="编辑器"
-        class="h-11 border-gray-400 px-2 -ml-2 dark:border-gray-600 !text-base" :class="[
-          isShowMobileToolbar ? 'bg-blue-50 dark:bg-blue-950' : '',
-        ]"
-        @click="handleMobileEditButtonClick"
-      >
-        <Pencil class="mr-1 size-5" />
-        编辑
-      </Button>
+        <!-- 移动端工具栏切换 -->
+        <Button
+          v-if="isMobile"
+          variant="outline"
+          title="编辑器"
+          class="h-11 flex-1 min-w-0 border-gray-400 px-1 dark:border-gray-600 !text-sm" :class="[
+            isShowMobileToolbar ? 'bg-blue-50 dark:bg-blue-950' : '',
+          ]"
+          @click="handleMobileEditButtonClick"
+        >
+          编辑
+        </Button>
 
       <!-- 撤销重做 - 电脑端显示 -->
       <Button
@@ -1317,13 +1315,13 @@ function handleMobileEditButtonClick() {
         <FileX2 class="size-4" />
       </Button>
 
-      <!-- 工具 -->
-      <DropdownMenu>
-        <DropdownMenuTrigger as-child>
-          <Button variant="outline" class="sm:border-input sm:dark:border-input h-11 border-gray-400 px-2 sm:h-10 dark:border-gray-600 !text-base">
-            工具🔥
-          </Button>
-        </DropdownMenuTrigger>
+        <!-- 工具 -->
+        <DropdownMenu>
+          <DropdownMenuTrigger as-child>
+            <Button variant="outline" class="sm:border-input sm:dark:border-input h-11 flex-1 min-w-0 border-gray-400 px-1 sm:px-2 sm:h-10 dark:border-gray-600 !text-sm sm:!text-base">
+              工具
+            </Button>
+          </DropdownMenuTrigger>
         <DropdownMenuContent align="start" class="py-2">
           <DropdownMenuItem class="py-3 text-base" @click="showRewriteDialog()">
             <Wand2 class="mr-2 size-5" />
@@ -1367,40 +1365,46 @@ function handleMobileEditButtonClick() {
               </span>
             </span>
           </DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
+          </DropdownMenuContent>
+        </DropdownMenu>
 
-      <!-- 主题选择 -->
-      <DropdownMenu>
-        <DropdownMenuTrigger as-child>
-          <Button variant="outline" class="sm:border-input sm:dark:border-input h-11 border-gray-400 px-2 sm:h-10 dark:border-gray-600 !text-base" title="主题">
-            主题
-          </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="start">
-          <DropdownMenuRadioGroup :model-value="theme" @update:model-value="themeChanged">
-            <DropdownMenuRadioItem
-              v-for="option in themeOptions"
-              :key="option.value"
-              :value="option.value"
-              class="text-base"
-            >
-              {{ option.label }}
-              <span v-if="option.desc" class="text-muted-foreground ml-1 text-xs">
-                {{ option.desc }}
-              </span>
-            </DropdownMenuRadioItem>
-          </DropdownMenuRadioGroup>
-        </DropdownMenuContent>
-      </DropdownMenu>
+        <!-- 主题选择 -->
+        <DropdownMenu>
+          <DropdownMenuTrigger as-child>
+            <Button variant="outline" class="sm:border-input sm:dark:border-input h-11 flex-1 min-w-0 border-gray-400 px-1 sm:px-2 sm:h-10 dark:border-gray-600 !text-sm sm:!text-base" title="主题">
+              主题
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="start">
+            <DropdownMenuRadioGroup :model-value="theme" @update:model-value="themeChanged">
+              <DropdownMenuRadioItem
+                v-for="option in themeOptions"
+                :key="option.value"
+                :value="option.value"
+                class="text-base"
+              >
+                {{ option.label }}
+                <span v-if="option.desc" class="text-muted-foreground ml-1 text-xs">
+                  {{ option.desc }}
+                </span>
+              </DropdownMenuRadioItem>
+            </DropdownMenuRadioGroup>
+          </DropdownMenuContent>
+        </DropdownMenu>
 
-      <!-- 发布菜单 -->
-      <Menubar class="menubar compact-menubar sm:border-input sm:dark:border-input h-11 border-gray-400 sm:h-10 dark:border-gray-600">
-        <FileDropdown :copy-mode="copyMode" :on-copy="handleCopyWithMode" :on-show-publish-dialog="showPublishDialog" />
-      </Menubar>
+        <!-- 发布菜单 -->
+        <DropdownMenu>
+          <DropdownMenuTrigger as-child>
+            <Button variant="outline" class="sm:border-input sm:dark:border-input h-11 flex-1 min-w-0 border-gray-400 px-1 sm:px-2 sm:h-10 dark:border-gray-600 !text-sm sm:!text-base">
+              发布
+            </Button>
+          </DropdownMenuTrigger>
+          <FileDropdown :copy-mode="copyMode" :on-copy="handleCopyWithMode" :on-show-publish-dialog="showPublishDialog" />
+        </DropdownMenu>
+      </div>
 
-      <!-- 菜单栏 - 移到最右边 -->
-      <Menubar class="compact-mobile compact-menubar extra-compact menubar sm:border-input sm:dark:border-input h-11 border-gray-400 sm:h-10 dark:border-gray-600">
+      <!-- 右侧按钮组 - 菜单栏 -->
+      <Menubar class="compact-mobile compact-menubar extra-compact menubar sm:border-input sm:dark:border-input h-11 flex-shrink-0 border-gray-400 sm:h-10 dark:border-gray-600">
         <StyleDropdown :copy-mode="copyMode" :on-copy="handleCopyWithMode" />
       </Menubar>
     </div>
@@ -1784,6 +1788,8 @@ function handleMobileEditButtonClick() {
 .compact-menubar :deep(.menubar__trigger) {
   padding-left: 0.5rem !important;
   padding-right: 0.5rem !important;
+  width: 100% !important;
+  justify-content: center !important;
 }
 
 .extra-compact :deep(.menubar__trigger) {
