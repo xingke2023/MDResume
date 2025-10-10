@@ -615,7 +615,7 @@ onUnmounted(() => {
       @start-copy="startCopy"
       @end-copy="endCopy"
       @switch-to-editor="switchToEditorAndFocus"
-      @navigate="(view) => $emit('navigate', view)"
+      @navigate="(view: 'editor' | 'cards') => $emit('navigate', view)"
     />
 
     <main

@@ -308,15 +308,6 @@ export const mwebIndigoTheme: Theme = {
       'background-color': `#f8f9fa`,
     },
 
-    th: {
-      border: `1px solid #dee2e6`,
-      padding: `0.5rem`,
-      color: `#2d3748`,
-      'font-weight': `600`,
-      'text-align': `left`,
-      'white-space': `nowrap`,
-    },
-
     td: {
       border: `1px solid #dee2e6`,
       padding: `0.5rem`,

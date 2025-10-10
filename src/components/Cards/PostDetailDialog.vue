@@ -50,38 +50,6 @@ const hasCreatedPost = ref(false)
 // 新创建的文章ID
 const newPostId = ref<string | null>(null)
 
-// 渲染的HTML内容
-const renderedHtml = ref(``)
-
-// 渲染Markdown内容
-function renderContent() {
-  if (!props.post)
-    return
-
-  // 这里简化处理，实际应该使用 store 的渲染器
-  // 但为了不依赖编辑器实例，我们做简单的HTML转换
-  const html = props.post.content
-    // 标题
-    .replace(/^### (.+)$/gm, `<h3>$1</h3>`)
-    .replace(/^## (.+)$/gm, `<h2>$1</h2>`)
-    .replace(/^# (.+)$/gm, `<h1>$1</h1>`)
-    // 加粗
-    .replace(/\*\*(.+?)\*\*/g, `<strong>$1</strong>`)
-    // 斜体
-    .replace(/\*(.+?)\*/g, `<em>$1</em>`)
-    // 链接
-    .replace(/\[(.+?)\]\((.+?)\)/g, `<a href="$2" target="_blank">$1</a>`)
-    // 行内代码
-    .replace(/`(.+?)`/g, `<code>$1</code>`)
-    // 图片
-    .replace(/!\[(.+?)\]\((.+?)\)/g, `<img src="$2" alt="$1" />`)
-    // 段落
-    .replace(/\n\n/g, `</p><p>`)
-    // 换行
-    .replace(/\n/g, `<br>`)
-
-  renderedHtml.value = `<p>${html}</p>`
-}
 
 // 监听打开状态，渲染内容
 watch(() => props.open, (isOpen) => {
@@ -212,17 +180,6 @@ watch(editContent, (newContent) => {
   }
 })
 
-// 切换编辑模式
-function toggleEdit() {
-  if (!props.post)
-    return
-  isEditing.value = !isEditing.value
-  if (isEditing.value) {
-    editTitle.value = props.post.title
-    editContent.value = props.post.content
-  }
-}
-
 // 已经不需要手动保存按钮了，因为都是自动保存
 
 // 处理 ESC 键关闭
@@ -338,7 +295,7 @@ function handleContentClick(e: MouseEvent) {
           <!-- 对话框内容 -->
           <div class="dialog-body">
             <!-- 编辑模式 -->
-            <div v-if="isEditing" class="edit-mode">
+            <div class="edit-mode">
               <input
                 v-model="editTitle"
                 type="text"
@@ -352,8 +309,6 @@ function handleContentClick(e: MouseEvent) {
                 rows="10"
               />
             </div>
-            <!-- 预览模式 -->
-            <div v-else class="content-preview" v-html="renderedHtml" />
           </div>
 
           <!-- 对话框底部 -->

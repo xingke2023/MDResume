@@ -214,7 +214,7 @@ function handleCloseDialog() {
 const selectedPost = computed(() => {
   if (!selectedPostId.value)
     return null
-  return store.getPostById(selectedPostId.value)
+  return store.getPostById(selectedPostId.value) || null
 })
 
 // 切换视图模式（循环切换：瀑布流 -> 时间轴 -> 列表 -> 瀑布流）

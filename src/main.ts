@@ -6,6 +6,7 @@ import VConsole from 'vconsole'
 
 // 移动端调试工具 - 仅在开发环境启用
 if (import.meta.env.DEV) {
+  // @ts-expect-error - vConsole 实例在创建后自动附加到 window，不需要显式引用
   const vConsole = new VConsole()
   console.log('vConsole 已启用 - 点击右下角绿色按钮查看控制台')
 }
