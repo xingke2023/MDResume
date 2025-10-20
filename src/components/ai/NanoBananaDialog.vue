@@ -126,7 +126,10 @@ async function handleSubmit() {
     }
 
     // 构建请求
-    const API_URL = `https://wechat.easy-write.com/api/image/generate-wechat`
+    // 开发环境使用代理，生产环境使用完整 URL
+    const API_URL = import.meta.env.DEV
+      ? `/api/image/generate-wechat`
+      : `https://api.xingke888.com/api/image/generate-wechat`
     const API_KEY = `0dbe66d87befa7a9d5d7c1bdbc631a9b7dc5ce88be9a20e41c26790060802647`
 
     const headers: Record<string, string> = {

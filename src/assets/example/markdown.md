@@ -1,8 +1,10 @@
-# 人工智能写作工具：公交车上的公众号创作利器
+# 保险文案人工智能写作工具：公交车上的公众号创作利器
 
 ## 关于人工智能写作的一些思考
 
 在快节奏的现代生活中，自媒体博主面临如何高效利用碎片时间的挑战。特别是在公交车、地铁等通勤场景中，时间往往被白白浪费。我最近在开发一款工具，旨在帮助自媒体博主在公交车上高效撰写和发布公众号文章，充分利用碎片时间，同时降低写作和排版的负担。
+
+![增加两个保险人在里面](http://mmecoa.qpic.cn/mmecoa_png/aEMSWo7trHZp4CWIu8WcoRceQXhwYYiaksk2jNgVHJ8b59iaIrn5E85eyYibEiaHYAymhZQnBcUHMKMCvzGD6hwaMw/0?from=appmsg)
 
 ### 为什么要在公交车上写公众号文章？
 
