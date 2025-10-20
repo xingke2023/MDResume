@@ -44,7 +44,7 @@ watch(() => props.open, (val) => {
     // 强制设置服务商为人工智能写作
     if (AIImageConfigStore.type !== `aiwriting`) {
       AIImageConfigStore.type = `aiwriting`
-      AIImageConfigStore.endpoint = `https://wechat.easy-write.com/extract/api/generate_image`
+      AIImageConfigStore.endpoint = `https://api.xingke888.com/extract/api/generate_image`
       AIImageConfigStore.model = ``
     }
   }
@@ -266,7 +266,7 @@ async function pollTaskStatus(taskId: string): Promise<string | null> {
         throw new Error(`任务已取消`)
       }
 
-      const queryUrl = `https://wechat.easy-write.com/extract/api/query_task_simple?task_id=${taskId}`
+      const queryUrl = `https://api.xingke888.com/extract/api/query_task_simple?task_id=${taskId}`
       const queryRes = await window.fetch(queryUrl, {
         method: `GET`,
         signal: abortController.value?.signal,
@@ -608,7 +608,7 @@ async function uploadImageViaProxy(imageUrl: string): Promise<string> {
     console.log(`📤 通过后端上传图片URL到微信图床:`, imageUrl)
 
     // 调用后端接口，发送图片URL，后端下载并上传到微信图床
-    const uploadResponse = await fetch(`https://wechat.easy-write.com/api/media/upload-image-url`, {
+    const uploadResponse = await fetch(`https://api.xingke888.com/api/media/upload-image-url`, {
       method: `POST`,
       headers: {
         'Content-Type': `application/json`,

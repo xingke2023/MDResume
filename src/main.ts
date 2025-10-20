@@ -1,6 +1,7 @@
 import { createPinia } from 'pinia'
 import { createApp } from 'vue'
 import App from './App.vue'
+import router from './router'
 import { setupComponents } from './utils/setup-components'
 import VConsole from 'vconsole'
 
@@ -38,5 +39,6 @@ setupComponents()
 const app = createApp(App)
 
 app.use(createPinia())
+app.use(router)
 
 app.mount(`#app`)

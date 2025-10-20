@@ -205,7 +205,7 @@ async function pollTaskStatus(taskId: string): Promise<string | null> {
         throw new Error(`任务已取消`)
       }
 
-      const queryUrl = `https://wechat.easy-write.com/extract/api/query_task_simple?task_id=${taskId}`
+      const queryUrl = `https://api.xingke888.com/extract/api/query_task_simple?task_id=${taskId}`
       const queryRes = await window.fetch(queryUrl, {
         method: `GET`,
         signal: abortController.value?.signal,
@@ -672,7 +672,7 @@ async function uploadImageViaProxy(imageUrl: string): Promise<string> {
     console.log(`📤 通过后端上传图片URL到微信图床:`, imageUrl)
 
     // 调用后端接口，发送图片URL，后端下载并上传到微信图床
-    const uploadResponse = await fetch(`https://wechat.easy-write.com/api/media/upload-image-url`, {
+    const uploadResponse = await fetch(`https://api.xingke888.com/api/media/upload-image-url`, {
       method: `POST`,
       headers: {
         'Content-Type': `application/json`,
@@ -735,7 +735,7 @@ async function uploadToWechat(imageUrl: string): Promise<string> {
     const formData = new FormData()
     formData.append(`media`, file)
 
-    const uploadResponse = await fetch(`https://wechat.easy-write.com/api/media/upload-image`, {
+    const uploadResponse = await fetch(`https://api.xingke888.com/api/media/upload-image`, {
       method: `POST`,
       headers: {
         'X-API-Key': `0dbe66d87befa7a9d5d7c1bdbc631a9b7dc5ce88be9a20e41c26790060802647`,

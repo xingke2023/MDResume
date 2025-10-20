@@ -1,13 +1,12 @@
 <script setup lang="ts">
 import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
+import { useRouter } from 'vue-router'
 import { toast } from 'vue-sonner'
 import PostCard from '@/components/Cards/PostCard.vue'
 import PostDetailDialog from '@/components/Cards/PostDetailDialog.vue'
 import { useStore } from '@/stores'
 
-// 定义 emits
-defineEmits([`navigate`])
-
+const router = useRouter()
 const store = useStore()
 
 // 当前选中的卡片
@@ -553,7 +552,7 @@ function deleteTag(tagName: string) {
           <button
             class="header-btn"
             title="关闭"
-            @click="$emit('navigate', 'editor')"
+            @click="router.push('/editor')"
           >
             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <line x1="18" y1="6" x2="6" y2="18" />
@@ -803,7 +802,7 @@ function deleteTag(tagName: string) {
       @close="handleCloseDialog"
       @edit="() => {
         store.currentPostId = selectedPostId!
-        $emit('navigate', 'editor')
+        router.push('/editor')
       }"
     />
 

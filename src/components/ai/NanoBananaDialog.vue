@@ -16,7 +16,7 @@ const emit = defineEmits<{
 const store = useStore()
 
 // 表单数据
-const prompt = ref('')
+const prompt = ref(``)
 const imageFiles = ref<File[]>([])
 const imagePreviews = ref<string[]>([])
 const isProcessing = ref(false)
@@ -49,8 +49,8 @@ function handleImageChange(event: Event) {
   // 检查图片数量限制
   const remainingSlots = 3 - imageFiles.value.length
   if (remainingSlots <= 0) {
-    toast.error('最多只能上传 3 张图片')
-    input.value = ''
+    toast.error(`最多只能上传 3 张图片`)
+    input.value = ``
     return
   }
 
@@ -63,7 +63,7 @@ function handleImageChange(event: Event) {
     }
 
     // 验证文件类型
-    if (!file.type.startsWith('image/')) {
+    if (!file.type.startsWith(`image/`)) {
       toast.error(`${file.name} 不是图片文件`)
       return
     }
@@ -95,7 +95,7 @@ function handleImageChange(event: Event) {
   }
 
   // 清空input，允许重复选择同一文件
-  input.value = ''
+  input.value = ``
 }
 
 // 移除指定索引的图片
@@ -107,7 +107,7 @@ function removeImage(index: number) {
 // 发送请求
 async function handleSubmit() {
   if (!prompt.value.trim()) {
-    toast.error('请输入提示词')
+    toast.error(`请输入提示词`)
     return
   }
 
@@ -116,18 +116,18 @@ async function handleSubmit() {
   try {
     // 构建 FormData
     const formData = new FormData()
-    formData.append('prompt', prompt.value.trim())
+    formData.append(`prompt`, prompt.value.trim())
 
     // 如果有图片，添加到 FormData（支持多张）
     if (imageFiles.value.length > 0) {
       imageFiles.value.forEach((file) => {
-        formData.append('images', file)
+        formData.append(`images`, file)
       })
     }
 
     // 构建请求
-    const API_URL = 'https://wechat.easy-write.com/api/image/generate-wechat'
-    const API_KEY = '0dbe66d87befa7a9d5d7c1bdbc631a9b7dc5ce88be9a20e41c26790060802647'
+    const API_URL = `https://wechat.easy-write.com/api/image/generate-wechat`
+    const API_KEY = `0dbe66d87befa7a9d5d7c1bdbc631a9b7dc5ce88be9a20e41c26790060802647`
 
     const headers: Record<string, string> = {
       'X-API-Key': API_KEY,
@@ -135,33 +135,33 @@ async function handleSubmit() {
     }
 
     const response = await fetch(API_URL, {
-      method: 'POST',
+      method: `POST`,
       headers,
       body: formData,
     })
 
     if (!response.ok) {
       const errorText = await response.text()
-      console.error('AI接口错误详情:', errorText)
+      console.error(`AI接口错误详情:`, errorText)
       throw new Error(`AI 接口请求失败 (${response.status}): ${response.statusText}`)
     }
 
     const data = await response.json()
 
     if (!data.success) {
-      throw new Error(data.message || 'Nano Banana 处理失败')
+      throw new Error(data.message || `Nano Banana 处理失败`)
     }
 
     const wechatUrl = data.data?.wechatImageUrl
 
     if (!wechatUrl) {
-      console.error('AI响应数据:', data)
-      throw new Error('未返回微信图片URL')
+      console.error(`AI响应数据:`, data)
+      throw new Error(`未返回微信图片URL`)
     }
 
     // 显示成功并插入图片
-    toast.success('Nano Banana 处理完成！')
-    console.log('微信图片URL:', wechatUrl)
+    toast.success(`Nano Banana 处理完成！`)
+    console.log(`微信图片URL:`, wechatUrl)
 
     // 将图片插入到编辑器
     await insertImageToEditor(wechatUrl, data.data?.prompt || prompt.value)
@@ -170,24 +170,24 @@ async function handleSubmit() {
     closeDialog()
   }
   catch (error) {
-    console.error('Nano Banana 处理失败:', error)
+    console.error(`Nano Banana 处理失败:`, error)
 
-    let errorMessage = '处理失败'
+    let errorMessage = `处理失败`
     const errorMsg = error instanceof Error ? error.message : String(error)
-    if (errorMsg.includes('Failed to fetch') || errorMsg.includes('CORS') || errorMsg.includes('cross-origin')) {
-      errorMessage = 'CORS跨域错误：请确保AI接口支持跨域访问，或使用代理服务'
+    if (errorMsg.includes(`Failed to fetch`) || errorMsg.includes(`CORS`) || errorMsg.includes(`cross-origin`)) {
+      errorMessage = `CORS跨域错误：请确保AI接口支持跨域访问，或使用代理服务`
     }
-    else if (errorMsg.includes('401')) {
-      errorMessage = 'API密钥验证失败，请检查密钥配置'
+    else if (errorMsg.includes(`401`)) {
+      errorMessage = `API密钥验证失败，请检查密钥配置`
     }
-    else if (errorMsg.includes('429')) {
-      errorMessage = 'API调用频率超限，请稍后重试'
+    else if (errorMsg.includes(`429`)) {
+      errorMessage = `API调用频率超限，请稍后重试`
     }
-    else if (errorMsg.includes('403')) {
-      errorMessage = 'API访问被拒绝，请检查密钥权限'
+    else if (errorMsg.includes(`403`)) {
+      errorMessage = `API访问被拒绝，请检查密钥权限`
     }
-    else if (errorMsg.includes('404')) {
-      errorMessage = 'API接口地址错误，请检查endpoint配置'
+    else if (errorMsg.includes(`404`)) {
+      errorMessage = `API接口地址错误，请检查endpoint配置`
     }
     else {
       errorMessage = `处理失败: ${errorMsg}`
@@ -203,16 +203,16 @@ async function handleSubmit() {
 // 插入图片到编辑器
 async function insertImageToEditor(imageUrl: string, imagePrompt: string) {
   if (!store.editor) {
-    console.warn('编辑器未初始化')
-    toast.error('编辑器未初始化')
+    console.warn(`编辑器未初始化`)
+    toast.error(`编辑器未初始化`)
     return
   }
 
   try {
     // 生成简洁的alt文本
     const altText = imagePrompt.trim()
-      ? imagePrompt.trim().substring(0, 30).replace(/\n/g, ' ')
-      : 'Nano Banana 生成的图片'
+      ? imagePrompt.trim().substring(0, 30).replace(/\n/g, ` `)
+      : `Nano Banana 生成的图片`
 
     // 生成Markdown图片语法
     const markdownImage = `![${altText}](${imageUrl})`
@@ -228,13 +228,13 @@ async function insertImageToEditor(imageUrl: string, imagePrompt: string) {
     // 聚焦编辑器
     store.editor.focus()
 
-    toast.success('图片已插入编辑器')
-    console.log('✅ 图片已成功插入到编辑器')
+    toast.success(`图片已插入编辑器`)
+    console.log(`✅ 图片已成功插入到编辑器`)
   }
   catch (error) {
-    const errorMsg = (error as Error).message || '插入图片失败'
+    const errorMsg = (error as Error).message || `插入图片失败`
     toast.error(errorMsg)
-    console.error('❌ 插入图片到编辑器失败:', error)
+    console.error(`❌ 插入图片到编辑器失败:`, error)
   }
 }
 </script>
@@ -259,7 +259,7 @@ async function insertImageToEditor(imageUrl: string, imagePrompt: string) {
 
       <!-- 标题 -->
       <h3 class="mb-2 text-center text-xl text-gray-900 font-bold dark:text-gray-100">
-        Nano Banana
+        保险行业插图制作及修改工具
       </h3>
 
       <!-- 描述 -->
@@ -287,7 +287,7 @@ async function insertImageToEditor(imageUrl: string, imagePrompt: string) {
               <button
                 type="button"
                 :disabled="imageFiles.length >= 3"
-                class="flex items-center gap-1 rounded px-2 py-1 text-xs text-gray-600 transition-colors dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 disabled:cursor-not-allowed disabled:opacity-50"
+                class="flex items-center gap-1 rounded px-2 py-1 text-xs text-gray-600 transition-colors disabled:cursor-not-allowed hover:bg-gray-100 dark:text-gray-400 disabled:opacity-50 dark:hover:bg-gray-700"
                 @click="selectImage"
               >
                 <ImagePlus class="h-4 w-4" />
@@ -306,10 +306,10 @@ async function insertImageToEditor(imageUrl: string, imagePrompt: string) {
               <img
                 :src="preview"
                 :alt="`预览图片 ${index + 1}`"
-                class="h-full w-full object-cover"
+                class="object-cover h-full w-full"
               >
               <button
-                class="absolute top-0.5 right-0.5 bg-red-500 hover:bg-red-600 rounded-full p-0.5 text-white shadow-lg opacity-0 transition-opacity group-hover:opacity-100"
+                class="absolute right-0.5 top-0.5 rounded-full bg-red-500 p-0.5 text-white opacity-0 shadow-lg transition-opacity hover:bg-red-600 group-hover:opacity-100"
                 @click="removeImage(index)"
               >
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" viewBox="0 0 20 20" fill="currentColor">
@@ -323,7 +323,7 @@ async function insertImageToEditor(imageUrl: string, imagePrompt: string) {
         <!-- 提示信息 -->
         <div class="rounded-lg bg-purple-50 p-3 dark:bg-purple-900/20">
           <p class="text-sm text-purple-800 dark:text-purple-300">
-            <span class="font-medium">💡 提示：</span>Nano Banana 支持纯文本生成图片，也支持上传图片进行理解、物体识别、场景分析等多种功能
+            <span class="font-medium">💡 提示：</span>本工具 支持纯文本生成图片，也支持上传图片进行理解、物体识别、场景分析等多种功能
           </p>
         </div>
       </div>

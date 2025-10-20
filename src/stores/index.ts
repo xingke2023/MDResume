@@ -457,7 +457,13 @@ export const useStore = defineStore(`store`, () => {
   onMounted(() => {
     const cssEditorDom = document.querySelector<HTMLTextAreaElement>(
       `#cssEditor`,
-    )!
+    )
+
+    // 如果 CSS 编辑器不存在（例如在笔记视图时），直接返回
+    if (!cssEditorDom) {
+      return
+    }
+
     cssEditorDom.value = getCurrentTab().content
     const theme = isDark.value ? `darcula` : `xq-light`
     cssEditor.value = markRaw(

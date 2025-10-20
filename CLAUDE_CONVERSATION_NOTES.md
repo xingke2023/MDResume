@@ -215,7 +215,7 @@ function isHasChild(postId: string) {
   - 提取封面图（第一张图片）
   - 渲染 Markdown → HTML
   ↓
-调用第三方API: wechat.easy-write.com
+调用第三方API: api.xingke888.com
   ↓
 在公众号后台创建草稿
 ```
@@ -223,7 +223,7 @@ function isHasChild(postId: string) {
 ### 关键代码位置
 - **主逻辑**: `src/components/CodemirrorEditor/EditorHeader/index.vue:869-994`
 - **配置**: `localStorage.mpConfig`
-- **API**: `https://wechat.easy-write.com/api/draft/create-with-credentials`
+- **API**: `https://api.xingke888.com/api/draft/create-with-credentials`
 
 ### 注意事项
 - ⚠️ 需要先配置公众号 AppID 和 AppSecret

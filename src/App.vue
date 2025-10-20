@@ -1,29 +1,16 @@
 <script setup lang="ts">
-import { ref } from 'vue'
 import { Toaster } from '@/components/ui/sonner'
 import { useStore } from '@/stores'
-import CodemirrorEditor from '@/views/CodemirrorEditor.vue'
-import CardsView from '@/views/CardsView.vue'
 
 const store = useStore()
-
-// 当前视图: 'editor' | 'cards'
-const currentView = ref<'editor' | 'cards'>('editor')
-
-// 切换视图
-const navigateTo = (view: 'editor' | 'cards') => {
-  currentView.value = view
-}
 </script>
 
 <template>
-  <Transition name="page-slide" mode="out-in">
-    <component
-      :is="currentView === 'editor' ? CodemirrorEditor : CardsView"
-      :key="currentView"
-      @navigate="navigateTo"
-    />
-  </Transition>
+  <RouterView v-slot="{ Component }">
+    <Transition name="page-slide" mode="out-in">
+      <component :is="Component" />
+    </Transition>
+  </RouterView>
   <Toaster
     rich-colors
     position="top-center"

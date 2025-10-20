@@ -30,6 +30,7 @@ import {
 } from 'lucide-vue-next'
 import { storeToRefs } from 'pinia'
 import { nextTick, ref, toRaw } from 'vue'
+import { useRouter } from 'vue-router'
 import { toast } from 'vue-sonner'
 import BeautifyDialog from '@/components/ai/BeautifyDialog.vue'
 import IndustryHotspotDialog from '@/components/ai/IndustryHotspotDialog.vue'
@@ -45,7 +46,8 @@ import RewriteDialog from './RewriteDialog.vue'
 import MpConfigDialog from './WechatPublish/MpConfigDialog.vue'
 import PublishDialog from './WechatPublish/PublishDialog.vue'
 
-const emit = defineEmits([`startCopy`, `endCopy`, `switchToEditor`, `navigate`])
+const emit = defineEmits([`startCopy`, `endCopy`, `switchToEditor`])
+const router = useRouter()
 
 const store = useStore()
 const displayStore = useDisplayStore()
@@ -902,7 +904,7 @@ async function publishToWechat() {
     }
 
     // API配置
-    const API_URL = `https://wechat.easy-write.com`
+    const API_URL = `https://api.xingke888.com`
     const API_KEY = `0dbe66d87befa7a9d5d7c1bdbc631a9b7dc5ce88be9a20e41c26790060802647`
 
     // 获取处理后的HTML内容（与"复制公众号格式"相同的处理）
@@ -1098,15 +1100,15 @@ function handleMobileEditButtonClick() {
     class="backdrop-blur-sm header-container fixed left-0 right-0 top-0 z-50 min-h-15 flex flex-wrap items-center bg-white px-2 py-1 sm:h-15 dark:bg-[#191c20] sm:px-5"
   >
     <!-- 左侧操作区：所有工具按钮 -->
-    <div class="w-full flex items-center gap-1 sm:gap-2 sm:min-w-0 sm:flex-1">
+    <div class="w-full flex items-center gap-1 sm:min-w-0 sm:flex-1 sm:gap-2">
       <!-- 左侧按钮组 - 占满剩余空间,所有按钮等宽 -->
-      <div class="flex items-center gap-1 flex-1 min-w-0">
+      <div class="min-w-0 flex flex-1 items-center gap-1">
         <!-- 移动端工具栏切换 -->
         <Button
           v-if="isMobile"
           variant="outline"
           title="编辑器"
-          class="h-11 flex-1 min-w-0 border-gray-400 px-1 dark:border-gray-600 !text-sm" :class="[
+          class="h-11 min-w-0 flex-1 border-gray-400 px-1 dark:border-gray-600 !text-sm" :class="[
             isShowMobileToolbar ? 'bg-blue-50 dark:bg-blue-950' : '',
           ]"
           @click="handleMobileEditButtonClick"
@@ -1114,256 +1116,256 @@ function handleMobileEditButtonClick() {
           编辑
         </Button>
 
-      <!-- 撤销重做 - 电脑端显示 -->
-      <Button
-        variant="outline"
-        size="icon"
-        title="撤销"
-        class="hidden sm:inline-flex"
-        @click="undo()"
-      >
-        <Undo class="size-4" />
-      </Button>
-      <Button
-        variant="outline"
-        size="icon"
-        title="重做"
-        class="hidden sm:inline-flex"
-        @click="redo()"
-      >
-        <Redo class="size-4" />
-      </Button>
+        <!-- 撤销重做 - 电脑端显示 -->
+        <Button
+          variant="outline"
+          size="icon"
+          title="撤销"
+          class="hidden sm:inline-flex"
+          @click="undo()"
+        >
+          <Undo class="size-4" />
+        </Button>
+        <Button
+          variant="outline"
+          size="icon"
+          title="重做"
+          class="hidden sm:inline-flex"
+          @click="redo()"
+        >
+          <Redo class="size-4" />
+        </Button>
 
-      <!-- 格式化工具 - 电脑端显示 -->
-      <Button
-        variant="outline"
-        size="icon"
-        title="格式化"
-        class="hidden sm:inline-flex"
-        @click="formatContent()"
-      >
-        <Wand2 class="size-4" />
-      </Button>
+        <!-- 格式化工具 - 电脑端显示 -->
+        <Button
+          variant="outline"
+          size="icon"
+          title="格式化"
+          class="hidden sm:inline-flex"
+          @click="formatContent()"
+        >
+          <Wand2 class="size-4" />
+        </Button>
 
-      <!-- 标题选择 - 电脑端显示 -->
-      <DropdownMenu>
-        <DropdownMenuTrigger as-child>
-          <Button
-            variant="outline"
-            size="icon"
-            title="标题"
-            class="hidden sm:inline-flex"
-          >
-            <Heading class="size-4" />
-          </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="start">
-          <DropdownMenuItem @click="insertHeading(1)">
-            <span class="text-2xl font-bold">H1</span>
-            <span class="text-muted-foreground ml-2 text-sm">一级标题</span>
-          </DropdownMenuItem>
-          <DropdownMenuItem @click="insertHeading(2)">
-            <span class="text-xl font-bold">H2</span>
-            <span class="text-muted-foreground ml-2 text-sm">二级标题</span>
-          </DropdownMenuItem>
-          <DropdownMenuItem @click="insertHeading(3)">
-            <span class="text-lg font-bold">H3</span>
-            <span class="text-muted-foreground ml-2 text-sm">三级标题</span>
-          </DropdownMenuItem>
-          <DropdownMenuItem @click="insertHeading(4)">
-            <span class="font-bold">H4</span>
-            <span class="text-muted-foreground ml-2 text-sm">四级标题</span>
-          </DropdownMenuItem>
-          <DropdownMenuItem @click="insertHeading(5)">
-            <span class="text-sm font-bold">H5</span>
-            <span class="text-muted-foreground ml-2 text-sm">五级标题</span>
-          </DropdownMenuItem>
-          <DropdownMenuItem @click="insertHeading(6)">
-            <span class="text-xs font-bold">H6</span>
-            <span class="text-muted-foreground ml-2 text-sm">六级标题</span>
-          </DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
+        <!-- 标题选择 - 电脑端显示 -->
+        <DropdownMenu>
+          <DropdownMenuTrigger as-child>
+            <Button
+              variant="outline"
+              size="icon"
+              title="标题"
+              class="hidden sm:inline-flex"
+            >
+              <Heading class="size-4" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="start">
+            <DropdownMenuItem @click="insertHeading(1)">
+              <span class="text-2xl font-bold">H1</span>
+              <span class="text-muted-foreground ml-2 text-sm">一级标题</span>
+            </DropdownMenuItem>
+            <DropdownMenuItem @click="insertHeading(2)">
+              <span class="text-xl font-bold">H2</span>
+              <span class="text-muted-foreground ml-2 text-sm">二级标题</span>
+            </DropdownMenuItem>
+            <DropdownMenuItem @click="insertHeading(3)">
+              <span class="text-lg font-bold">H3</span>
+              <span class="text-muted-foreground ml-2 text-sm">三级标题</span>
+            </DropdownMenuItem>
+            <DropdownMenuItem @click="insertHeading(4)">
+              <span class="font-bold">H4</span>
+              <span class="text-muted-foreground ml-2 text-sm">四级标题</span>
+            </DropdownMenuItem>
+            <DropdownMenuItem @click="insertHeading(5)">
+              <span class="text-sm font-bold">H5</span>
+              <span class="text-muted-foreground ml-2 text-sm">五级标题</span>
+            </DropdownMenuItem>
+            <DropdownMenuItem @click="insertHeading(6)">
+              <span class="text-xs font-bold">H6</span>
+              <span class="text-muted-foreground ml-2 text-sm">六级标题</span>
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
 
-      <Button
-        variant="outline"
-        size="icon"
-        title="加粗"
-        class="hidden sm:inline-flex"
-        @click="addFormat(`${ctrlKey}-B`)"
-      >
-        <Bold class="size-4" />
-      </Button>
-      <Button
-        variant="outline"
-        size="icon"
-        title="引用"
-        class="hidden sm:inline-flex"
-        @click="insertQuote()"
-      >
-        <Quote class="size-4" />
-      </Button>
-      <Button
-        variant="outline"
-        size="icon"
-        title="超链接"
-        class="hidden sm:inline-flex"
-        @click="addFormat(`${ctrlKey}-K`)"
-      >
-        <Link class="size-4" />
-      </Button>
-      <Button
-        variant="outline"
-        size="icon"
-        title="有序列表"
-        class="hidden sm:inline-flex"
-        @click="addFormat(`${ctrlKey}-O`)"
-      >
-        <ListOrdered class="size-4" />
-      </Button>
-      <Button
-        variant="outline"
-        size="icon"
-        title="无序列表"
-        class="hidden sm:inline-flex"
-        @click="addFormat(`${ctrlKey}-U`)"
-      >
-        <List class="size-4" />
-      </Button>
-      <Button
-        variant="outline"
-        size="icon"
-        title="分割线"
-        class="hidden sm:inline-flex"
-        @click="insertDivider()"
-      >
-        <Minus class="size-4" />
-      </Button>
-      <Button
-        variant="outline"
-        size="icon"
-        title="段落首行缩进"
-        class="hidden sm:inline-flex"
-        @click="insertIndent()"
-      >
-        <Indent class="size-4" />
-      </Button>
+        <Button
+          variant="outline"
+          size="icon"
+          title="加粗"
+          class="hidden sm:inline-flex"
+          @click="addFormat(`${ctrlKey}-B`)"
+        >
+          <Bold class="size-4" />
+        </Button>
+        <Button
+          variant="outline"
+          size="icon"
+          title="引用"
+          class="hidden sm:inline-flex"
+          @click="insertQuote()"
+        >
+          <Quote class="size-4" />
+        </Button>
+        <Button
+          variant="outline"
+          size="icon"
+          title="超链接"
+          class="hidden sm:inline-flex"
+          @click="addFormat(`${ctrlKey}-K`)"
+        >
+          <Link class="size-4" />
+        </Button>
+        <Button
+          variant="outline"
+          size="icon"
+          title="有序列表"
+          class="hidden sm:inline-flex"
+          @click="addFormat(`${ctrlKey}-O`)"
+        >
+          <ListOrdered class="size-4" />
+        </Button>
+        <Button
+          variant="outline"
+          size="icon"
+          title="无序列表"
+          class="hidden sm:inline-flex"
+          @click="addFormat(`${ctrlKey}-U`)"
+        >
+          <List class="size-4" />
+        </Button>
+        <Button
+          variant="outline"
+          size="icon"
+          title="分割线"
+          class="hidden sm:inline-flex"
+          @click="insertDivider()"
+        >
+          <Minus class="size-4" />
+        </Button>
+        <Button
+          variant="outline"
+          size="icon"
+          title="段落首行缩进"
+          class="hidden sm:inline-flex"
+          @click="insertIndent()"
+        >
+          <Indent class="size-4" />
+        </Button>
 
-      <!-- 插入工具 - 电脑端显示 -->
-      <Button
-        variant="outline"
-        size="icon"
-        title="上传图片"
-        class="hidden sm:inline-flex"
-        @click="displayStore.toggleShowUploadImgDialog()"
-      >
-        <ImagePlus class="size-4" />
-      </Button>
-      <Button
-        variant="outline"
-        size="icon"
-        title="插入表格"
-        class="hidden sm:inline-flex"
-        @click="displayStore.toggleShowInsertFormDialog()"
-      >
-        <Table class="size-4" />
-      </Button>
-      <Button
-        variant="outline"
-        size="icon"
-        title="图表工具"
-        class="hidden sm:inline-flex"
-        @click="addFormat(`${ctrlKey}-M`)"
-      >
-        <ChartPie class="size-4" />
-      </Button>
-      <Button
-        variant="outline"
-        size="icon"
-        title="插入公众号名片"
-        class="hidden sm:inline-flex"
-        @click="displayStore.toggleShowInsertMpCardDialog()"
-      >
-        <CreditCard class="size-4" />
-      </Button>
-      <Button
-        variant="outline"
-        size="icon"
-        title="删除当前行"
-        class="hidden sm:inline-flex"
-        @click="deleteLine()"
-      >
-        <Trash2 class="size-4" />
-      </Button>
-      <Button
-        variant="outline"
-        size="icon"
-        title="清空编辑器"
-        class="hidden sm:inline-flex"
-        @click="clearEditor()"
-      >
-        <FileX2 class="size-4" />
-      </Button>
+        <!-- 插入工具 - 电脑端显示 -->
+        <Button
+          variant="outline"
+          size="icon"
+          title="上传图片"
+          class="hidden sm:inline-flex"
+          @click="displayStore.toggleShowUploadImgDialog()"
+        >
+          <ImagePlus class="size-4" />
+        </Button>
+        <Button
+          variant="outline"
+          size="icon"
+          title="插入表格"
+          class="hidden sm:inline-flex"
+          @click="displayStore.toggleShowInsertFormDialog()"
+        >
+          <Table class="size-4" />
+        </Button>
+        <Button
+          variant="outline"
+          size="icon"
+          title="图表工具"
+          class="hidden sm:inline-flex"
+          @click="addFormat(`${ctrlKey}-M`)"
+        >
+          <ChartPie class="size-4" />
+        </Button>
+        <Button
+          variant="outline"
+          size="icon"
+          title="插入公众号名片"
+          class="hidden sm:inline-flex"
+          @click="displayStore.toggleShowInsertMpCardDialog()"
+        >
+          <CreditCard class="size-4" />
+        </Button>
+        <Button
+          variant="outline"
+          size="icon"
+          title="删除当前行"
+          class="hidden sm:inline-flex"
+          @click="deleteLine()"
+        >
+          <Trash2 class="size-4" />
+        </Button>
+        <Button
+          variant="outline"
+          size="icon"
+          title="清空编辑器"
+          class="hidden sm:inline-flex"
+          @click="clearEditor()"
+        >
+          <FileX2 class="size-4" />
+        </Button>
 
         <!-- 工具 -->
         <DropdownMenu>
           <DropdownMenuTrigger as-child>
-            <Button variant="outline" class="sm:border-input sm:dark:border-input h-11 flex-1 min-w-0 border-gray-400 px-1 sm:px-2 sm:h-10 dark:border-gray-600 !text-sm sm:!text-base">
+            <Button variant="outline" class="sm:border-input sm:dark:border-input h-11 min-w-0 flex-1 border-gray-400 px-1 sm:h-10 dark:border-gray-600 sm:px-2 !text-sm sm:!text-base">
               工具
             </Button>
           </DropdownMenuTrigger>
-        <DropdownMenuContent align="start" class="py-2">
-          <DropdownMenuItem class="py-3 text-base" @click="showRewriteDialog()">
-            <Wand2 class="mr-2 size-5" />
-            全文一键改写
-          </DropdownMenuItem>
-          <DropdownMenuItem :disabled="isBeautifying" class="py-3 text-base" @click="showBeautifyConfirm()">
-            <Sparkles class="mr-2 size-5" />
-            {{ isBeautifying ? '美化中...' : '全文一键排版' }}
-          </DropdownMenuItem>
-          <DropdownMenuItem class="py-3 text-base" @click="showFetchDialog()">
-            <Wrench class="mr-2 size-5" />
-            公众号文章抓取工具
-          </DropdownMenuItem>
-          <DropdownMenuItem class="py-3 text-base" @click="showIndustryInfoDialog()">
-            <Newspaper class="mr-2 size-5" />
-            行业热点文案推送
-          </DropdownMenuItem>
-          <DropdownMenuItem class="py-3 text-base" @click="showWritingPlanDialog()">
-            <Calendar class="mr-2 size-5" />
-            个人写作计划✍️
-          </DropdownMenuItem>
-          <DropdownMenuItem class="py-3 text-base" @click="showKnowledgeBaseDialog()">
-            <BookOpen class="mr-2 size-5" />
-            个人知识库
-          </DropdownMenuItem>
-          <DropdownMenuItem class="py-3 text-base" @click="showPosterGeneratorDialog()">
-            <ImagePlus class="mr-2 size-5" />
-            <span class="flex items-center gap-2">
-              海报制作
-              <span class="rounded-full bg-red-500 px-1.5 py-0.5 text-[10px] text-white font-semibold">
-                NEW
+          <DropdownMenuContent align="start" class="py-2">
+            <DropdownMenuItem class="py-3 text-base" @click="showRewriteDialog()">
+              <Wand2 class="mr-2 size-5" />
+              全文一键改写
+            </DropdownMenuItem>
+            <DropdownMenuItem :disabled="isBeautifying" class="py-3 text-base" @click="showBeautifyConfirm()">
+              <Sparkles class="mr-2 size-5" />
+              {{ isBeautifying ? '美化中...' : '全文一键排版' }}
+            </DropdownMenuItem>
+            <DropdownMenuItem class="py-3 text-base" @click="showFetchDialog()">
+              <Wrench class="mr-2 size-5" />
+              公众号文章抓取工具
+            </DropdownMenuItem>
+            <DropdownMenuItem class="py-3 text-base" @click="showIndustryInfoDialog()">
+              <Newspaper class="mr-2 size-5" />
+              保险行业热点文案推送
+            </DropdownMenuItem>
+            <DropdownMenuItem class="py-3 text-base" @click="showWritingPlanDialog()">
+              <Calendar class="mr-2 size-5" />
+              个人写作计划✍️
+            </DropdownMenuItem>
+            <DropdownMenuItem class="py-3 text-base" @click="showKnowledgeBaseDialog()">
+              <BookOpen class="mr-2 size-5" />
+              个人知识库
+            </DropdownMenuItem>
+            <DropdownMenuItem class="py-3 text-base" @click="showPosterGeneratorDialog()">
+              <ImagePlus class="mr-2 size-5" />
+              <span class="flex items-center gap-2">
+                保险行业海报制作
+                <span class="rounded-full bg-red-500 px-1.5 py-0.5 text-[10px] text-white font-semibold">
+                  NEW
+                </span>
               </span>
-            </span>
-          </DropdownMenuItem>
-          <DropdownMenuItem class="py-3 text-base" @click="showNanoBananaDialog()">
-            <Gem class="mr-2 size-5" />
-            <span class="flex items-center gap-2">
-              Nano Banana图片工具
-              <span class="rounded-full bg-red-500 px-1.5 py-0.5 text-[10px] text-white font-semibold">
-                NEW
+            </DropdownMenuItem>
+            <DropdownMenuItem class="py-3 text-base" @click="showNanoBananaDialog()">
+              <Gem class="mr-2 size-5" />
+              <span class="flex items-center gap-2">
+                保险行业图片制作及修改工具
+                <span class="rounded-full bg-red-500 px-1.5 py-0.5 text-[10px] text-white font-semibold">
+                  NEW
+                </span>
               </span>
-            </span>
-          </DropdownMenuItem>
+            </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
 
         <!-- 笔记按钮 -->
         <Button
           variant="outline"
-          class="sm:border-input sm:dark:border-input h-11 flex-1 min-w-0 border-gray-400 px-1 sm:px-2 sm:h-10 dark:border-gray-600 !text-sm sm:!text-base"
+          class="sm:border-input sm:dark:border-input h-11 min-w-0 flex-1 border-gray-400 px-1 sm:h-10 dark:border-gray-600 sm:px-2 !text-sm sm:!text-base"
           title="笔记"
-          @click="$emit('navigate', 'cards')"
+          @click="router.push('/notes')"
         >
           笔记
         </Button>
@@ -1371,7 +1373,7 @@ function handleMobileEditButtonClick() {
         <!-- 主题选择 -->
         <DropdownMenu>
           <DropdownMenuTrigger as-child>
-            <Button variant="outline" class="sm:border-input sm:dark:border-input h-11 flex-1 min-w-0 border-gray-400 px-1 sm:px-2 sm:h-10 dark:border-gray-600 !text-sm sm:!text-base" title="主题">
+            <Button variant="outline" class="sm:border-input sm:dark:border-input h-11 min-w-0 flex-1 border-gray-400 px-1 sm:h-10 dark:border-gray-600 sm:px-2 !text-sm sm:!text-base" title="主题">
               主题
             </Button>
           </DropdownMenuTrigger>
@@ -1395,7 +1397,7 @@ function handleMobileEditButtonClick() {
         <!-- 发布菜单 -->
         <DropdownMenu>
           <DropdownMenuTrigger as-child>
-            <Button variant="outline" class="sm:border-input sm:dark:border-input h-11 flex-1 min-w-0 border-gray-400 px-1 sm:px-2 sm:h-10 dark:border-gray-600 !text-sm sm:!text-base">
+            <Button variant="outline" class="sm:border-input sm:dark:border-input h-11 min-w-0 flex-1 border-gray-400 px-1 sm:h-10 dark:border-gray-600 sm:px-2 !text-sm sm:!text-base">
               发布
             </Button>
           </DropdownMenuTrigger>
