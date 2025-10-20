@@ -2,8 +2,12 @@
 import {
   ArrowDown,
   Check,
+  ChevronDown,
+  ChevronUp,
   Copy,
   Edit,
+  ImagePlus,
+  Loader2,
   Pause,
   Plus,
   RefreshCcw,
@@ -85,6 +89,20 @@ const isQuoteCursorBefore = ref(false)
 const isQuoteCursorMiddle = ref(false)
 const cmdMgrOpen = ref(false)
 const quotedContent = ref(``)
+const contextSectionCollapsed = ref(false) // 上下文区域折叠状态
+
+/* ---------- 图片素材管理 ---------- */
+interface ImageMaterial {
+  id: string
+  file: File
+  preview: string
+  ocrText: string
+  isProcessing: boolean
+  error: string | null
+}
+
+const imageMaterials = ref<ImageMaterial[]>([])
+const imageFileInput = ref<HTMLInputElement | null>(null)
 
 /* ---------- 消息结构 ---------- */
 interface ChatMessage {
@@ -117,6 +135,205 @@ function clearQuotedContent() {
   isQuoteAllContent.value = false
   isQuoteCursorBefore.value = false
   isQuoteCursorMiddle.value = false
+}
+
+/* ---------- 图片素材功能 ---------- */
+// 打开文件选择对话框
+function selectImageMaterial() {
+  imageFileInput.value?.click()
+}
+
+// 处理图片选择
+async function handleImageSelect(event: Event) {
+  const input = event.target as HTMLInputElement
+  const files = input.files
+
+  if (!files || files.length === 0) {
+    return
+  }
+
+  // 处理每个选中的文件
+  for (const file of Array.from(files)) {
+    // 验证文件类型
+    if (!file.type.startsWith(`image/`)) {
+      showCustomToast(`${file.name} 不是图片文件`)
+      continue
+    }
+
+    // 验证文件大小（限制10MB）
+    if (file.size > 10 * 1024 * 1024) {
+      showCustomToast(`${file.name} 大小超过10MB`)
+      continue
+    }
+
+    // 生成预览
+    const reader = new FileReader()
+    reader.onload = async (e) => {
+      const preview = e.target?.result as string
+      const material: ImageMaterial = {
+        id: `${Date.now()}-${Math.random()}`,
+        file,
+        preview,
+        ocrText: ``,
+        isProcessing: true,
+        error: null,
+      }
+      imageMaterials.value.push(material)
+
+      // 调用OCR API
+      await performOCR(material)
+    }
+    reader.onerror = () => {
+      showCustomToast(`读取 ${file.name} 失败`)
+    }
+    reader.readAsDataURL(file)
+  }
+
+  // 清空input，允许重复选择同一文件
+  input.value = ``
+}
+
+// 压缩图片（针对OCR优化）
+async function compressImage(file: File, index: number): Promise<File> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader()
+    reader.readAsDataURL(file)
+    reader.onload = (e) => {
+      const img = new Image()
+      img.src = e.target?.result as string
+      img.onload = () => {
+        const canvas = document.createElement(`canvas`)
+        const ctx = canvas.getContext(`2d`)!
+
+        // OCR最佳实践：宽度1920px足够识别文字，保持宽高比
+        const maxWidth = 1920
+        let width = img.width
+        let height = img.height
+
+        // 如果图片宽度大于maxWidth，按比例缩放
+        if (width > maxWidth) {
+          height = (height * maxWidth) / width
+          width = maxWidth
+        }
+
+        canvas.width = width
+        canvas.height = height
+
+        // 使用高质量缩放算法
+        ctx.imageSmoothingEnabled = true
+        ctx.imageSmoothingQuality = `high`
+        ctx.drawImage(img, 0, 0, width, height)
+
+        // 转为JPEG格式，质量0.85（对OCR文字识别影响很小，但能大幅减小文件大小）
+        canvas.toBlob(
+          (blob) => {
+            if (blob) {
+              // 使用序号命名：image-1.jpg, image-2.jpg, ...
+              const compressedFile = new File(
+                [blob],
+                `image-${index}.jpg`,
+                { type: `image/jpeg` },
+              )
+
+              // 计算压缩比例
+              const originalSizeKB = (file.size / 1024).toFixed(2)
+              const compressedSizeKB = (compressedFile.size / 1024).toFixed(2)
+              const ratio = ((1 - compressedFile.size / file.size) * 100).toFixed(1)
+
+              console.log(`图片${index}压缩: ${file.name} → image-${index}.jpg`)
+              console.log(`  原始大小: ${originalSizeKB} KB`)
+              console.log(`  压缩后: ${compressedSizeKB} KB`)
+              console.log(`  压缩率: ${ratio}%`)
+
+              resolve(compressedFile)
+            }
+            else {
+              reject(new Error(`图片压缩失败`))
+            }
+          },
+          `image/jpeg`,
+          0.85, // JPEG质量：0.85对文字识别足够，同时大幅减小文件
+        )
+      }
+      img.onerror = () => reject(new Error(`图片加载失败`))
+    }
+    reader.onerror = () => reject(new Error(`图片读取失败`))
+  })
+}
+
+// 执行OCR识别
+async function performOCR(material: ImageMaterial) {
+  // 获取在数组中的索引
+  const arrayIndex = imageMaterials.value.findIndex(m => m.id === material.id)
+  if (arrayIndex === -1) {
+    return
+  }
+
+  try {
+    // 先压缩图片（使用序号，从1开始）
+    const compressedFile = await compressImage(material.file, arrayIndex + 1)
+
+    const formData = new FormData()
+    formData.append(`images`, compressedFile)
+
+    const API_URL = import.meta.env.DEV
+      ? `/api/image/ocr`
+      : `https://api.xingke888.com/api/image/ocr`
+    const API_KEY = `0dbe66d87befa7a9d5d7c1bdbc631a9b7dc5ce88be9a20e41c26790060802647`
+
+    const response = await fetch(API_URL, {
+      method: `POST`,
+      headers: {
+        'X-API-Key': API_KEY,
+      },
+      body: formData,
+    })
+
+    if (!response.ok) {
+      throw new Error(`OCR请求失败 (${response.status})`)
+    }
+
+    const data = await response.json()
+
+    if (data.success && data.data?.results && data.data.results.length > 0) {
+      const result = data.data.results[0] // 每次只上传一张图片，取第一个结果
+      if (result.success && result.text) {
+        // 通过索引直接更新数组中的元素，确保响应式更新
+        imageMaterials.value[arrayIndex].ocrText = result.text
+        imageMaterials.value[arrayIndex].error = null
+        showCustomToast(`${material.file.name} OCR识别完成 (${result.textCount}行文字)`)
+      }
+      else {
+        throw new Error(`图片识别失败`)
+      }
+    }
+    else {
+      throw new Error(data.message || `OCR返回数据异常`)
+    }
+  }
+  catch (error) {
+    console.error(`OCR识别失败:`, error)
+    // 通过索引直接更新数组中的元素
+    imageMaterials.value[arrayIndex].error = error instanceof Error ? error.message : `识别失败`
+    showCustomToast(`${material.file.name} OCR识别失败`)
+  }
+  finally {
+    // 通过索引直接更新数组中的元素，确保响应式更新
+    imageMaterials.value[arrayIndex].isProcessing = false
+  }
+}
+
+// 移除图片素材
+function removeImageMaterial(id: string) {
+  const index = imageMaterials.value.findIndex(m => m.id === id)
+  if (index !== -1) {
+    imageMaterials.value.splice(index, 1)
+  }
+}
+
+// 清空所有图片素材
+function clearAllImageMaterials() {
+  imageMaterials.value = []
 }
 
 // 暴露方法给父组件
@@ -480,6 +697,10 @@ async function sendMessage() {
   const replyMessage: ChatMessage = { role: `assistant`, content: ``, reasoning: ``, done: false }
   messages.value.push(replyMessage)
   const replyMessageProxy = messages.value[messages.value.length - 1]
+
+  // 自动折叠上下文区域，为聊天内容腾出更多空间
+  contextSectionCollapsed.value = true
+
   await scrollToBottom(true)
 
   /* 组装上下文 */
@@ -513,6 +734,19 @@ async function sendMessage() {
     quoteMessages.push({
       role: `user`,
       content: `请以此为上下文参考：\n\n${quotedContent.value.trim()}`,
+    })
+  }
+
+  // 如果有图片素材的OCR结果，添加到上下文
+  const ocrResults = imageMaterials.value
+    .filter(m => m.ocrText && !m.isProcessing && !m.error)
+    .map((m, index) => `图片${index + 1}（${m.file.name}）的文字内容：\n${m.ocrText}`)
+    .join(`\n\n`)
+
+  if (ocrResults) {
+    quoteMessages.push({
+      role: `user`,
+      content: `以下是图片素材中识别的文字内容，请作为参考：\n\n${ocrResults}`,
     })
   }
 
@@ -647,12 +881,12 @@ async function sendMessage() {
 <template>
   <Dialog v-model:open="dialogVisible">
     <DialogContent
-      class="bg-card text-card-foreground h-[98dvh] max-h-[98dvh] w-[98%] flex flex-col rounded-lg shadow-xl sm:max-h-[80vh] sm:max-w-2xl sm:rounded-xl"
+      class="bg-card text-card-foreground h-[98dvh] max-h-[98dvh] w-[98%] flex flex-col rounded-lg p-3 shadow-xl sm:max-h-[80vh] sm:max-w-2xl sm:rounded-xl sm:p-6"
     >
       <!-- ============ 头部 ============ -->
-      <DialogHeader class="space-y-3 flex flex-col items-start">
+      <DialogHeader class="space-y-3 flex flex-col items-start pr-10">
         <div class="w-full flex items-center justify-between">
-          <DialogTitle>AI助手</DialogTitle>
+          <DialogTitle>AI写作助手</DialogTitle>
 
           <div class="flex items-center gap-1">
             <Button
@@ -713,7 +947,7 @@ async function sendMessage() {
 
       <!-- ============ 快捷指令 ============ -->
       <div
-        v-if="!configVisible"
+        v-if="false"
         class="mb-1 mt-3 flex flex-wrap gap-2 overflow-x-auto pb-1"
       >
         <template v-if="quickCmdStore.commands.length">
@@ -756,101 +990,237 @@ async function sendMessage() {
         @saved="handleConfigSaved"
       />
 
-      <!-- ============ 上下文选择按钮 ============ -->
-      <div v-if="!configVisible" class="mb-3 flex flex-wrap items-center gap-2">
-        <!-- 选择上下文标签 -->
-        <span class="ml-1 text-xs text-gray-700 font-medium dark:text-gray-300">引文:</span>
-        <Button
-          size="sm"
-          variant="outline"
-          class="h-5 flex items-center gap-0.5 rounded px-2 py-0.5 text-xs transition-colors duration-150"
-          :style="quotedContent.trim() ? { backgroundColor: '#000000', color: '#ffffff', borderColor: '#000000' } : {}"
-          aria-label="选取的上下文"
-          :disabled="!quotedContent.trim()"
-          @click="quotedContent.trim() && clearQuotedContent()"
-        >
-          <Check v-if="quotedContent.trim()" class="h-2.5 w-2.5" />
-          <span>鼠标选取</span>
-        </Button>
-
-        <!-- 引用光标前作为上下文按钮 -->
-        <Button
-          size="sm"
-          variant="outline"
-          class="h-5 flex items-center gap-0.5 rounded px-2 py-0.5 text-xs transition-colors duration-150"
-          :style="isQuoteCursorBefore ? { backgroundColor: '#000000', color: '#ffffff', borderColor: '#000000' } : {}"
-          aria-label="引用光标前作为上下文"
-          @click="() => { console.log('点击光标前，当前状态:', isQuoteCursorBefore); quoteCursorBefore(); nextTick(() => console.log('点击光标前后，新状态:', isQuoteCursorBefore)); }"
-        >
-          <Check v-if="isQuoteCursorBefore" class="h-2.5 w-2.5" />
-          <span>光标前全文</span>
-        </Button>
-
-        <!-- 写光标中间部分按钮 -->
-        <Button
-          size="sm"
-          variant="outline"
-          class="h-5 flex items-center gap-0.5 rounded px-2 py-0.5 text-xs transition-colors duration-150"
-          :style="isQuoteCursorMiddle ? { backgroundColor: '#000000', color: '#ffffff', borderColor: '#000000' } : {}"
-          aria-label="写光标中间部分"
-          @click="() => { console.log('点击光标中间，当前状态:', isQuoteCursorMiddle); quoteCursorMiddle(); nextTick(() => console.log('点击光标中间后，新状态:', isQuoteCursorMiddle)); }"
-        >
-          <Check v-if="isQuoteCursorMiddle" class="h-2.5 w-2.5" />
-          <span>光标前后</span>
-        </Button>
-
-        <!-- 引用全文按钮 -->
-        <Button
-          size="sm"
-          variant="outline"
-          class="h-5 flex items-center gap-0.5 rounded px-2 py-0.5 text-xs transition-colors duration-150"
-          :style="isQuoteAllContent ? { backgroundColor: '#000000', color: '#ffffff', borderColor: '#000000' } : {}"
-          aria-label="引用全文作为上下文"
-          @click="() => { console.log('点击全文，当前状态:', isQuoteAllContent); quoteAllContent(); nextTick(() => console.log('点击全文后，新状态:', isQuoteAllContent)); }"
-        >
-          <Check v-if="isQuoteAllContent" class="h-2.5 w-2.5" />
-          <span>全文</span>
-        </Button>
-      </div>
-
-      <!-- ============ 引用的内容 ============ -->
-      <div
-        v-if="!configVisible && (quotedContent || (isQuoteCursorBefore && getCursorBeforeContent().trim()) || isQuoteAllContent || (isQuoteCursorMiddle && getCursorBeforeContent().trim() && getCursorAfterContent().trim()))"
-        class="relative mb-1 border rounded-lg p-3"
-        :class="isQuoteCursorBefore ? 'bg-green-50 dark:bg-green-900/20' : 'bg-gray-50 dark:bg-gray-800/50'"
-      >
-        <div class="mb-2 pr-20 text-sm text-gray-700 font-semibold dark:text-gray-300">
-          {{
-            isQuoteCursorBefore ? '光标前全文'
-            : isQuoteAllContent ? '全文'
-              : isQuoteCursorMiddle ? '光标前后上下文'
-                : '选取的上下文'
-          }}
-        </div>
-
-        <!-- 清除引用按钮 - 右上角 -->
-        <Button
-          variant="ghost"
-          size="sm"
-          class="absolute right-2 top-2 h-6 px-2 text-xs hover:bg-gray-200 dark:hover:bg-gray-700"
-          title="清除引用"
-          aria-label="清除引用"
-          @click="clearQuotedContent"
-        >
-          <X class="mr-1 h-3 w-3" />
-          清除选取的上下文
-        </Button>
-
+      <!-- ============ 上下文区域 ============ -->
+      <div v-if="!configVisible" class="from-blue-50/50 to-gray-50/50 bg-gradient-to-b dark:from-blue-900/10 dark:to-gray-800/30 border-1 border-blue-400 rounded-md dark:border-blue-600">
+        <!-- 上下文标题栏（折叠控制） -->
         <div
-          class="custom-scroll max-h-16 overflow-y-auto whitespace-pre-wrap text-sm text-gray-600 dark:text-gray-400"
+          class="flex cursor-pointer items-center justify-between border-b bg-blue-100/40 px-3 py-2 transition-colors dark:border-gray-600 dark:bg-blue-900/20 hover:bg-blue-100/60 dark:hover:bg-blue-900/30"
+          :class="contextSectionCollapsed ? 'border-transparent' : ''"
+          @click="contextSectionCollapsed = !contextSectionCollapsed"
         >
-          {{
-            isQuoteCursorBefore ? getCursorBeforeContent()
-            : isQuoteAllContent ? (editor?.getValue() || '')
-              : isQuoteCursorMiddle ? `前文：${getCursorBeforeContent()}\n\n后文：${getCursorAfterContent()}`
-                : quotedContent
-          }}
+          <div class="flex items-center gap-2">
+            <span class="text-xs text-gray-700 font-semibold dark:text-gray-300">上下文</span>
+            <ChevronDown v-if="contextSectionCollapsed" class="h-3.5 w-3.5 text-gray-500" />
+            <ChevronUp v-else class="h-3.5 w-3.5 text-gray-500" />
+          </div>
+
+          <!-- 折叠状态摘要 -->
+          <div v-if="contextSectionCollapsed" class="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
+            <template v-if="imageMaterials.length > 0 || quotedContent.trim() || isQuoteAllContent || isQuoteCursorBefore || isQuoteCursorMiddle">
+              <span v-if="imageMaterials.filter(m => m.ocrText && !m.error).length > 0" class="rounded bg-blue-100 px-1.5 py-0.5 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300">
+                {{ imageMaterials.filter(m => m.ocrText && !m.error).length }}张图片
+              </span>
+              <span v-if="quotedContent.trim() || isQuoteAllContent || isQuoteCursorBefore || isQuoteCursorMiddle" class="rounded bg-green-100 px-1.5 py-0.5 text-green-700 dark:bg-green-900/30 dark:text-green-300">
+                已选引文
+              </span>
+            </template>
+            <span v-else class="text-gray-400 dark:text-gray-500">无上下文</span>
+          </div>
         </div>
+
+        <!-- 上下文内容区域（可折叠） -->
+        <Transition name="context-collapse">
+          <div v-show="!contextSectionCollapsed" class="space-y-2 bg-white/40 p-2 dark:bg-gray-900/20">
+            <!-- ============ 引文选择按钮 ============ -->
+            <div class="flex flex-wrap items-center gap-2 rounded-lg bg-white/60 p-1.5 dark:bg-gray-800/40">
+              <!-- 选择上下文标签 -->
+              <span class="text-xs text-gray-700 font-semibold dark:text-gray-300">引用:</span>
+              <Button
+                size="sm"
+                variant="outline"
+                class="h-5 flex items-center gap-0.5 rounded px-1 py-0.5 text-xs transition-colors duration-150"
+                :style="quotedContent.trim() ? { backgroundColor: '#000000', color: '#ffffff', borderColor: '#000000' } : {}"
+                aria-label="选取的上下文"
+                :disabled="!quotedContent.trim()"
+                @click="quotedContent.trim() && clearQuotedContent()"
+              >
+                <Check v-if="quotedContent.trim()" class="h-2.5 w-2.5" />
+                <span>鼠标选取</span>
+              </Button>
+
+              <!-- 引用光标前作为上下文按钮 -->
+              <Button
+                size="sm"
+                variant="outline"
+                class="h-5 flex items-center gap-0.5 rounded px-2 py-0.5 text-xs transition-colors duration-150"
+                :style="isQuoteCursorBefore ? { backgroundColor: '#000000', color: '#ffffff', borderColor: '#000000' } : {}"
+                aria-label="引用光标前作为上下文"
+                @click="() => { console.log('点击光标前，当前状态:', isQuoteCursorBefore); quoteCursorBefore(); nextTick(() => console.log('点击光标前后，新状态:', isQuoteCursorBefore)); }"
+              >
+                <Check v-if="isQuoteCursorBefore" class="h-2.5 w-2.5" />
+                <span>光标前全文</span>
+              </Button>
+
+              <!-- 写光标中间部分按钮 -->
+              <Button
+                size="sm"
+                variant="outline"
+                class="h-5 flex items-center gap-0.5 rounded px-2 py-0.5 text-xs transition-colors duration-150"
+                :style="isQuoteCursorMiddle ? { backgroundColor: '#000000', color: '#ffffff', borderColor: '#000000' } : {}"
+                aria-label="写光标中间部分"
+                @click="() => { console.log('点击光标中间，当前状态:', isQuoteCursorMiddle); quoteCursorMiddle(); nextTick(() => console.log('点击光标中间后，新状态:', isQuoteCursorMiddle)); }"
+              >
+                <Check v-if="isQuoteCursorMiddle" class="h-2.5 w-2.5" />
+                <span>光标前后</span>
+              </Button>
+
+              <!-- 引用全文按钮 -->
+              <Button
+                size="sm"
+                variant="outline"
+                class="h-5 flex items-center gap-0.5 rounded px-2 py-0.5 text-xs transition-colors duration-150"
+                :style="isQuoteAllContent ? { backgroundColor: '#000000', color: '#ffffff', borderColor: '#000000' } : {}"
+                aria-label="引用全文作为上下文"
+                @click="() => { console.log('点击全文，当前状态:', isQuoteAllContent); quoteAllContent(); nextTick(() => console.log('点击全文后，新状态:', isQuoteAllContent)); }"
+              >
+                <Check v-if="isQuoteAllContent" class="h-2.5 w-2.5" />
+                <span>全文</span>
+              </Button>
+            </div>
+
+            <!-- ============ 引用的内容 ============ -->
+            <div
+              v-if="quotedContent || (isQuoteCursorBefore && getCursorBeforeContent().trim()) || isQuoteAllContent || (isQuoteCursorMiddle && getCursorBeforeContent().trim() && getCursorAfterContent().trim())"
+              class="relative border-1 border-green-300 rounded-sm bg-green-50/80 p-2 shadow-sm dark:border-green-700 dark:bg-green-900/30"
+            >
+              <div class="mb-2 pr-20 text-sm text-gray-700 font-semibold dark:text-gray-300">
+                {{
+                  isQuoteCursorBefore ? '光标前全文'
+                  : isQuoteAllContent ? '全文'
+                    : isQuoteCursorMiddle ? '光标前后上下文'
+                      : '选取的上下文'
+                }}
+              </div>
+
+              <!-- 清除引用按钮 - 右上角 -->
+              <Button
+                variant="ghost"
+                size="sm"
+                class="absolute right-2 top-2 h-6 px-2 text-xs hover:bg-gray-200 dark:hover:bg-gray-700"
+                title="清除引用"
+                aria-label="清除引用"
+                @click="clearQuotedContent"
+              >
+                <X class="mr-1 h-3 w-3" />
+                清除
+              </Button>
+
+              <div
+                class="custom-scroll max-h-10 overflow-y-auto whitespace-pre-wrap text-sm text-gray-600 dark:text-gray-400"
+              >
+                {{
+                  isQuoteCursorBefore ? getCursorBeforeContent()
+                  : isQuoteAllContent ? (editor?.getValue() || '')
+                    : isQuoteCursorMiddle ? `前文：${getCursorBeforeContent()}\n\n后文：${getCursorAfterContent()}`
+                      : quotedContent
+                }}
+              </div>
+            </div>
+
+            <!-- ============ 图片素材区域 ============ -->
+            <div class="rounded-lg bg-white/60 p-1.5 dark:bg-gray-800/40">
+              <div class="mb-2 flex items-center justify-between">
+                <span class="text-xs text-gray-700 font-semibold dark:text-gray-300">图片素材:</span>
+                <div class="flex items-center gap-2">
+                  <Button
+                    v-if="imageMaterials.length > 0"
+                    size="sm"
+                    variant="ghost"
+                    class="h-5 px-2 text-xs text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300"
+                    @click="clearAllImageMaterials"
+                  >
+                    <X class="mr-1 h-3 w-3" />
+                    清空图片
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    class="h-5 px-2 text-xs"
+                    @click="selectImageMaterial"
+                  >
+                    <ImagePlus class="mr-1 h-3 w-3" />
+                    添加图片素材
+                  </Button>
+                </div>
+              </div>
+
+              <!-- 图片素材列表 -->
+              <div v-if="imageMaterials.length > 0" class="space-y-2">
+                <div
+                  v-for="material in imageMaterials"
+                  :key="material.id"
+                  class="relative border border-gray-200 rounded-lg bg-white p-1.5 shadow-sm dark:border-gray-700 dark:bg-gray-900/70"
+                >
+                  <div class="flex items-start gap-2">
+                    <!-- 图片预览 -->
+                    <div class="relative h-16 w-16 flex-shrink-0 overflow-hidden border rounded bg-white dark:bg-gray-700">
+                      <img
+                        :src="material.preview"
+                        :alt="material.file.name"
+                        class="object-cover h-full w-full"
+                      >
+                      <!-- 处理中遮罩 -->
+                      <div
+                        v-if="material.isProcessing"
+                        class="absolute inset-0 flex items-center justify-center bg-black/50"
+                      >
+                        <Loader2 class="animate-spin h-5 w-5 text-white" />
+                      </div>
+                      <!-- 错误遮罩 -->
+                      <div
+                        v-if="material.error"
+                        class="absolute inset-0 flex items-center justify-center bg-red-500/80"
+                      >
+                        <X class="h-5 w-5 text-white" />
+                      </div>
+                    </div>
+
+                    <!-- 文件信息和OCR结果 -->
+                    <div class="min-w-0 flex-1">
+                      <div class="mb-1 flex items-center justify-between">
+                        <div class="truncate text-xs text-gray-700 font-medium dark:text-gray-300">
+                          {{ material.file.name }}
+                        </div>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          class="h-5 w-5 flex-shrink-0 p-0.5"
+                          @click="removeImageMaterial(material.id)"
+                        >
+                          <X class="h-3 w-3" />
+                        </Button>
+                      </div>
+
+                      <!-- OCR状态 -->
+                      <div v-if="material.isProcessing" class="text-xs text-gray-500 dark:text-gray-400">
+                        正在识别文字...
+                      </div>
+                      <div v-else-if="material.error" class="text-xs text-red-600 dark:text-red-400">
+                        识别失败: {{ material.error }}
+                      </div>
+                      <div v-else-if="material.ocrText" class="text-xs text-gray-600 dark:text-gray-400">
+                        <div class="line-clamp-2">
+                          {{ material.ocrText }}
+                        </div>
+                      </div>
+                      <div v-else class="text-xs text-gray-500 dark:text-gray-400">
+                        无文字内容
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- 无图片提示 -->
+              <div
+                v-else
+                class="flex items-center gap-2 border-2 border-gray-300 rounded-md border-dashed bg-gray-50/50 px-2 py-1.5 text-xs text-gray-500 dark:border-gray-600 dark:bg-gray-800/30 dark:text-gray-400"
+              >
+                点击"添加图片素材"按钮上传图片，AI将自动识别图片中的文字作为对话参考
+              </div>
+            </div>
+          </div>
+        </Transition>
       </div>
 
       <!-- ============ 聊天内容 ============ -->
@@ -964,7 +1334,7 @@ async function sendMessage() {
       <!-- ============ 输入框 ============ -->
       <div v-if="!configVisible" class="relative mt-2">
         <div
-          class="bg-background border-border item-start flex flex-col items-baseline gap-2 border rounded-xl px-3 py-2 pr-12 shadow-inner"
+          class="item-start from-blue-50 to-white bg-gradient-to-br dark:from-blue-950/30 dark:to-gray-900 flex flex-col items-baseline gap-2 border-1 border-blue-300 rounded-md px-3 py-2 pr-12 shadow-lg transition-all duration-200 dark:border-blue-700 focus-within:border-blue-500 focus-within:shadow-sm focus-within:ring-1 focus-within:ring-blue-300/50 dark:focus-within:border-blue-500 dark:focus-within:ring-blue-700/50"
         >
           <Textarea
             v-model="input"
@@ -978,7 +1348,7 @@ async function sendMessage() {
           <Button
             :disabled="!input.trim() && !loading"
             size="icon"
-            class="hover:bg-primary/90 bg-primary text-primary-foreground absolute bottom-3 right-3 rounded-full disabled:opacity-40"
+            class="bg-primary text-primary-foreground hover:bg-primary/90 absolute bottom-3 right-3 rounded-full disabled:opacity-40"
             :aria-label="loading ? '暂停' : '发送'"
             @click="loading ? pauseStreaming() : sendMessage()"
           >
@@ -1002,6 +1372,16 @@ async function sendMessage() {
 
   <!-- 海报制作对话框 -->
   <PosterGeneratorDialog v-model:open="posterDialogVisible" />
+
+  <!-- Hidden file input for image material selection -->
+  <input
+    ref="imageFileInput"
+    type="file"
+    accept="image/*"
+    multiple
+    class="hidden"
+    @change="handleImageSelect"
+  >
 </template>
 
 <style scoped>
@@ -1095,5 +1475,26 @@ async function sendMessage() {
 .bg-card textarea,
 .bg-card input {
   user-select: text;
+}
+
+/* 上下文区域折叠动画 */
+.context-collapse-enter-active,
+.context-collapse-leave-active {
+  transition: all 0.3s ease-in-out;
+  overflow: hidden;
+}
+
+.context-collapse-enter-from,
+.context-collapse-leave-to {
+  max-height: 0;
+  opacity: 0;
+  transform: translateY(-10px);
+}
+
+.context-collapse-enter-to,
+.context-collapse-leave-from {
+  max-height: 1000px;
+  opacity: 1;
+  transform: translateY(0);
 }
 </style>
