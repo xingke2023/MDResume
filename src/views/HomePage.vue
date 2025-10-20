@@ -20,7 +20,7 @@ const currentLang = ref<Language>(`zh-CN`)
 // 语言内容
 const translations = {
   'zh-CN': {
-    siteTitle: `保险文案快速制作及发布系统`,
+    siteTitle: ``,
     badge: `✨ 为香港保险中介人量身打造`,
     heroTitle1: `公众号文案制作`,
     heroTitle2: `及发布利器`,
@@ -61,7 +61,7 @@ const translations = {
     ],
   },
   'zh-TW': {
-    siteTitle: `保險文案快速製作及發佈系統`,
+    siteTitle: ``,
     badge: `✨ 為香港保險中介人量身打造`,
     heroTitle1: `公眾號文案製作`,
     heroTitle2: `及發佈利器`,
@@ -102,7 +102,7 @@ const translations = {
     ],
   },
   'en': {
-    siteTitle: `Insurance Content Creation & Publishing System`,
+    siteTitle: ``,
     badge: `✨ Tailored for Hong Kong Insurance Intermediaries`,
     heroTitle1: `Official Account Content`,
     heroTitle2: `Creation & Publishing Tool`,
