@@ -282,7 +282,7 @@ const featureGradients = [
     </section>
 
     <!-- 功能特性区域 -->
-    <section class="relative rounded-t-[2rem] bg-white px-4 py-12 sm:rounded-t-[4rem] lg:px-8 lg:py-24 sm:px-6 sm:py-20">
+    <section class="relative rounded-t-[2rem] bg-white px-6 py-12 sm:rounded-t-[4rem] lg:px-8 lg:py-24 sm:px-6 sm:py-20">
       <div class="mx-auto max-w-7xl">
         <div class="mb-10 text-center sm:mb-16">
           <h3 class="mb-3 text-2xl text-gray-900 font-bold sm:mb-4 lg:text-5xl md:text-4xl sm:text-3xl">
