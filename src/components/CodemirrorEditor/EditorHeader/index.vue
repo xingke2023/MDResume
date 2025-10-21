@@ -4,6 +4,7 @@ import {
   Bold,
   BookOpen,
   Calendar,
+  Camera,
   ChartPie,
   Code,
   CreditCard,
@@ -36,6 +37,7 @@ import BeautifyDialog from '@/components/ai/BeautifyDialog.vue'
 import IndustryHotspotDialog from '@/components/ai/IndustryHotspotDialog.vue'
 import NanoBananaDialog from '@/components/ai/NanoBananaDialog.vue'
 import PosterGeneratorDialog from '@/components/ai/PosterGeneratorDialog.vue'
+import ScreenshotWritingDialog from '@/components/ai/ScreenshotWritingDialog.vue'
 import WritingPlanDialog from '@/components/ai/WritingPlanDialog.vue'
 import { ctrlKey, themeOptions } from '@/config'
 import { useDisplayStore, useStore } from '@/stores'
@@ -711,6 +713,14 @@ function showNanoBananaDialog() {
   nanoBananaDialogVisible.value = true
 }
 
+// 截图写作状态
+const screenshotWritingDialogVisible = ref(false)
+
+// 显示截图写作对话框
+function showScreenshotWritingDialog() {
+  screenshotWritingDialogVisible.value = true
+}
+
 // 发布到公众号状态
 const publishDialogVisible = ref(false)
 const showMpConfigDialog = ref(false)
@@ -1357,6 +1367,15 @@ function handleMobileEditButtonClick() {
                 </span>
               </span>
             </DropdownMenuItem>
+            <DropdownMenuItem class="py-3 text-base" @click="showScreenshotWritingDialog()">
+              <Camera class="mr-2 size-5" />
+              <span class="flex items-center gap-2">
+                截图写作
+                <span class="rounded-full bg-red-500 px-1.5 py-0.5 text-[10px] text-white font-semibold">
+                  NEW
+                </span>
+              </span>
+            </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
 
@@ -1780,6 +1799,9 @@ function handleMobileEditButtonClick() {
 
   <!-- Nano Banana 对话框 -->
   <NanoBananaDialog v-model:visible="nanoBananaDialogVisible" />
+
+  <!-- 截图写作对话框 -->
+  <ScreenshotWritingDialog v-model:visible="screenshotWritingDialogVisible" />
 </template>
 
 <style lang="less" scoped>

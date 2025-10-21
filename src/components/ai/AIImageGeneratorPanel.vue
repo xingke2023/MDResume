@@ -1,11 +1,17 @@
 <script setup lang="ts">
 import {
+  Camera,
   Copy,
   Download,
+  Gem,
   Image as ImageIcon,
+  ImagePlus,
   Loader2,
+  Palette,
   RefreshCcw,
+  Send,
   Settings,
+  Sparkles,
   Trash2,
 } from 'lucide-vue-next'
 import { storeToRefs } from 'pinia'
@@ -28,9 +34,98 @@ import AIImageConfig from './AIImageConfig.vue'
 const props = defineProps<{ open: boolean }>()
 const emit = defineEmits([`update:open`])
 
+/* ---------- Tab 管理 ---------- */
+const activeTab = ref<'screenshot' | 'poster' | 'nano' | 'text2img'>('text2img')
+
 /* ---------- 编辑器引用 ---------- */
 const store = useStore()
 const { editor } = storeToRefs(store)
+
+/* ---------- Tab 1: 截图写作 - 数据 ---------- */
+const screenshotInstruction = ref('')
+const screenshotImageFiles = ref<File[]>([])
+const screenshotImagePreviews = ref<string[]>([])
+const screenshotIsProcessing = ref(false)
+const screenshotFileInput = ref<HTMLInputElement | null>(null)
+
+/* ---------- Tab 2: 海报制作 - 数据 ---------- */
+const posterSelectedStyle = ref<string>(`cartoon`)
+const posterPrompt = ref<string>(``)
+const posterLoading = ref(false)
+const posterLoadingProgress = ref(0)
+const posterGeneratedImages = ref<string[]>([])
+const posterImagePrompts = ref<string[]>([])
+const posterImageTimestamps = ref<number[]>([])
+const posterAbortController = ref<AbortController | null>(null)
+const posterCurrentImageIndex = ref(0)
+
+// 海报风格模板
+interface StyleTemplate {
+  id: string
+  name: string
+  emoji: string
+  description: string
+  template: string
+  placeholder: string
+}
+
+const styleTemplates: StyleTemplate[] = [
+  {
+    id: `cartoon`,
+    name: `卡通风格`,
+    emoji: `🎨`,
+    description: `可爱活泼的卡通插画风格`,
+    template: `卡通风格海报，可爱活泼，色彩鲜艳，{content}，扁平化设计，矢量插画风格`,
+    placeholder: `输入海报主题，如：夏日促销活动`,
+  },
+  {
+    id: `realistic`,
+    name: `写实风格`,
+    emoji: `📷`,
+    description: `高清真实的摄影级效果`,
+    template: `写实风格海报，高清摄影，真实质感，{content}，专业摄影级别，光影细腻`,
+    placeholder: `输入海报主题，如：咖啡店开业`,
+  },
+  {
+    id: `minimalist`,
+    name: `极简风格`,
+    emoji: `⚪`,
+    description: `简约现代的设计风格`,
+    template: `极简风格海报，简约现代，留白设计，{content}，几何元素，高级感`,
+    placeholder: `输入海报主题，如：产品发布会`,
+  },
+  {
+    id: `vintage`,
+    name: `复古风格`,
+    emoji: `📻`,
+    description: `怀旧复古的艺术风格`,
+    template: `复古风格海报，怀旧质感，复古色调，{content}，老式海报设计，年代感`,
+    placeholder: `输入海报主题，如：音乐节活动`,
+  },
+  {
+    id: `tech`,
+    name: `科技风格`,
+    emoji: `🚀`,
+    description: `未来感十足的科技风`,
+    template: `科技风格海报，未来感，科技元素，{content}，蓝色调，数字化设计，科幻感`,
+    placeholder: `输入海报主题，如：AI新品发布`,
+  },
+  {
+    id: `chinese`,
+    name: `中国风`,
+    emoji: `🏮`,
+    description: `传统典雅的中式风格`,
+    template: `中国风海报，传统元素，水墨画风格，{content}，典雅大气，中式美学`,
+    placeholder: `输入海报主题，如：茶文化展览`,
+  },
+]
+
+/* ---------- Tab 3: Nano Banana (图片制作) - 数据 ---------- */
+const nanoPrompt = ref('')
+const nanoImageFiles = ref<File[]>([])
+const nanoImagePreviews = ref<string[]>([])
+const nanoIsProcessing = ref(false)
+const nanoFileInput = ref<HTMLInputElement | null>(null)
 
 /* ---------- 弹窗开关 ---------- */
 const dialogVisible = ref(props.open)
@@ -915,20 +1010,760 @@ function getTimeRemainingClass(index: number): string {
     return `text-green-600`
   }
 }
+
+/* ---------- Tab 1: 截图写作 - 函数 ---------- */
+// 选择图片
+function selectScreenshotImage() {
+  screenshotFileInput.value?.click()
+}
+
+// 处理图片选择（支持多选）
+function handleScreenshotImageChange(event: Event) {
+  const input = event.target as HTMLInputElement
+  const files = input.files
+
+  if (!files || files.length === 0) {
+    return
+  }
+
+  // 检查图片数量限制
+  const remainingSlots = 6 - screenshotImageFiles.value.length
+  if (remainingSlots <= 0) {
+    toast.error(`最多只能上传 6 张图片`)
+    input.value = ``
+    return
+  }
+
+  // 验证并添加每个文件
+  let addedCount = 0
+  Array.from(files).forEach((file) => {
+    // 检查是否超过限制
+    if (addedCount >= remainingSlots) {
+      return
+    }
+
+    // 验证文件类型
+    if (!file.type.startsWith(`image/`)) {
+      toast.error(`${file.name} 不是图片文件`)
+      return
+    }
+
+    // 验证文件大小（限制10MB）
+    if (file.size > 10 * 1024 * 1024) {
+      toast.error(`${file.name} 大小超过10MB`)
+      return
+    }
+
+    // 添加文件
+    screenshotImageFiles.value.push(file)
+    addedCount++
+
+    // 生成预览
+    const reader = new FileReader()
+    reader.onload = (e) => {
+      screenshotImagePreviews.value.push(e.target?.result as string)
+    }
+    reader.onerror = () => {
+      toast.error(`读取 ${file.name} 失败`)
+    }
+    reader.readAsDataURL(file)
+  })
+
+  // 如果有文件因数量限制未添加，提示用户
+  if (files.length > remainingSlots) {
+    toast.warning(`已添加 ${addedCount} 张图片，最多只能上传 6 张`)
+  }
+
+  // 清空input，允许重复选择同一文件
+  input.value = ``
+}
+
+// 移除指定索引的图片
+function removeScreenshotImage(index: number) {
+  screenshotImageFiles.value.splice(index, 1)
+  screenshotImagePreviews.value.splice(index, 1)
+}
+
+// 压缩图片（针对OCR优化）
+async function compressScreenshotImage(file: File, index: number): Promise<File> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader()
+    reader.readAsDataURL(file)
+    reader.onload = (e) => {
+      const img = new Image()
+      img.src = e.target?.result as string
+      img.onload = () => {
+        const canvas = document.createElement(`canvas`)
+        const ctx = canvas.getContext(`2d`)!
+
+        // OCR最佳实践：宽度1920px足够识别文字，保持宽高比
+        const maxWidth = 1920
+        let width = img.width
+        let height = img.height
+
+        // 如果图片宽度大于maxWidth，按比例缩放
+        if (width > maxWidth) {
+          height = (height * maxWidth) / width
+          width = maxWidth
+        }
+
+        canvas.width = width
+        canvas.height = height
+
+        // 使用高质量缩放算法
+        ctx.imageSmoothingEnabled = true
+        ctx.imageSmoothingQuality = `high`
+        ctx.drawImage(img, 0, 0, width, height)
+
+        // 转为JPEG格式，质量0.85
+        canvas.toBlob(
+          (blob) => {
+            if (blob) {
+              const compressedFile = new File(
+                [blob],
+                `image-${index}.jpg`,
+                { type: `image/jpeg` },
+              )
+              resolve(compressedFile)
+            }
+            else {
+              reject(new Error(`图片压缩失败`))
+            }
+          },
+          `image/jpeg`,
+          0.85,
+        )
+      }
+      img.onerror = () => reject(new Error(`图片加载失败`))
+    }
+    reader.onerror = () => reject(new Error(`图片读取失败`))
+  })
+}
+
+// 发送请求
+async function handleScreenshotSubmit() {
+  if (screenshotImageFiles.value.length === 0) {
+    toast.error(`请至少上传一张图片`)
+    return
+  }
+
+  if (!screenshotInstruction.value.trim()) {
+    toast.error(`请输入写作要求`)
+    return
+  }
+
+  screenshotIsProcessing.value = true
+
+  try {
+    // 压缩所有图片
+    toast.loading(`正在压缩图片...`, { id: `compress-images` })
+    const compressedFiles = await Promise.all(
+      screenshotImageFiles.value.map((file, index) => compressScreenshotImage(file, index + 1)),
+    )
+    toast.dismiss(`compress-images`)
+    toast.success(`图片压缩完成，开始生成文稿...`)
+
+    // 构建 FormData
+    const formData = new FormData()
+    formData.append(`instruction`, screenshotInstruction.value.trim())
+
+    // 添加压缩后的图片到 FormData
+    compressedFiles.forEach((file) => {
+      formData.append(`images`, file)
+    })
+
+    // 构建请求
+    const API_URL = import.meta.env.DEV
+      ? `/api/image/generate-article`
+      : `https://api.xingke888.com/api/image/generate-article`
+    const API_KEY = `0dbe66d87befa7a9d5d7c1bdbc631a9b7dc5ce88be9a20e41c26790060802647`
+
+    const headers: Record<string, string> = {
+      'X-API-Key': API_KEY,
+    }
+
+    const response = await fetch(API_URL, {
+      method: `POST`,
+      headers,
+      body: formData,
+    })
+
+    if (!response.ok) {
+      const errorText = await response.text()
+      console.error(`AI接口错误详情:`, errorText)
+      throw new Error(`AI 接口请求失败 (${response.status}): ${response.statusText}`)
+    }
+
+    const data = await response.json()
+
+    if (!data.success) {
+      throw new Error(data.message || `截图写作处理失败`)
+    }
+
+    const article = data.data?.article || data.article
+
+    if (!article) {
+      console.error(`AI响应数据:`, data)
+      throw new Error(`未返回文稿内容`)
+    }
+
+    // 显示成功并插入文稿
+    toast.success(`截图写作完成！文稿已插入编辑器`)
+    console.log(`生成的文稿:`, article)
+
+    // 将文稿插入到编辑器
+    await insertArticleToEditor(article)
+
+    // 清空表单
+    screenshotInstruction.value = ``
+    screenshotImageFiles.value = []
+    screenshotImagePreviews.value = []
+  }
+  catch (error) {
+    console.error(`截图写作处理失败:`, error)
+
+    let errorMessage = `处理失败`
+    const errorMsg = error instanceof Error ? error.message : String(error)
+    if (errorMsg.includes(`Failed to fetch`) || errorMsg.includes(`CORS`) || errorMsg.includes(`cross-origin`)) {
+      errorMessage = `CORS跨域错误：请确保AI接口支持跨域访问，或使用代理服务`
+    }
+    else if (errorMsg.includes(`401`)) {
+      errorMessage = `API密钥验证失败，请检查密钥配置`
+    }
+    else if (errorMsg.includes(`429`)) {
+      errorMessage = `API调用频率超限，请稍后重试`
+    }
+    else if (errorMsg.includes(`403`)) {
+      errorMessage = `API访问被拒绝，请检查密钥权限`
+    }
+    else if (errorMsg.includes(`404`)) {
+      errorMessage = `API接口地址错误，请检查endpoint配置`
+    }
+    else {
+      errorMessage = `处理失败: ${errorMsg}`
+    }
+
+    toast.error(errorMessage)
+  }
+  finally {
+    screenshotIsProcessing.value = false
+  }
+}
+
+// 插入文稿到编辑器
+async function insertArticleToEditor(article: string) {
+  if (!editor.value) {
+    console.warn(`编辑器未初始化`)
+    toast.error(`编辑器未初始化`)
+    return
+  }
+
+  try {
+    // 获取当前光标位置并插入
+    const cursor = editor.value.getCursor()
+
+    // 在光标位置插入文稿内容
+    editor.value.replaceRange(`\n${article}\n`, cursor)
+
+    // 将光标移动到插入内容后面
+    const lines = article.split(`\n`)
+    const newCursor = {
+      line: cursor.line + lines.length + 1,
+      ch: 0,
+    }
+    editor.value.setCursor(newCursor)
+
+    // 聚焦编辑器
+    editor.value.focus()
+
+    toast.success(`文稿已插入编辑器`)
+    console.log(`✅ 文稿已成功插入到编辑器`)
+  }
+  catch (error) {
+    const errorMsg = (error as Error).message || `插入文稿失败`
+    toast.error(errorMsg)
+    console.error(`❌ 插入文稿到编辑器失败:`, error)
+  }
+}
+
+/* ---------- Tab 2: 海报制作 - 函数 ---------- */
+// 选择风格
+function selectPosterStyle(styleId: string) {
+  posterSelectedStyle.value = styleId
+  posterPrompt.value = ``
+}
+
+// 构建完整提示词
+function buildPosterFullPrompt(userInput: string): string {
+  if (!posterSelectedStyle.value) {
+    return userInput
+  }
+
+  const style = styleTemplates.find(s => s.id === posterSelectedStyle.value)
+  if (!style) {
+    return userInput
+  }
+
+  return style.template.replace(`{content}`, userInput)
+}
+
+// 轮询任务状态
+async function pollPosterTaskStatus(taskId: string): Promise<string | null> {
+  const maxAttempts = 60
+  const pollInterval = 2000
+
+  for (let attempt = 0; attempt < maxAttempts; attempt++) {
+    try {
+      if (posterAbortController.value?.signal.aborted) {
+        throw new Error(`任务已取消`)
+      }
+
+      const queryUrl = `https://api.xingke888.com/extract/api/query_task_simple?task_id=${taskId}`
+      const queryRes = await window.fetch(queryUrl, {
+        method: `GET`,
+        signal: posterAbortController.value?.signal,
+      })
+
+      if (!queryRes.ok) {
+        throw new Error(`查询任务状态失败: ${queryRes.status}`)
+      }
+
+      const queryData = await queryRes.json()
+
+      if (!queryData.success) {
+        throw new Error(queryData.error || `查询任务失败`)
+      }
+
+      if (queryData.status === `succeeded` && queryData.images && queryData.images.length > 0) {
+        posterLoadingProgress.value = 100
+        return queryData.images[0]
+      }
+      else if (queryData.status === `failed`) {
+        throw new Error(queryData.message || `海报生成失败`)
+      }
+      else if (queryData.status === `running` || queryData.status === `processing`) {
+        const progress = Math.round((queryData.progress || 0) * 100)
+        posterLoadingProgress.value = progress
+        await new Promise(resolve => setTimeout(resolve, pollInterval))
+        continue
+      }
+    }
+    catch (e) {
+      if ((e as Error).name === `AbortError`) {
+        throw e
+      }
+      if (attempt === maxAttempts - 1) {
+        throw e
+      }
+      await new Promise(resolve => setTimeout(resolve, pollInterval))
+    }
+  }
+
+  throw new Error(`任务超时，请稍后重试`)
+}
+
+// 生成海报
+async function generatePoster() {
+  if (!posterPrompt.value.trim() || posterLoading.value)
+    return
+
+  const userInput = posterPrompt.value.trim()
+  const currentPrompt = buildPosterFullPrompt(userInput)
+
+  posterLoading.value = true
+  posterLoadingProgress.value = 0
+  posterAbortController.value = new AbortController()
+
+  try {
+    const url = `https://api.xingke888.com/extract/api/generate_image`
+
+    const res = await window.fetch(url, {
+      method: `POST`,
+      headers: { 'Content-Type': `application/json` },
+      body: JSON.stringify({ prompt: currentPrompt }),
+      signal: posterAbortController.value.signal,
+    })
+
+    if (!res.ok) {
+      throw new Error(`${res.status}: ${await res.text()}`)
+    }
+
+    const data = await res.json()
+
+    if (!data.success || !data.task_id) {
+      throw new Error(data.message || `任务提交失败`)
+    }
+
+    const imageUrl = await pollPosterTaskStatus(data.task_id)
+
+    if (imageUrl) {
+      const currentTimestamp = Date.now()
+      posterGeneratedImages.value.unshift(imageUrl)
+      posterImagePrompts.value.unshift(currentPrompt)
+      posterImageTimestamps.value.unshift(currentTimestamp)
+      posterCurrentImageIndex.value = 0
+
+      if (posterGeneratedImages.value.length > 20) {
+        posterGeneratedImages.value = posterGeneratedImages.value.slice(0, 20)
+        posterImagePrompts.value = posterImagePrompts.value.slice(0, 20)
+        posterImageTimestamps.value = posterImageTimestamps.value.slice(0, 20)
+      }
+
+      localStorage.setItem(`poster_generated_images`, JSON.stringify(posterGeneratedImages.value))
+      localStorage.setItem(`poster_image_prompts`, JSON.stringify(posterImagePrompts.value))
+      localStorage.setItem(`poster_image_timestamps`, JSON.stringify(posterImageTimestamps.value))
+
+      posterPrompt.value = ``
+      toast.success(`海报生成成功！`)
+    }
+  }
+  catch (e) {
+    if ((e as Error).name === `AbortError`) {
+      toast.info(`生成已取消`)
+    }
+    else {
+      toast.error(`生成失败: ${(e as Error).message}`)
+    }
+  }
+  finally {
+    posterLoading.value = false
+    posterAbortController.value = null
+  }
+}
+
+// 取消生成
+function cancelPosterGeneration() {
+  if (posterAbortController.value) {
+    posterAbortController.value.abort()
+    posterAbortController.value = null
+  }
+  posterLoading.value = false
+}
+
+// 清空海报
+function clearPosters() {
+  posterGeneratedImages.value = []
+  posterImagePrompts.value = []
+  posterImageTimestamps.value = []
+  posterCurrentImageIndex.value = 0
+  localStorage.removeItem(`poster_generated_images`)
+  localStorage.removeItem(`poster_image_prompts`)
+  localStorage.removeItem(`poster_image_timestamps`)
+  toast.success(`已清空所有海报`)
+}
+
+// 下载海报
+async function downloadPoster(imageUrl: string, index: number) {
+  try {
+    const relatedPrompt = posterImagePrompts.value[index] || ``
+    const promptPart = relatedPrompt.substring(0, 20).replace(/[^\w\s-]/g, ``).replace(/\s+/g, `-`)
+    const filename = `poster-${index + 1}-${promptPart || `no-prompt`}.png`
+
+    const a = document.createElement(`a`)
+    a.href = imageUrl
+    a.download = filename
+    a.target = `_blank`
+    document.body.appendChild(a)
+    a.click()
+    document.body.removeChild(a)
+
+    toast.success(`已触发下载`)
+  }
+  catch (error) {
+    toast.error(`下载失败: ${(error as Error).message}`)
+  }
+}
+
+// 插入海报到编辑器
+async function insertPosterToEditor(imageUrl: string) {
+  if (!editor.value) {
+    toast.error(`编辑器未初始化`)
+    return
+  }
+
+  try {
+    toast.loading(`正在处理图片插入...`, { id: `upload-poster-image` })
+
+    const uploadResponse = await fetch(`https://api.xingke888.com/api/media/upload-image-url`, {
+      method: `POST`,
+      headers: {
+        'Content-Type': `application/json`,
+        'X-API-Key': `0dbe66d87befa7a9d5d7c1bdbc631a9b7dc5ce88be9a20e41c26790060802647`,
+      },
+      body: JSON.stringify({ imageUrl }),
+    })
+
+    if (!uploadResponse.ok) {
+      throw new Error(`上传失败: ${uploadResponse.status}`)
+    }
+
+    const data = await uploadResponse.json()
+
+    if (!data.data || !data.data.url) {
+      throw new Error(`上传成功但未返回图片URL`)
+    }
+
+    const finalImageUrl = data.data.url
+    toast.dismiss(`upload-poster-image`)
+
+    const imagePrompt = posterImagePrompts.value[posterCurrentImageIndex.value] || ``
+    const altText = imagePrompt.trim()
+      ? imagePrompt.trim().substring(0, 30).replace(/\n/g, ` `)
+      : `AI生成的海报`
+
+    const markdownImage = `![${altText}](${finalImageUrl})`
+    const cursor = editor.value.getCursor()
+    editor.value.replaceRange(markdownImage, cursor)
+
+    const newCursor = { line: cursor.line, ch: cursor.ch + markdownImage.length }
+    editor.value.setCursor(newCursor)
+    editor.value.focus()
+
+    toast.success(`海报已上传并插入`)
+  }
+  catch (error) {
+    toast.dismiss(`upload-poster-image`)
+    toast.error((error as Error).message || `插入图片失败`)
+  }
+}
+
+// 切换海报
+function previousPoster() {
+  if (posterCurrentImageIndex.value > 0) {
+    posterCurrentImageIndex.value--
+  }
+}
+
+function nextPoster() {
+  if (posterCurrentImageIndex.value < posterGeneratedImages.value.length - 1) {
+    posterCurrentImageIndex.value++
+  }
+}
+
+/* ---------- Tab 3: Nano Banana - 函数 ---------- */
+// 选择图片
+function selectNanoImage() {
+  nanoFileInput.value?.click()
+}
+
+// 处理图片选择（支持多选）
+function handleNanoImageChange(event: Event) {
+  const input = event.target as HTMLInputElement
+  const files = input.files
+
+  if (!files || files.length === 0) {
+    return
+  }
+
+  // 检查图片数量限制
+  const remainingSlots = 3 - nanoImageFiles.value.length
+  if (remainingSlots <= 0) {
+    toast.error(`最多只能上传 3 张图片`)
+    input.value = ``
+    return
+  }
+
+  // 验证并添加每个文件
+  let addedCount = 0
+  Array.from(files).forEach((file) => {
+    // 检查是否超过限制
+    if (addedCount >= remainingSlots) {
+      return
+    }
+
+    // 验证文件类型
+    if (!file.type.startsWith(`image/`)) {
+      toast.error(`${file.name} 不是图片文件`)
+      return
+    }
+
+    // 验证文件大小（限制10MB）
+    if (file.size > 10 * 1024 * 1024) {
+      toast.error(`${file.name} 大小超过10MB`)
+      return
+    }
+
+    // 添加文件
+    nanoImageFiles.value.push(file)
+    addedCount++
+
+    // 生成预览
+    const reader = new FileReader()
+    reader.onload = (e) => {
+      nanoImagePreviews.value.push(e.target?.result as string)
+    }
+    reader.onerror = () => {
+      toast.error(`读取 ${file.name} 失败`)
+    }
+    reader.readAsDataURL(file)
+  })
+
+  // 如果有文件因数量限制未添加，提示用户
+  if (files.length > remainingSlots) {
+    toast.warning(`已添加 ${addedCount} 张图片，最多只能上传 3 张`)
+  }
+
+  // 清空input，允许重复选择同一文件
+  input.value = ``
+}
+
+// 移除指定索引的图片
+function removeNanoImage(index: number) {
+  nanoImageFiles.value.splice(index, 1)
+  nanoImagePreviews.value.splice(index, 1)
+}
+
+// 发送请求
+async function handleNanoSubmit() {
+  if (!nanoPrompt.value.trim()) {
+    toast.error(`请输入提示词`)
+    return
+  }
+
+  nanoIsProcessing.value = true
+
+  try {
+    // 构建 FormData
+    const formData = new FormData()
+    formData.append(`prompt`, nanoPrompt.value.trim())
+
+    // 如果有图片，添加到 FormData（支持多张）
+    if (nanoImageFiles.value.length > 0) {
+      nanoImageFiles.value.forEach((file) => {
+        formData.append(`images`, file)
+      })
+    }
+
+    // 构建请求
+    // 开发环境使用代理，生产环境使用完整 URL
+    const API_URL = import.meta.env.DEV
+      ? `/api/image/generate-wechat`
+      : `https://api.xingke888.com/api/image/generate-wechat`
+    const API_KEY = `0dbe66d87befa7a9d5d7c1bdbc631a9b7dc5ce88be9a20e41c26790060802647`
+
+    const headers: Record<string, string> = {
+      'X-API-Key': API_KEY,
+      // 不设置 Content-Type，让浏览器自动设置 multipart/form-data 的 boundary
+    }
+
+    const response = await fetch(API_URL, {
+      method: `POST`,
+      headers,
+      body: formData,
+    })
+
+    if (!response.ok) {
+      const errorText = await response.text()
+      console.error(`AI接口错误详情:`, errorText)
+      throw new Error(`AI 接口请求失败 (${response.status}): ${response.statusText}`)
+    }
+
+    const data = await response.json()
+
+    if (!data.success) {
+      throw new Error(data.message || `Nano Banana 处理失败`)
+    }
+
+    const wechatUrl = data.data?.wechatImageUrl
+
+    if (!wechatUrl) {
+      console.error(`AI响应数据:`, data)
+      throw new Error(`未返回微信图片URL`)
+    }
+
+    // 显示成功并插入图片
+    toast.success(`Nano Banana 处理完成！`)
+    console.log(`微信图片URL:`, wechatUrl)
+
+    // 将图片插入到编辑器
+    await insertNanoImageToEditor(wechatUrl, data.data?.prompt || nanoPrompt.value)
+
+    // 清空表单
+    nanoPrompt.value = ``
+    nanoImageFiles.value = []
+    nanoImagePreviews.value = []
+  }
+  catch (error) {
+    console.error(`Nano Banana 处理失败:`, error)
+
+    let errorMessage = `处理失败`
+    const errorMsg = error instanceof Error ? error.message : String(error)
+    if (errorMsg.includes(`Failed to fetch`) || errorMsg.includes(`CORS`) || errorMsg.includes(`cross-origin`)) {
+      errorMessage = `CORS跨域错误：请确保AI接口支持跨域访问，或使用代理服务`
+    }
+    else if (errorMsg.includes(`401`)) {
+      errorMessage = `API密钥验证失败，请检查密钥配置`
+    }
+    else if (errorMsg.includes(`429`)) {
+      errorMessage = `API调用频率超限，请稍后重试`
+    }
+    else if (errorMsg.includes(`403`)) {
+      errorMessage = `API访问被拒绝，请检查密钥权限`
+    }
+    else if (errorMsg.includes(`404`)) {
+      errorMessage = `API接口地址错误，请检查endpoint配置`
+    }
+    else {
+      errorMessage = `处理失败: ${errorMsg}`
+    }
+
+    toast.error(errorMessage)
+  }
+  finally {
+    nanoIsProcessing.value = false
+  }
+}
+
+// 插入图片到编辑器
+async function insertNanoImageToEditor(imageUrl: string, imagePrompt: string) {
+  if (!editor.value) {
+    console.warn(`编辑器未初始化`)
+    toast.error(`编辑器未初始化`)
+    return
+  }
+
+  try {
+    // 生成简洁的alt文本
+    const altText = imagePrompt.trim()
+      ? imagePrompt.trim().substring(0, 30).replace(/\n/g, ` `)
+      : `Nano Banana 生成的图片`
+
+    // 生成Markdown图片语法
+    const markdownImage = `![${altText}](${imageUrl})`
+
+    // 获取当前光标位置并插入
+    const cursor = editor.value.getCursor()
+    editor.value.replaceRange(markdownImage, cursor)
+
+    // 将光标移动到插入内容后面
+    const newCursor = { line: cursor.line, ch: cursor.ch + markdownImage.length }
+    editor.value.setCursor(newCursor)
+
+    // 聚焦编辑器
+    editor.value.focus()
+
+    toast.success(`图片已插入编辑器`)
+    console.log(`✅ 图片已成功插入到编辑器`)
+  }
+  catch (error) {
+    const errorMsg = (error as Error).message || `插入图片失败`
+    toast.error(errorMsg)
+    console.error(`❌ 插入图片到编辑器失败:`, error)
+  }
+}
 </script>
 
 <template>
   <Dialog v-model:open="dialogVisible">
     <DialogContent
-      class="bg-card text-card-foreground z-[70] h-auto max-h-[90vh] w-[95vw] flex flex-col overflow-y-auto sm:max-h-[85vh] sm:max-w-4xl"
+      class="bg-card text-card-foreground z-[70] h-[100vh] w-[98vw] flex flex-col overflow-y-auto p-3 sm:max-w-4xl"
     >
       <!-- ============ 头部 ============ -->
-      <DialogHeader class="space-y-1 flex flex-col items-start">
-        <div class="w-full flex items-center justify-between">
-          <DialogTitle>AI 文生图</DialogTitle>
-
+      <DialogHeader class="space-y-3 flex flex-col items-start">
+        <div class="w-full flex items-center justify-end">
           <div class="flex items-center gap-1 pr-2">
             <Button
+              v-if="activeTab === 'text2img'"
               :title="configVisible ? 'AI 文生图' : '配置参数'"
               :aria-label="configVisible ? 'AI 文生图' : '配置参数'"
               variant="ghost"
@@ -941,6 +1776,7 @@ function getTimeRemainingClass(index: number): string {
             </Button>
 
             <Button
+              v-if="activeTab === 'text2img' && generatedImages.length > 0"
               title="清空图像"
               aria-label="清空图像"
               variant="ghost"
@@ -953,26 +1789,443 @@ function getTimeRemainingClass(index: number): string {
             </Button>
           </div>
         </div>
-        <p class="text-muted-foreground text-sm">
-          使用 AI 根据文字描述生成图像
-        </p>
+
+        <!-- Tab 导航 -->
+        <div class="w-full flex gap-1 overflow-x-auto rounded-lg bg-gray-100 p-1 dark:bg-gray-800">
+          <button
+            type="button"
+            class="flex-1 flex items-center justify-center gap-1.5 rounded-md px-3 py-2 text-sm font-medium transition-all whitespace-nowrap"
+            :class="[
+              activeTab === 'screenshot'
+                ? 'bg-white text-gray-900 shadow-sm dark:bg-gray-700 dark:text-gray-100'
+                : 'text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-200',
+            ]"
+            @click="activeTab = 'screenshot'"
+          >
+            <Camera class="h-4 w-4" />
+            <span>截图写作</span>
+          </button>
+
+          <button
+            type="button"
+            class="flex-1 flex items-center justify-center gap-1.5 rounded-md px-3 py-2 text-sm font-medium transition-all whitespace-nowrap"
+            :class="[
+              activeTab === 'poster'
+                ? 'bg-white text-gray-900 shadow-sm dark:bg-gray-700 dark:text-gray-100'
+                : 'text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-200',
+            ]"
+            @click="activeTab = 'poster'"
+          >
+            <Palette class="h-4 w-4" />
+            <span>海报制作</span>
+          </button>
+
+          <button
+            type="button"
+            class="flex-1 flex items-center justify-center gap-1.5 rounded-md px-3 py-2 text-sm font-medium transition-all whitespace-nowrap"
+            :class="[
+              activeTab === 'nano'
+                ? 'bg-white text-gray-900 shadow-sm dark:bg-gray-700 dark:text-gray-100'
+                : 'text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-200',
+            ]"
+            @click="activeTab = 'nano'"
+          >
+            <Gem class="h-4 w-4" />
+            <span>图片制作</span>
+          </button>
+
+          <button
+            type="button"
+            class="flex-1 flex items-center justify-center gap-1.5 rounded-md px-3 py-2 text-sm font-medium transition-all whitespace-nowrap"
+            :class="[
+              activeTab === 'text2img'
+                ? 'bg-white text-gray-900 shadow-sm dark:bg-gray-700 dark:text-gray-100'
+                : 'text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-200',
+            ]"
+            @click="activeTab = 'text2img'"
+          >
+            <Sparkles class="h-4 w-4" />
+            <span>AI文生图</span>
+          </button>
+        </div>
       </DialogHeader>
 
-      <!-- ============ 参数配置面板 ============ -->
-      <div
-        v-if="configVisible"
-        class="mb-4 h-[60vh] w-full flex flex-shrink-0 flex-col border rounded-md"
-      >
-        <div class="flex-1 overflow-y-auto p-4">
-          <AIImageConfig @saved="handleConfigSaved" />
+      <!-- ============ Tab 内容区域 ============ -->
+
+      <!-- Tab 1: 截图写作 -->
+      <div v-if="activeTab === 'screenshot'" class="space-y-4 flex flex-col flex-1 overflow-y-auto">
+        <!-- 介绍 -->
+        <div class="rounded-lg bg-gradient-to-r from-blue-50 to-cyan-50 p-4 dark:from-blue-950/40 dark:to-cyan-950/40">
+          <div class="flex items-center gap-2">
+            <Camera class="h-5 w-5 text-blue-600 dark:text-blue-400" />
+            <p class="text-sm text-blue-800 font-medium dark:text-blue-300">
+              上传截图，AI自动OCR识别文字并生成Markdown文稿
+            </p>
+          </div>
+        </div>
+
+        <!-- 写作要求输入 -->
+        <div class="space-y-2">
+          <label class="text-sm text-gray-700 font-medium dark:text-gray-300">
+            写作要求 <span class="text-red-500">*</span>
+          </label>
+          <div class="relative">
+            <textarea
+              v-model="screenshotInstruction"
+              rows="3"
+              placeholder="请输入写作要求，如：根据识别的文字整理成一篇结构化的文章..."
+              class="w-full resize-none border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-900 transition-colors dark:border-gray-600 focus:border-blue-500 dark:bg-gray-800 dark:text-gray-100 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:placeholder:text-gray-500"
+            />
+          </div>
+        </div>
+
+        <!-- 图片上传区域 -->
+        <div class="space-y-2">
+          <label class="text-sm text-gray-700 font-medium dark:text-gray-300">
+            上传截图 <span class="text-red-500">*</span> (最多6张)
+          </label>
+
+          <!-- 上传按钮 -->
+          <button
+            type="button"
+            :disabled="screenshotImageFiles.length >= 6"
+            class="w-full border-2 border-dashed border-gray-300 rounded-lg py-8 transition-colors disabled:cursor-not-allowed hover:border-blue-500 hover:bg-blue-50 dark:border-gray-600 disabled:opacity-50 dark:hover:border-blue-500 dark:hover:bg-blue-950/20"
+            @click="selectScreenshotImage"
+          >
+            <div class="flex flex-col items-center gap-2">
+              <ImagePlus class="h-8 w-8 text-gray-400" />
+              <p class="text-sm text-gray-600 dark:text-gray-400">
+                {{ screenshotImageFiles.length > 0 ? `已选择 ${screenshotImageFiles.length}/6 张图片` : '点击选择图片' }}
+              </p>
+            </div>
+          </button>
+
+          <!-- 图片预览列表 -->
+          <div v-if="screenshotImagePreviews.length > 0" class="grid grid-cols-3 gap-2 sm:grid-cols-4">
+            <div
+              v-for="(preview, index) in screenshotImagePreviews"
+              :key="index"
+              class="group relative aspect-square overflow-hidden border-2 border-gray-300 rounded-lg dark:border-gray-600"
+            >
+              <img
+                :src="preview"
+                :alt="`预览图片 ${index + 1}`"
+                class="object-cover h-full w-full"
+              >
+              <button
+                class="absolute right-1 top-1 rounded-full bg-red-500 p-1 text-white opacity-0 shadow-lg transition-opacity hover:bg-red-600 group-hover:opacity-100"
+                @click="removeScreenshotImage(index)"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                  <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" />
+                </svg>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- 提交按钮 -->
+        <div class="mt-auto pt-4">
+          <Button
+            class="bg-gradient-to-r from-blue-500 to-cyan-600 hover:from-blue-600 hover:to-cyan-700 w-full border-0 text-white"
+            :disabled="screenshotIsProcessing || !screenshotInstruction.trim() || screenshotImageFiles.length === 0"
+            @click="handleScreenshotSubmit"
+          >
+            <Send v-if="!screenshotIsProcessing" class="mr-2 h-4 w-4" />
+            <Loader2 v-if="screenshotIsProcessing" class="animate-spin mr-2 h-4 w-4" />
+            {{ screenshotIsProcessing ? '生成中...' : '开始生成文稿' }}
+          </Button>
+        </div>
+
+        <!-- 隐藏的文件选择输入框 -->
+        <input
+          ref="screenshotFileInput"
+          type="file"
+          accept="image/*"
+          multiple
+          class="hidden"
+          @change="handleScreenshotImageChange"
+        >
+      </div>
+
+      <!-- Tab 2: 海报制作 -->
+      <div v-if="activeTab === 'poster'" class="space-y-4 flex flex-col flex-1 overflow-y-auto">
+        <!-- 介绍 -->
+        <div class="rounded-lg bg-gradient-to-br from-pink-50 via-purple-50 to-blue-50 p-4 dark:from-pink-950/40 dark:via-purple-950/40 dark:to-blue-950/40">
+          <div class="flex items-center gap-2">
+            <Palette class="h-5 w-5 text-purple-600 dark:text-purple-400" />
+            <p class="text-sm text-purple-800 font-medium dark:text-purple-300">
+              选择风格，输入主题，AI为您生成专业海报
+            </p>
+          </div>
+        </div>
+
+        <!-- 风格选择 -->
+        <div class="space-y-3">
+          <div class="flex items-center gap-2">
+            <span class="text-sm text-gray-700 font-semibold dark:text-gray-300">选择海报风格</span>
+            <span v-if="posterSelectedStyle" class="text-xs text-purple-600 dark:text-purple-400">
+              (已选：{{ styleTemplates.find(s => s.id === posterSelectedStyle)?.name }})
+            </span>
+          </div>
+          <div class="grid grid-cols-2 gap-2 sm:grid-cols-3">
+            <button
+              v-for="style in styleTemplates"
+              :key="style.id"
+              type="button"
+              class="group relative overflow-hidden border-2 rounded-lg p-3 text-left transition-all duration-200"
+              :class="[
+                posterSelectedStyle === style.id
+                  ? 'border-purple-500 bg-purple-50 dark:border-purple-400 dark:bg-purple-950/30'
+                  : 'border-gray-200 bg-white hover:border-purple-300 dark:border-gray-700 dark:bg-gray-800 dark:hover:border-purple-600',
+              ]"
+              @click="selectPosterStyle(style.id)"
+            >
+              <!-- 选中标记 -->
+              <div
+                v-if="posterSelectedStyle === style.id"
+                class="absolute right-1 top-1 h-5 w-5 flex items-center justify-center rounded-full bg-purple-500 text-white"
+              >
+                <span class="text-xs">✓</span>
+              </div>
+
+              <div class="flex items-center gap-2">
+                <span class="text-2xl">{{ style.emoji }}</span>
+                <div class="min-w-0 flex-1">
+                  <p class="text-sm text-gray-800 font-semibold dark:text-gray-200">
+                    {{ style.name }}
+                  </p>
+                  <p class="text-xs text-gray-500 dark:text-gray-400">
+                    {{ style.description }}
+                  </p>
+                </div>
+              </div>
+            </button>
+          </div>
+        </div>
+
+        <!-- 生成的海报展示 -->
+        <div v-if="posterLoading || posterGeneratedImages.length > 0" class="space-y-4">
+          <div class="min-h-[250px] flex items-center justify-center rounded-lg bg-gray-50 sm:min-h-[300px] dark:bg-gray-800">
+            <!-- 加载中 -->
+            <div v-if="posterLoading" class="flex flex-col items-center gap-4">
+              <Loader2 class="animate-spin text-primary h-8 w-8" />
+              <div class="flex flex-col items-center gap-2">
+                <p class="text-muted-foreground text-sm">正在生成海报...</p>
+                <p v-if="posterLoadingProgress > 0" class="text-primary text-lg font-semibold">
+                  {{ posterLoadingProgress }}%
+                </p>
+              </div>
+              <Button variant="outline" size="sm" @click="cancelPosterGeneration">
+                取消生成
+              </Button>
+            </div>
+
+            <!-- 海报展示 -->
+            <div v-else-if="posterGeneratedImages.length > 0" class="space-y-3 w-full flex flex-col">
+              <!-- 导航 -->
+              <div v-if="posterGeneratedImages.length > 1" class="bg-muted/20 flex items-center justify-between rounded p-2">
+                <Button variant="outline" size="sm" :disabled="posterCurrentImageIndex <= 0" @click="previousPoster">
+                  上一张
+                </Button>
+                <span class="text-muted-foreground text-sm">
+                  {{ posterCurrentImageIndex + 1 }} / {{ posterGeneratedImages.length }}
+                </span>
+                <Button variant="outline" size="sm" :disabled="posterCurrentImageIndex >= posterGeneratedImages.length - 1" @click="nextPoster">
+                  下一张
+                </Button>
+              </div>
+
+              <!-- 海报图片 -->
+              <div class="flex items-center justify-center p-2 sm:p-4">
+                <div class="group relative max-w-sm w-full cursor-pointer" @click="viewFullImage(posterGeneratedImages[posterCurrentImageIndex])">
+                  <img
+                    :src="posterGeneratedImages[posterCurrentImageIndex]"
+                    :alt="`生成的海报 ${posterCurrentImageIndex + 1}`"
+                    class="border-border object-contain h-auto max-h-[300px] w-full border rounded-lg shadow-lg transition-transform sm:max-h-[350px] hover:scale-105"
+                  >
+                  <div class="pointer-events-none absolute inset-0 flex items-center justify-center rounded-lg bg-black/0 opacity-0 transition-opacity group-hover:bg-black/10 group-hover:opacity-100">
+                    <div class="rounded-md bg-black/70 px-3 py-1 text-sm text-white">
+                      点击查看大图
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- 海报操作按钮 -->
+              <div class="bg-muted/20 border-border flex flex-wrap justify-center gap-2 border-t rounded-b-lg p-2 sm:p-4">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  class="bg-background flex-shrink-0 text-xs sm:text-sm"
+                  @click="insertPosterToEditor(posterGeneratedImages[posterCurrentImageIndex])"
+                >
+                  <ImageIcon class="mr-1 h-3 w-3 sm:mr-2 sm:h-4 sm:w-4" />
+                  插入
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  class="bg-background flex-shrink-0 text-xs sm:text-sm"
+                  @click="downloadPoster(posterGeneratedImages[posterCurrentImageIndex], posterCurrentImageIndex)"
+                >
+                  <Download class="mr-1 h-3 w-3 sm:mr-2 sm:h-4 sm:w-4" />
+                  下载
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  class="bg-background flex-shrink-0 text-xs sm:text-sm"
+                  @click="clearPosters"
+                >
+                  <Trash2 class="mr-1 h-3 w-3 sm:mr-2 sm:h-4 sm:w-4" />
+                  清空
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 输入框 -->
+        <div class="relative mt-auto flex-shrink-0">
+          <div class="bg-background border-border flex flex-col items-baseline gap-2 border rounded-xl px-3 py-2 pr-12 shadow-inner">
+            <Textarea
+              v-model="posterPrompt"
+              :placeholder="posterSelectedStyle ? styleTemplates.find(s => s.id === posterSelectedStyle)?.placeholder || '描述你想要生成的海报...' : '请先选择一种海报风格，然后输入主题'"
+              rows="2"
+              class="custom-scroll min-h-16 w-full resize-none border-none bg-transparent p-0 focus-visible:outline-hidden focus:outline-hidden focus-visible:ring-0 focus:ring-0 focus-visible:ring-offset-0 focus:ring-offset-0 focus-visible:ring-transparent focus:ring-transparent"
+            />
+
+            <!-- 生成按钮 -->
+            <Button
+              :disabled="!posterSelectedStyle || (!posterPrompt.trim() && !posterLoading)"
+              size="icon"
+              :title="!posterSelectedStyle ? '请先选择风格' : (posterLoading ? '取消' : '生成')"
+              :class="[
+                'absolute bottom-3 right-3 rounded-full disabled:opacity-40',
+                'bg-primary hover:bg-primary/90 text-primary-foreground',
+              ]"
+              :aria-label="posterLoading ? '取消' : '生成'"
+              @click="posterLoading ? cancelPosterGeneration() : generatePoster()"
+            >
+              <Loader2 v-if="posterLoading" class="animate-spin h-4 w-4" />
+              <ImageIcon v-else class="h-4 w-4" />
+            </Button>
+          </div>
         </div>
       </div>
 
-      <!-- ============ 图像展示区域 ============ -->
-      <div
-        v-if="!configVisible && (loading || generatedImages.length > 0)"
-        class="space-y-4 flex flex-shrink-0 flex-col"
-      >
+      <!-- Tab 3: 图片制作 (Nano Banana) -->
+      <div v-if="activeTab === 'nano'" class="space-y-4 flex flex-col flex-1 overflow-y-auto">
+        <!-- 介绍 -->
+        <div class="rounded-lg bg-gradient-to-r from-purple-50 to-pink-50 p-4 dark:from-purple-950/40 dark:to-pink-950/40">
+          <div class="flex items-center gap-2">
+            <Gem class="h-5 w-5 text-purple-600 dark:text-purple-400" />
+            <p class="text-sm text-purple-800 font-medium dark:text-purple-300">
+              使用 Google 最新的图片模型，支持文本生图和图片理解分析
+            </p>
+          </div>
+        </div>
+
+        <!-- 提示词输入 -->
+        <div class="space-y-2">
+          <label class="text-sm text-gray-700 font-medium dark:text-gray-300">
+            提示词 <span class="text-red-500">*</span>
+          </label>
+          <div class="relative">
+            <textarea
+              v-model="nanoPrompt"
+              rows="4"
+              placeholder="请描述您想让 AI 对这张图片做什么分析或处理..."
+              class="w-full resize-none border border-gray-300 rounded-lg px-3 py-2 pb-10 text-sm text-gray-900 transition-colors dark:border-gray-600 focus:border-purple-500 dark:bg-gray-800 dark:text-gray-100 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500/20 dark:placeholder:text-gray-500"
+            />
+
+            <!-- 附件上传按钮 -->
+            <div class="absolute bottom-2 left-2 flex items-center gap-2">
+              <button
+                type="button"
+                :disabled="nanoImageFiles.length >= 3"
+                class="flex items-center gap-1 rounded px-2 py-1 text-xs text-gray-600 transition-colors disabled:cursor-not-allowed hover:bg-gray-100 dark:text-gray-400 disabled:opacity-50 dark:hover:bg-gray-700"
+                @click="selectNanoImage"
+              >
+                <ImagePlus class="h-4 w-4" />
+                <span>{{ nanoImageFiles.length > 0 ? `${nanoImageFiles.length}/3 张图片` : '添加图片' }}</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- 图片预览列表 -->
+          <div v-if="nanoImagePreviews.length > 0" class="flex flex-wrap gap-2">
+            <div
+              v-for="(preview, index) in nanoImagePreviews"
+              :key="index"
+              class="group relative h-16 w-16 overflow-hidden border-2 border-gray-300 rounded-lg dark:border-gray-600"
+            >
+              <img
+                :src="preview"
+                :alt="`预览图片 ${index + 1}`"
+                class="object-cover h-full w-full"
+              >
+              <button
+                class="absolute right-0.5 top-0.5 rounded-full bg-red-500 p-0.5 text-white opacity-0 shadow-lg transition-opacity hover:bg-red-600 group-hover:opacity-100"
+                @click="removeNanoImage(index)"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" viewBox="0 0 20 20" fill="currentColor">
+                  <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" />
+                </svg>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- 提示信息 -->
+        <div class="rounded-lg bg-purple-50 p-3 dark:bg-purple-900/20">
+          <p class="text-sm text-purple-800 dark:text-purple-300">
+            <span class="font-medium">💡 提示：</span>本工具支持纯文本生成图片，也支持上传图片进行理解、物体识别、场景分析等多种功能
+          </p>
+        </div>
+
+        <!-- 提交按钮 -->
+        <div class="mt-auto pt-4">
+          <Button
+            class="bg-gradient-to-r from-purple-500 to-pink-600 hover:from-purple-600 hover:to-pink-700 w-full border-0 text-white"
+            :disabled="nanoIsProcessing || !nanoPrompt.trim()"
+            @click="handleNanoSubmit"
+          >
+            <Send v-if="!nanoIsProcessing" class="mr-2 h-4 w-4" />
+            <Loader2 v-if="nanoIsProcessing" class="animate-spin mr-2 h-4 w-4" />
+            {{ nanoIsProcessing ? '处理中...' : '发送' }}
+          </Button>
+        </div>
+
+        <!-- 隐藏的文件选择输入框（支持多选） -->
+        <input
+          ref="nanoFileInput"
+          type="file"
+          accept="image/*"
+          multiple
+          class="hidden"
+          @change="handleNanoImageChange"
+        >
+      </div>
+
+      <!-- Tab 4: AI 文生图 (原有功能) -->
+      <div v-if="activeTab === 'text2img'" class="space-y-4 flex flex-col flex-1">
+        <!-- ============ 参数配置面板 ============ -->
+        <div
+          v-if="configVisible"
+          class="mb-4 h-[60vh] w-full flex flex-shrink-0 flex-col border rounded-md"
+        >
+          <div class="flex-1 overflow-y-auto p-4">
+            <AIImageConfig @saved="handleConfigSaved" />
+          </div>
+        </div>
+
+        <!-- ============ 图像展示区域 ============ -->
+        <div
+          v-if="!configVisible && (loading || generatedImages.length > 0)"
+          class="space-y-4 flex flex-shrink-0 flex-col"
+        >
         <!-- 图像显示 -->
         <div class="min-h-[250px] flex items-center justify-center rounded-lg bg-gray-50 sm:min-h-[300px] dark:bg-gray-800">
           <div v-if="loading" class="flex flex-col items-center gap-4">
@@ -1097,35 +2350,36 @@ function getTimeRemainingClass(index: number): string {
         </div>
       </div>
 
-      <!-- ============ 输入框 ============ -->
-      <div v-if="!configVisible" class="relative mt-auto flex-shrink-0">
-        <div
-          class="bg-background border-border flex flex-col items-baseline gap-2 border rounded-xl px-3 py-2 pr-12 shadow-inner"
-        >
-          <Textarea
-            v-model="prompt"
-            placeholder="描述你想要生成的图像... (Enter 生成，Shift+Enter 换行)"
-            rows="2"
-            class="custom-scroll min-h-16 w-full resize-none border-none bg-transparent p-0 focus-visible:outline-hidden focus:outline-hidden focus-visible:ring-0 focus:ring-0 focus-visible:ring-offset-0 focus:ring-offset-0 focus-visible:ring-transparent focus:ring-transparent"
-            @keydown="handleKeydown"
-          />
-
-          <!-- 生成按钮 -->
-          <Button
-            :disabled="!prompt.trim() && !loading"
-            size="icon"
-            :class="[
-              // eslint-disable-next-line vue/prefer-separate-static-class
-              'absolute bottom-3 right-3 rounded-full disabled:opacity-40',
-              // eslint-disable-next-line vue/prefer-separate-static-class
-              'bg-primary hover:bg-primary/90 text-primary-foreground',
-            ]"
-            :aria-label="loading ? '取消' : '生成'"
-            @click="loading ? cancelGeneration() : generateImage()"
+        <!-- ============ 输入框 ============ -->
+        <div v-if="!configVisible" class="relative mt-auto flex-shrink-0">
+          <div
+            class="bg-background border-border flex flex-col items-baseline gap-2 border rounded-xl px-3 py-2 pr-12 shadow-inner"
           >
-            <Loader2 v-if="loading" class="animate-spin h-4 w-4" />
-            <ImageIcon v-else class="h-4 w-4" />
-          </Button>
+            <Textarea
+              v-model="prompt"
+              placeholder="描述你想要生成的图像... (Enter 生成，Shift+Enter 换行)"
+              rows="2"
+              class="custom-scroll min-h-16 w-full resize-none border-none bg-transparent p-0 focus-visible:outline-hidden focus:outline-hidden focus-visible:ring-0 focus:ring-0 focus-visible:ring-offset-0 focus:ring-offset-0 focus-visible:ring-transparent focus:ring-transparent"
+              @keydown="handleKeydown"
+            />
+
+            <!-- 生成按钮 -->
+            <Button
+              :disabled="!prompt.trim() && !loading"
+              size="icon"
+              :class="[
+                // eslint-disable-next-line vue/prefer-separate-static-class
+                'absolute bottom-3 right-3 rounded-full disabled:opacity-40',
+                // eslint-disable-next-line vue/prefer-separate-static-class
+                'bg-primary hover:bg-primary/90 text-primary-foreground',
+              ]"
+              :aria-label="loading ? '取消' : '生成'"
+              @click="loading ? cancelGeneration() : generateImage()"
+            >
+              <Loader2 v-if="loading" class="animate-spin h-4 w-4" />
+              <ImageIcon v-else class="h-4 w-4" />
+            </Button>
+          </div>
         </div>
       </div>
     </DialogContent>
