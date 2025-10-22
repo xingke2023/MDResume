@@ -25,7 +25,7 @@ export default defineConfig({
         target: `https://api.xingke888.com`,
         changeOrigin: true,
         secure: false,
-        rewrite: (path) => path,
+        rewrite: path => path,
       },
     },
   },

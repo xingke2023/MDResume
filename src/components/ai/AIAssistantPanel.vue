@@ -8,6 +8,7 @@ import {
   Edit,
   ImagePlus,
   Loader2,
+  Maximize2,
   Pause,
   Plus,
   RefreshCcw,
@@ -90,6 +91,9 @@ const isQuoteCursorMiddle = ref(false)
 const cmdMgrOpen = ref(false)
 const quotedContent = ref(``)
 const contextSectionCollapsed = ref(false) // 上下文区域折叠状态
+const expandedViewVisible = ref(false) // 放大查看对话框
+const expandedViewContent = ref(``) // 放大查看的内容
+const expandedViewTitle = ref(``) // 放大查看的标题
 
 /* ---------- 图片素材管理 ---------- */
 interface ImageMaterial {
@@ -544,6 +548,54 @@ function quoteAllContent() {
   }
 }
 
+/* ---------- 过滤Markdown图片和链接 ---------- */
+// 过滤掉Markdown中的图片和链接，只保留纯文本
+function stripMarkdownImagesAndLinks(text: string): string {
+  let result = text
+  // 移除图片：![alt](url) -> 空
+  result = result.replace(/!\[([^\]]*)\]\([^)]*\)/g, ``)
+  // 移除链接：[text](url) -> text
+  result = result.replace(/\[([^\]]*)\]\([^)]*\)/g, `$1`)
+  // 将多行空行合并成一行空行（匹配3个或更多连续换行）
+  result = result.replace(/\n(?:\s*\n){2,}/g, `\n\n`)
+  return result
+}
+
+// 获取过滤后的全文内容（用于UI显示）
+function getFilteredFullContent(): string {
+  if (!editor.value)
+    return ``
+  const fullContent = editor.value.getValue()
+  return stripMarkdownImagesAndLinks(fullContent)
+}
+
+/* ---------- 放大查看功能 ---------- */
+function openExpandedView() {
+  // 根据当前激活的引用类型获取内容和标题
+  if (isQuoteCursorBefore.value) {
+    expandedViewTitle.value = `光标前全文`
+    expandedViewContent.value = getCursorBeforeContent()
+  }
+  else if (isQuoteAllContent.value) {
+    expandedViewTitle.value = `全文`
+    expandedViewContent.value = getFilteredFullContent()
+  }
+  else if (isQuoteCursorMiddle.value) {
+    expandedViewTitle.value = `光标前后上下文`
+    expandedViewContent.value = `前文：${getCursorBeforeContent()}\n\n后文：${getCursorAfterContent()}`
+  }
+  else {
+    expandedViewTitle.value = `选取的上下文`
+    expandedViewContent.value = quotedContent.value
+  }
+
+  expandedViewVisible.value = true
+}
+
+function closeExpandedView() {
+  expandedViewVisible.value = false
+}
+
 /* ---------- 引用光标前内容 ---------- */
 function quoteCursorBefore() {
   console.log(`quoteCursorBefore函数开始，当前值:`, isQuoteCursorBefore.value)
@@ -625,7 +677,9 @@ function getCursorBeforeContent(): string {
     const currentLine = lines[cursor.line] || ``
     const currentLineBefore = currentLine.substring(0, cursor.ch)
 
-    return [...beforeLines, currentLineBefore].join(`\n`).trim()
+    const rawContent = [...beforeLines, currentLineBefore].join(`\n`).trim()
+    // 过滤图片和链接
+    return stripMarkdownImagesAndLinks(rawContent)
   }
   catch (e) {
     console.warn(`获取光标前内容失败`, e)
@@ -658,7 +712,9 @@ function getCursorAfterContent(): string {
     // 获取光标后的所有行
     const afterLines = lines.slice(cursor.line + 1)
 
-    return [currentLineAfter, ...afterLines].join(`\n`).trim()
+    const rawContent = [currentLineAfter, ...afterLines].join(`\n`).trim()
+    // 过滤图片和链接
+    return stripMarkdownImagesAndLinks(rawContent)
   }
   catch (e) {
     console.warn(`获取光标后内容失败`, e)
@@ -752,9 +808,12 @@ async function sendMessage() {
 
   // 如果启用了引用全文，添加全文到上下文
   if (isQuoteAllContent.value) {
+    const fullContent = editor.value!.getValue()
+    // 过滤图片和链接
+    const filteredContent = stripMarkdownImagesAndLinks(fullContent)
     quoteMessages.push({
       role: `assistant`,
-      content: `\n\n${editor.value!.getValue()}`,
+      content: `\n\n${filteredContent}`,
     })
   }
 
@@ -999,7 +1058,7 @@ async function sendMessage() {
           @click="contextSectionCollapsed = !contextSectionCollapsed"
         >
           <div class="flex items-center gap-2">
-            <span class="text-xs text-gray-700 font-semibold dark:text-gray-300">上下文</span>
+            <span class="text-xs text-gray-700 font-semibold dark:text-gray-300">参考资料(写作参照上下文)</span>
             <ChevronDown v-if="contextSectionCollapsed" class="h-3.5 w-3.5 text-gray-500" />
             <ChevronUp v-else class="h-3.5 w-3.5 text-gray-500" />
           </div>
@@ -1022,9 +1081,9 @@ async function sendMessage() {
         <Transition name="context-collapse">
           <div v-show="!contextSectionCollapsed" class="space-y-2 bg-white/40 p-2 dark:bg-gray-900/20">
             <!-- ============ 引文选择按钮 ============ -->
-            <div class="flex flex-wrap items-center gap-2 rounded-lg bg-white/60 p-1.5 dark:bg-gray-800/40">
+            <div class="flex flex-wrap items-center gap-1 rounded-lg bg-white/60 p-1.5 dark:bg-gray-800/40">
               <!-- 选择上下文标签 -->
-              <span class="text-xs text-gray-700 font-semibold dark:text-gray-300">①引用:</span>
+              <span class="text-xs text-gray-700 font-semibold dark:text-gray-300"><span class="text-lg">①</span>引用:</span>
               <Button
                 size="sm"
                 variant="outline"
@@ -1080,7 +1139,7 @@ async function sendMessage() {
 
             <!-- ============ 引用的内容 ============ -->
             <div
-              v-if="quotedContent || (isQuoteCursorBefore && getCursorBeforeContent().trim()) || isQuoteAllContent || (isQuoteCursorMiddle && getCursorBeforeContent().trim() && getCursorAfterContent().trim())"
+              v-if="quotedContent || (isQuoteCursorBefore && getCursorBeforeContent().trim()) || (isQuoteAllContent && getFilteredFullContent().trim()) || (isQuoteCursorMiddle && getCursorBeforeContent().trim() && getCursorAfterContent().trim())"
               class="relative border-1 border-green-300 rounded-sm bg-green-50/80 p-2 shadow-sm dark:border-green-700 dark:bg-green-900/30"
             >
               <div class="mb-2 pr-20 text-sm text-gray-700 font-semibold dark:text-gray-300">
@@ -1092,25 +1151,40 @@ async function sendMessage() {
                 }}
               </div>
 
-              <!-- 清除引用按钮 - 右上角 -->
-              <Button
-                variant="ghost"
-                size="sm"
-                class="absolute right-2 top-2 h-6 px-2 text-xs hover:bg-gray-200 dark:hover:bg-gray-700"
-                title="清除引用"
-                aria-label="清除引用"
-                @click="clearQuotedContent"
-              >
-                <X class="mr-1 h-3 w-3" />
-                清除
-              </Button>
+              <!-- 操作按钮组 - 右上角 -->
+              <div class="absolute right-2 top-2 flex gap-1">
+                <!-- 放大查看按钮 -->
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  class="h-6 px-2 text-xs hover:bg-gray-200 dark:hover:bg-gray-700"
+                  title="放大查看"
+                  aria-label="放大查看"
+                  @click="openExpandedView"
+                >
+                  <Maximize2 class="mr-1 h-3 w-3" />
+                  放大
+                </Button>
+                <!-- 清除引用按钮 -->
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  class="h-6 px-2 text-xs hover:bg-gray-200 dark:hover:bg-gray-700"
+                  title="清除引用"
+                  aria-label="清除引用"
+                  @click="clearQuotedContent"
+                >
+                  <X class="mr-1 h-3 w-3" />
+                  清除
+                </Button>
+              </div>
 
               <div
                 class="custom-scroll max-h-10 overflow-y-auto whitespace-pre-wrap text-sm text-gray-600 dark:text-gray-400"
               >
                 {{
                   isQuoteCursorBefore ? getCursorBeforeContent()
-                  : isQuoteAllContent ? (editor?.getValue() || '')
+                  : isQuoteAllContent ? getFilteredFullContent()
                     : isQuoteCursorMiddle ? `前文：${getCursorBeforeContent()}\n\n后文：${getCursorAfterContent()}`
                       : quotedContent
                 }}
@@ -1120,7 +1194,7 @@ async function sendMessage() {
             <!-- ============ 图片素材区域 ============ -->
             <div class="rounded-lg bg-white/60 p-1.5 dark:bg-gray-800/40">
               <div class="mb-2 flex items-center justify-between">
-                <span class="text-xs text-gray-700 font-semibold dark:text-gray-300">②图片素材:</span>
+                <span class="text-xs text-gray-700 font-semibold dark:text-gray-300"><span class="text-lg">②</span>图片素材:</span>
                 <div class="flex items-center gap-2">
                   <Button
                     v-if="imageMaterials.length > 0"
@@ -1334,7 +1408,7 @@ async function sendMessage() {
       <!-- ============ 输入框 ============ -->
       <div v-if="!configVisible" class="relative mt-2">
         <div
-          class="from-blue-50 bg-gradient-to-br item-start to-white dark:from-blue-950/30 dark:to-gray-900 flex flex-col items-baseline gap-2 border-1 border-blue-300 rounded-md px-3 py-2 pr-12 shadow-lg transition-all duration-200 dark:border-blue-700 focus-within:border-blue-500 focus-within:shadow-sm focus-within:ring-1 focus-within:ring-blue-300/50 dark:focus-within:border-blue-500 dark:focus-within:ring-blue-700/50"
+          class="from-blue-50 item-start to-white bg-gradient-to-br dark:from-blue-950/30 dark:to-gray-900 flex flex-col items-baseline gap-2 border-1 border-blue-300 rounded-md px-3 py-2 pr-12 shadow-lg transition-all duration-200 dark:border-blue-700 focus-within:border-blue-500 focus-within:shadow-sm focus-within:ring-1 focus-within:ring-blue-300/50 dark:focus-within:border-blue-500 dark:focus-within:ring-blue-700/50"
         >
           <Textarea
             v-model="input"
@@ -1369,6 +1443,26 @@ async function sendMessage() {
       {{ customToastMessage }}
     </div>
   </Transition>
+
+  <!-- 放大查看对话框 -->
+  <Dialog v-model:open="expandedViewVisible">
+    <DialogContent class="h-[90vh] max-w-3xl w-[90vw] flex flex-col">
+      <DialogHeader>
+        <DialogTitle>{{ expandedViewTitle }}</DialogTitle>
+        <DialogDescription class="sr-only">
+          放大查看引用内容
+        </DialogDescription>
+      </DialogHeader>
+      <div class="custom-scroll flex-1 overflow-y-auto whitespace-pre-wrap border rounded-lg bg-gray-50 p-4 text-sm text-gray-800 dark:border-gray-700 dark:bg-gray-900/50 dark:text-gray-200">
+        {{ expandedViewContent }}
+      </div>
+      <div class="flex justify-end gap-2 pt-4">
+        <Button variant="outline" @click="closeExpandedView">
+          关闭
+        </Button>
+      </div>
+    </DialogContent>
+  </Dialog>
 
   <!-- 海报制作对话框 -->
   <PosterGeneratorDialog v-model:open="posterDialogVisible" />
