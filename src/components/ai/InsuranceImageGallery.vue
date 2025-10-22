@@ -8,11 +8,13 @@ import { useStore } from '@/stores'
 
 /* ---------- 数据类型定义 ---------- */
 interface GalleryImage {
-  id: string
+  id: number
   url: string
-  title: string
-  category: string
-  thumbnail?: string
+  basename: string
+  original_url: string | null
+  file_size: number
+  content_type: string
+  created_at: string
 }
 
 /* ---------- 组件事件 ---------- */
@@ -86,12 +88,19 @@ async function fetchImages(reset = false) {
       throw new Error(`Failed to fetch images: ${response.statusText}`)
     }
 
-    const data = await response.json()
+    const result = await response.json()
 
-    // 根据实际API返回格式调整
-    const newImages: GalleryImage[] = data.images || data.data || []
+    // 检查返回状态
+    if (!result.success) {
+      throw new Error(result.message || `获取图片失败`)
+    }
 
-    if (newImages.length < limit) {
+    // 解析数据
+    const newImages: GalleryImage[] = result.data?.images || []
+    const totalCount = result.data?.count || 0
+
+    // 判断是否还有更多数据
+    if (newImages.length < limit || galleryImages.value.length + newImages.length >= totalCount) {
       hasMore.value = false
     }
 
@@ -205,8 +214,8 @@ onMounted(() => {
           @click="insertImage(image.url)"
         >
           <img
-            :src="image.thumbnail || image.url"
-            :alt="image.title"
+            :src="image.url"
+            :alt="`${image.basename} 图片`"
             class="object-cover h-full w-full transition-transform group-hover:scale-105"
             loading="lazy"
           >
