@@ -25,7 +25,7 @@ export default defineStore(`AIImageConfig`, () => {
       set(val: string) {
         value = val
         // 为人工智能写作服务保存自定义 endpoint
-        if (type.value === 'aiwriting') {
+        if (type.value === `aiwriting`) {
           localStorage.setItem(`openai_image_endpoint_aiwriting`, val)
         }
         trigger()
@@ -57,7 +57,7 @@ export default defineStore(`AIImageConfig`, () => {
       const svc = imageServiceOptions.find(s => s.value === newType) ?? imageServiceOptions[0]
 
       // 更新端点 - 人工智能写作服务使用保存的自定义端点
-      if (newType === 'aiwriting') {
+      if (newType === `aiwriting`) {
         endpoint.value = localStorage.getItem(`openai_image_endpoint_aiwriting`) || svc.endpoint
       }
       else {

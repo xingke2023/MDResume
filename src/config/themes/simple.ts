@@ -170,7 +170,7 @@ export const simpleTheme: Theme = toMerged(defaultTheme, {
     },
 
     listitem_content: {
-      'flex': `1`,
+      flex: `1`,
     },
   },
 })

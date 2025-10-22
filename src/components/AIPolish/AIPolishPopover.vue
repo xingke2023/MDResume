@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import { nextTick, ref, toRaw, watch } from 'vue'
-import { storeToRefs } from 'pinia'
-import { toast } from 'vue-sonner'
 import { Pause, Settings, X } from 'lucide-vue-next'
+import { storeToRefs } from 'pinia'
+import { nextTick, ref, toRaw, watch } from 'vue'
+import { toast } from 'vue-sonner'
 import { Button } from '@/components/ui/button'
 import {
   Select,

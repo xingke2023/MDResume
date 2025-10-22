@@ -1,10 +1,10 @@
 <script setup lang="ts">
 import type { Editor } from 'codemirror'
 import type { ComponentPublicInstance } from 'vue'
-import { nextTick, onMounted, onUnmounted, ref, toRaw, useTemplateRef, watch } from 'vue'
-import { storeToRefs } from 'pinia'
-import { toast } from 'vue-sonner'
 import { fromTextArea } from 'codemirror'
+import { storeToRefs } from 'pinia'
+import { nextTick, onMounted, onUnmounted, ref, toRaw, useTemplateRef, watch } from 'vue'
+import { toast } from 'vue-sonner'
 import {
   AIPolishButton,
   AIPolishPopover,
@@ -121,7 +121,8 @@ function switchToEditorAndFocus() {
         }, 800)
       })
     })
-  } else {
+  }
+  else {
     // 如果是从预览模式切换过来，使用标准延迟聚焦
     nextTick(() => {
       setTimeout(() => {

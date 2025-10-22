@@ -165,7 +165,7 @@ const featureGradients = [
 </script>
 
 <template>
-  <div class="bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-500 min-h-screen overflow-x-hidden">
+  <div class="bg-gradient-to-br via-purple-600 from-indigo-600 to-pink-500 min-h-screen overflow-x-hidden">
     <!-- 顶部导航 - 带语言切换 -->
     <header class="absolute left-0 right-0 top-0 z-50">
       <div class="mx-auto max-w-7xl px-4 py-4 lg:px-8 lg:py-8 sm:px-6 sm:py-6">
@@ -236,7 +236,7 @@ const featureGradients = [
     <section class="relative px-4 pb-16 pt-28 lg:px-8 sm:px-6 lg:pb-32 lg:pt-48 sm:pb-24 sm:pt-40">
       <!-- 装饰性背景 -->
       <div class="pointer-events-none absolute inset-0 overflow-hidden">
-        <div class="mix-blend-multiply filter blur-3xl animate-blob absolute h-96 w-96 rounded-full bg-purple-400 opacity-30 -right-40 -top-40" />
+        <div class="filter blur-3xl animate-blob mix-blend-multiply absolute h-96 w-96 rounded-full bg-purple-400 opacity-30 -right-40 -top-40" />
         <div class="mix-blend-multiply filter blur-3xl animate-blob animation-delay-2000 absolute h-96 w-96 rounded-full bg-pink-400 opacity-30 -bottom-40 -left-40" />
         <div class="mix-blend-multiply filter blur-3xl animate-blob animation-delay-4000 absolute left-1/2 top-1/2 h-96 w-96 transform rounded-full bg-indigo-400 opacity-30 -translate-x-1/2 -translate-y-1/2" />
       </div>
@@ -248,7 +248,7 @@ const featureGradients = [
 
         <h2 class="animate-fade-in-up mb-6 text-3xl text-white font-extrabold leading-tight sm:mb-8 lg:text-7xl md:text-6xl sm:text-5xl xl:text-8xl">
           {{ t.heroTitle1 }}
-          <span class="bg-gradient-to-r from-yellow-200 to-pink-200 bg-clip-text mt-2 block text-transparent">
+          <span class="bg-gradient-to-r bg-clip-text from-yellow-200 to-pink-200 mt-2 block text-transparent">
             {{ t.heroTitle2 }}
           </span>
         </h2>

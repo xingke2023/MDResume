@@ -11,7 +11,7 @@ const emit = defineEmits<{
 }>()
 
 function closeDialog() {
-  emit('update:visible', false)
+  emit(`update:visible`, false)
 }
 </script>
 
@@ -23,11 +23,11 @@ function closeDialog() {
     @click="closeDialog"
   >
     <div
-      class="mx-4 h-[90vh] max-w-lg w-[90vw] flex scale-100 transform flex-col rounded-2xl bg-white shadow-2xl transition-all duration-300 dark:bg-gray-800"
+      class="mx-4 h-[90vh] max-w-lg w-[90vw] flex flex-col scale-100 transform rounded-2xl bg-white shadow-2xl transition-all duration-300 dark:bg-gray-800"
       @click.stop
     >
       <!-- 可滚动内容区 -->
-      <div class="scrollbar-hidden overflow-y-auto flex-1 p-6">
+      <div class="scrollbar-hidden flex-1 overflow-y-auto p-6">
         <!-- 标题图标 -->
         <div class="mb-4 flex items-center justify-center">
           <div class="bg-gradient-to-r from-purple-500 to-indigo-600 h-12 w-12 flex items-center justify-center rounded-full">
@@ -46,7 +46,7 @@ function closeDialog() {
         </p>
 
         <!-- 核心说明 -->
-        <div class="mb-4 rounded-lg bg-gradient-to-r from-purple-100 to-indigo-100 border-2 border-purple-300 p-4 dark:from-purple-900/40 dark:to-indigo-900/40 dark:border-purple-700">
+        <div class="bg-gradient-to-r from-purple-100 to-indigo-100 dark:from-purple-900/40 dark:to-indigo-900/40 mb-4 border-2 border-purple-300 rounded-lg p-4 dark:border-purple-700">
           <p class="text-sm text-purple-900 font-medium leading-relaxed dark:text-purple-100">
             ⭐ 系统会根据您所在行业的热点爆文，结合AI智能分析，为您量身定制一套完整的写作计划和发布日程。
           </p>
@@ -67,7 +67,7 @@ function closeDialog() {
         </div>
 
         <!-- 提示信息 -->
-        <div class="mb-6 rounded-lg bg-gradient-to-r from-purple-50 to-indigo-50 p-3 dark:from-purple-900/20 dark:to-indigo-900/20">
+        <div class="bg-gradient-to-r from-purple-50 to-indigo-50 dark:from-purple-900/20 dark:to-indigo-900/20 mb-6 rounded-lg p-3">
           <p class="text-xs text-gray-700 leading-relaxed dark:text-gray-300">
             💡 <strong>温馨提示：</strong>配合"行业热点文案推送"功能使用效果更佳，让您的创作始终紧跟行业脉搏，提升内容影响力。
           </p>
@@ -75,7 +75,7 @@ function closeDialog() {
       </div>
 
       <!-- 固定底部按钮组 -->
-      <div class="border-t flex-shrink-0 border-gray-200 p-6 dark:border-gray-700">
+      <div class="flex-shrink-0 border-t border-gray-200 p-6 dark:border-gray-700">
         <div class="flex justify-end gap-3">
           <Button
             variant="outline"

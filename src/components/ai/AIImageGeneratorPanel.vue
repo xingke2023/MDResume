@@ -11,12 +11,13 @@ import {
   RefreshCcw,
   Send,
   Settings,
-  Sparkles,
   Trash2,
+  Upload,
 } from 'lucide-vue-next'
 import { storeToRefs } from 'pinia'
 import { onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { toast } from 'vue-sonner'
+import CustomUploadForm from '@/components/CustomUploadForm.vue'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
@@ -24,7 +25,7 @@ import {
   DialogHeader,
 } from '@/components/ui/dialog'
 import { Textarea } from '@/components/ui/textarea'
-import { useStore } from '@/stores'
+import { useDisplayStore, useStore } from '@/stores'
 import useAIImageConfigStore from '@/stores/AIImageConfig'
 import { copyPlain } from '@/utils/clipboard'
 import AIImageConfig from './AIImageConfig.vue'
@@ -34,14 +35,15 @@ const props = defineProps<{ open: boolean }>()
 const emit = defineEmits([`update:open`])
 
 /* ---------- Tab 管理 ---------- */
-const activeTab = ref<'screenshot' | 'poster' | 'nano' | 'text2img'>('text2img')
+const activeTab = ref<`screenshot` | `poster` | `nano` | `text2img` | `upload`>(`upload`)
 
 /* ---------- 编辑器引用 ---------- */
 const store = useStore()
+const displayStore = useDisplayStore()
 const { editor } = storeToRefs(store)
 
 /* ---------- Tab 1: 截图写作 - 数据 ---------- */
-const screenshotInstruction = ref('')
+const screenshotInstruction = ref(``)
 const screenshotImageFiles = ref<File[]>([])
 const screenshotImagePreviews = ref<string[]>([])
 const screenshotIsProcessing = ref(false)
@@ -119,12 +121,14 @@ const styleTemplates: StyleTemplate[] = [
   },
 ]
 
-/* ---------- Tab 3: Nano Banana (图片制作) - 数据 ---------- */
-const nanoPrompt = ref('')
+/* ---------- Tab 3: NanoBanana图片制作 - 数据 ---------- */
+const nanoPrompt = ref(``)
 const nanoImageFiles = ref<File[]>([])
 const nanoImagePreviews = ref<string[]>([])
 const nanoIsProcessing = ref(false)
 const nanoFileInput = ref<HTMLInputElement | null>(null)
+const nanoGeneratedImageUrl = ref(``)
+const nanoGeneratedPrompt = ref(``)
 
 /* ---------- 弹窗开关 ---------- */
 const dialogVisible = ref(props.open)
@@ -1670,14 +1674,15 @@ async function handleNanoSubmit() {
       throw new Error(`未返回微信图片URL`)
     }
 
-    // 显示成功并插入图片
+    // 显示成功并保存生成的图片URL
     toast.success(`Nano Banana 处理完成！`)
     console.log(`微信图片URL:`, wechatUrl)
 
-    // 将图片插入到编辑器
-    await insertNanoImageToEditor(wechatUrl, data.data?.prompt || nanoPrompt.value)
+    // 保存生成的图片URL和提示词，显示预览
+    nanoGeneratedImageUrl.value = wechatUrl
+    nanoGeneratedPrompt.value = data.data?.prompt || nanoPrompt.value
 
-    // 清空表单
+    // 清空输入表单
     nanoPrompt.value = ``
     nanoImageFiles.value = []
     nanoImagePreviews.value = []
@@ -1713,7 +1718,21 @@ async function handleNanoSubmit() {
   }
 }
 
-// 插入图片到编辑器
+// 插入NanoBanana生成的图片到编辑器
+async function insertNanoGeneratedImage() {
+  if (!nanoGeneratedImageUrl.value) {
+    toast.error(`没有可插入的图片`)
+    return
+  }
+
+  await insertNanoImageToEditor(nanoGeneratedImageUrl.value, nanoGeneratedPrompt.value)
+
+  // 清空生成的图片
+  nanoGeneratedImageUrl.value = ``
+  nanoGeneratedPrompt.value = ``
+}
+
+// 插入图片到编辑器的具体实现
 async function insertNanoImageToEditor(imageUrl: string, imagePrompt: string) {
   if (!editor.value) {
     console.warn(`编辑器未初始化`)
@@ -1741,7 +1760,7 @@ async function insertNanoImageToEditor(imageUrl: string, imagePrompt: string) {
     // 聚焦编辑器
     editor.value.focus()
 
-    toast.success(`图片已插入编辑器`)
+    toast.success(`图片已插入编辑器，请预览查看`)
     console.log(`✅ 图片已成功插入到编辑器`)
   }
   catch (error) {
@@ -1755,106 +1774,123 @@ async function insertNanoImageToEditor(imageUrl: string, imagePrompt: string) {
 <template>
   <Dialog v-model:open="dialogVisible">
     <DialogContent
-      class="bg-card text-card-foreground z-[70] h-[100vh] w-[98vw] flex flex-col overflow-y-auto p-3 sm:max-w-4xl"
+      class="bg-card text-card-foreground z-[70] h-[92vh] w-[98vw] flex flex-col overflow-y-auto p-3 sm:max-w-4xl"
     >
       <!-- ============ 头部 ============ -->
-      <DialogHeader class="space-y-3 flex flex-col items-start">
-        <div class="w-full flex items-center justify-end">
-          <div class="flex items-center gap-1 pr-2">
-            <Button
-              v-if="activeTab === 'text2img'"
-              :title="configVisible ? 'AI 文生图' : '配置参数'"
-              :aria-label="configVisible ? 'AI 文生图' : '配置参数'"
-              variant="ghost"
-              size="sm"
-              class="px-2"
-              @click="configVisible = !configVisible"
+      <DialogHeader class="mb-4 flex flex-col items-start">
+        <div class="w-full flex items-start gap-3">
+          <!-- Tab 导航 -->
+          <div class="flex flex-wrap gap-1 pr-10">
+            <button
+              type="button"
+              class="flex items-center justify-center whitespace-nowrap border rounded-md px-3 py-1 text-sm font-medium transition-all"
+              :class="[
+                activeTab === 'upload'
+                  ? 'border-transparent bg-gradient-to-r from-emerald-500 to-teal-500 text-white shadow-lg shadow-emerald-500/50 dark:from-emerald-600 dark:to-teal-600'
+                  : 'border-gray-200 bg-white text-gray-700 hover:border-emerald-300 hover:bg-emerald-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:border-emerald-500/50 dark:hover:bg-emerald-900/30',
+              ]"
+              @click="activeTab = 'upload'"
             >
-              <Settings class="mr-1 h-4 w-4" />
-              模型配置
-            </Button>
+              本地上传
+            </button>
 
-            <Button
-              v-if="activeTab === 'text2img' && generatedImages.length > 0"
-              title="清空图像"
-              aria-label="清空图像"
-              variant="ghost"
-              size="sm"
-              class="px-2"
-              @click="clearImages"
+            <button
+              type="button"
+              class="flex items-center justify-center whitespace-nowrap border rounded-md px-3 py-1 text-sm font-medium transition-all"
+              :class="[
+                activeTab === 'nano'
+                  ? 'border-transparent bg-gradient-to-r from-purple-500 to-purple-600 text-white shadow-lg shadow-purple-500/50 dark:from-purple-600 dark:to-purple-700'
+                  : 'border-gray-200 bg-white text-gray-700 hover:border-purple-300 hover:bg-purple-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:border-purple-500/50 dark:hover:bg-purple-900/30',
+              ]"
+              @click="activeTab = 'nano'"
             >
-              <Trash2 class="mr-1 h-4 w-4" />
-              清空图像
-            </Button>
+              NanoBanana图片制作
+            </button>
+
+            <button
+              type="button"
+              class="flex items-center justify-center whitespace-nowrap border rounded-md px-3 py-1 text-sm font-medium transition-all"
+              :class="[
+                activeTab === 'poster'
+                  ? 'border-transparent bg-gradient-to-r from-orange-500 to-pink-500 text-white shadow-lg shadow-orange-500/50 dark:from-orange-600 dark:to-pink-600'
+                  : 'border-gray-200 bg-white text-gray-700 hover:border-orange-300 hover:bg-orange-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:border-orange-500/50 dark:hover:bg-orange-900/30',
+              ]"
+              @click="activeTab = 'poster'"
+            >
+              海报制作
+            </button>
+
+            <button
+              type="button"
+              class="flex items-center justify-center whitespace-nowrap border rounded-md px-3 py-1 text-sm font-medium transition-all"
+              :class="[
+                activeTab === 'screenshot'
+                  ? 'border-transparent bg-gradient-to-r from-blue-500 to-cyan-500 text-white shadow-lg shadow-blue-500/50 dark:from-blue-600 dark:to-cyan-600'
+                  : 'border-gray-200 bg-white text-gray-700 hover:border-blue-300 hover:bg-blue-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:border-blue-500/50 dark:hover:bg-blue-900/30',
+              ]"
+              @click="activeTab = 'screenshot'"
+            >
+              截图写作
+            </button>
+
+            <button
+              type="button"
+              class="flex items-center justify-center whitespace-nowrap border rounded-md px-3 py-1 text-sm font-medium transition-all"
+              :class="[
+                activeTab === 'text2img'
+                  ? 'border-transparent bg-gradient-to-r from-pink-500 to-violet-600 text-white shadow-lg shadow-pink-500/50 dark:from-pink-600 dark:to-violet-700'
+                  : 'border-gray-200 bg-white text-gray-700 hover:border-pink-300 hover:bg-pink-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:border-pink-500/50 dark:hover:bg-pink-900/30',
+              ]"
+              @click="activeTab = 'text2img'"
+            >
+              AI文生图
+            </button>
           </div>
-        </div>
-
-        <!-- Tab 导航 -->
-        <div class="w-full flex gap-1 overflow-x-auto rounded-lg bg-gray-100 p-1 dark:bg-gray-800">
-          <button
-            type="button"
-            class="flex-1 flex items-center justify-center gap-1.5 rounded-md px-3 py-2 text-sm font-medium transition-all whitespace-nowrap"
-            :class="[
-              activeTab === 'screenshot'
-                ? 'bg-white text-gray-900 shadow-sm dark:bg-gray-700 dark:text-gray-100'
-                : 'text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-200',
-            ]"
-            @click="activeTab = 'screenshot'"
-          >
-            <Camera class="h-4 w-4" />
-            <span>截图写作</span>
-          </button>
-
-          <button
-            type="button"
-            class="flex-1 flex items-center justify-center gap-1.5 rounded-md px-3 py-2 text-sm font-medium transition-all whitespace-nowrap"
-            :class="[
-              activeTab === 'poster'
-                ? 'bg-white text-gray-900 shadow-sm dark:bg-gray-700 dark:text-gray-100'
-                : 'text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-200',
-            ]"
-            @click="activeTab = 'poster'"
-          >
-            <Palette class="h-4 w-4" />
-            <span>海报制作</span>
-          </button>
-
-          <button
-            type="button"
-            class="flex-1 flex items-center justify-center gap-1.5 rounded-md px-3 py-2 text-sm font-medium transition-all whitespace-nowrap"
-            :class="[
-              activeTab === 'nano'
-                ? 'bg-white text-gray-900 shadow-sm dark:bg-gray-700 dark:text-gray-100'
-                : 'text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-200',
-            ]"
-            @click="activeTab = 'nano'"
-          >
-            <Gem class="h-4 w-4" />
-            <span>图片制作</span>
-          </button>
-
-          <button
-            type="button"
-            class="flex-1 flex items-center justify-center gap-1.5 rounded-md px-3 py-2 text-sm font-medium transition-all whitespace-nowrap"
-            :class="[
-              activeTab === 'text2img'
-                ? 'bg-white text-gray-900 shadow-sm dark:bg-gray-700 dark:text-gray-100'
-                : 'text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-200',
-            ]"
-            @click="activeTab = 'text2img'"
-          >
-            <Sparkles class="h-4 w-4" />
-            <span>AI文生图</span>
-          </button>
         </div>
       </DialogHeader>
 
       <!-- ============ Tab 内容区域 ============ -->
 
-      <!-- Tab 1: 截图写作 -->
-      <div v-if="activeTab === 'screenshot'" class="space-y-4 flex flex-col flex-1 overflow-y-auto">
+      <!-- Tab 0: 本地上传 -->
+      <div v-if="activeTab === 'upload'" class="space-y-4 flex flex-1 flex-col overflow-y-auto">
         <!-- 介绍 -->
-        <div class="rounded-lg bg-gradient-to-r from-blue-50 to-cyan-50 p-4 dark:from-blue-950/40 dark:to-cyan-950/40">
+        <div class="from-emerald-50 to-teal-50 bg-gradient-to-r dark:from-emerald-950/40 dark:to-teal-950/40 rounded-lg p-4">
+          <div class="flex items-center gap-2">
+            <Upload class="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
+            <p class="text-sm text-emerald-800 font-medium dark:text-emerald-300">
+              将本地图片上传到图床，支持多种图床配置
+            </p>
+          </div>
+        </div>
+
+        <!-- 打开上传对话框按钮 -->
+        <div class="flex flex-col items-center justify-center gap-4 py-8">
+          <Button
+            size="lg"
+            class="bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 border-0 text-white shadow-lg"
+            @click="displayStore.toggleShowUploadImgDialog()"
+          >
+            <Upload class="mr-2 h-5 w-5" />
+            本地图片上传至微信素材库
+          </Button>
+          <p class="text-muted-foreground text-center text-sm">
+            支持公众号、GitHub、阿里云OSS、腾讯云COS、<br>七牛云、MinIO、R2、又拍云、Telegram等多种图床
+          </p>
+        </div>
+
+        <!-- 自定义上传表单 -->
+        <div class="flex-1 overflow-y-auto border-t pt-4">
+          <div class="mb-3 text-sm text-gray-600 font-medium dark:text-gray-400">
+            当前图床配置：
+          </div>
+          <CustomUploadForm />
+        </div>
+      </div>
+
+      <!-- Tab 1: 截图写作 -->
+      <div v-if="activeTab === 'screenshot'" class="space-y-4 flex flex-1 flex-col overflow-y-auto">
+        <!-- 介绍 -->
+        <div class="bg-gradient-to-r from-blue-50 to-cyan-50 dark:from-blue-950/40 dark:to-cyan-950/40 rounded-lg p-4">
           <div class="flex items-center gap-2">
             <Camera class="h-5 w-5 text-blue-600 dark:text-blue-400" />
             <p class="text-sm text-blue-800 font-medium dark:text-blue-300">
@@ -1888,7 +1924,7 @@ async function insertNanoImageToEditor(imageUrl: string, imagePrompt: string) {
           <button
             type="button"
             :disabled="screenshotImageFiles.length >= 6"
-            class="w-full border-2 border-dashed border-gray-300 rounded-lg py-8 transition-colors disabled:cursor-not-allowed hover:border-blue-500 hover:bg-blue-50 dark:border-gray-600 disabled:opacity-50 dark:hover:border-blue-500 dark:hover:bg-blue-950/20"
+            class="w-full border-2 border-gray-300 rounded-lg border-dashed py-8 transition-colors disabled:cursor-not-allowed dark:border-gray-600 hover:border-blue-500 hover:bg-blue-50 disabled:opacity-50 dark:hover:border-blue-500 dark:hover:bg-blue-950/20"
             @click="selectScreenshotImage"
           >
             <div class="flex flex-col items-center gap-2">
@@ -1948,9 +1984,9 @@ async function insertNanoImageToEditor(imageUrl: string, imagePrompt: string) {
       </div>
 
       <!-- Tab 2: 海报制作 -->
-      <div v-if="activeTab === 'poster'" class="space-y-4 flex flex-col flex-1 overflow-y-auto">
+      <div v-if="activeTab === 'poster'" class="space-y-4 flex flex-1 flex-col overflow-y-auto">
         <!-- 介绍 -->
-        <div class="rounded-lg bg-gradient-to-br from-pink-50 via-purple-50 to-blue-50 p-4 dark:from-pink-950/40 dark:via-purple-950/40 dark:to-blue-950/40">
+        <div class="from-pink-50 via-purple-50 to-blue-50 bg-gradient-to-br dark:from-pink-950/40 dark:via-purple-950/40 dark:to-blue-950/40 rounded-lg p-4">
           <div class="flex items-center gap-2">
             <Palette class="h-5 w-5 text-purple-600 dark:text-purple-400" />
             <p class="text-sm text-purple-800 font-medium dark:text-purple-300">
@@ -2010,7 +2046,9 @@ async function insertNanoImageToEditor(imageUrl: string, imagePrompt: string) {
             <div v-if="posterLoading" class="flex flex-col items-center gap-4">
               <Loader2 class="animate-spin text-primary h-8 w-8" />
               <div class="flex flex-col items-center gap-2">
-                <p class="text-muted-foreground text-sm">正在生成海报...</p>
+                <p class="text-muted-foreground text-sm">
+                  正在生成海报...
+                </p>
                 <p v-if="posterLoadingProgress > 0" class="text-primary text-lg font-semibold">
                   {{ posterLoadingProgress }}%
                 </p>
@@ -2041,7 +2079,7 @@ async function insertNanoImageToEditor(imageUrl: string, imagePrompt: string) {
                   <img
                     :src="posterGeneratedImages[posterCurrentImageIndex]"
                     :alt="`生成的海报 ${posterCurrentImageIndex + 1}`"
-                    class="border-border object-contain h-auto max-h-[300px] w-full border rounded-lg shadow-lg transition-transform sm:max-h-[350px] hover:scale-105"
+                    class="object-contain border-border h-auto max-h-[300px] w-full border rounded-lg shadow-lg transition-transform sm:max-h-[350px] hover:scale-105"
                   >
                   <div class="pointer-events-none absolute inset-0 flex items-center justify-center rounded-lg bg-black/0 opacity-0 transition-opacity group-hover:bg-black/10 group-hover:opacity-100">
                     <div class="rounded-md bg-black/70 px-3 py-1 text-sm text-white">
@@ -2100,10 +2138,7 @@ async function insertNanoImageToEditor(imageUrl: string, imagePrompt: string) {
               :disabled="!posterSelectedStyle || (!posterPrompt.trim() && !posterLoading)"
               size="icon"
               :title="!posterSelectedStyle ? '请先选择风格' : (posterLoading ? '取消' : '生成')"
-              :class="[
-                'absolute bottom-3 right-3 rounded-full disabled:opacity-40',
-                'bg-primary hover:bg-primary/90 text-primary-foreground',
-              ]"
+              class="bg-primary text-primary-foreground hover:bg-primary/90 absolute bottom-3 right-3 rounded-full disabled:opacity-40"
               :aria-label="posterLoading ? '取消' : '生成'"
               @click="posterLoading ? cancelPosterGeneration() : generatePoster()"
             >
@@ -2114,10 +2149,101 @@ async function insertNanoImageToEditor(imageUrl: string, imagePrompt: string) {
         </div>
       </div>
 
-      <!-- Tab 3: 图片制作 (Nano Banana) -->
-      <div v-if="activeTab === 'nano'" class="space-y-4 flex flex-col flex-1 overflow-y-auto">
+      <!-- Tab 3: NanoBanana图片制作 -->
+      <div v-if="activeTab === 'nano'" class="space-y-4 flex flex-1 flex-col overflow-y-auto">
+        <!-- 工具按钮 -->
+        <div class="flex items-center gap-2">
+          <Button
+            v-if="nanoGeneratedImageUrl"
+            title="清空图像"
+            aria-label="清空图像"
+            variant="outline"
+            size="sm"
+            @click="() => { nanoGeneratedImageUrl = ''; nanoGeneratedPrompt = '' }"
+          >
+            <Trash2 class="mr-1 h-4 w-4" />
+            清空图像
+          </Button>
+        </div>
+
+        <!-- ============ 图像展示区域 ============ -->
+        <div
+          v-if="nanoIsProcessing || nanoGeneratedImageUrl"
+          class="space-y-4 flex flex-shrink-0 flex-col"
+        >
+          <!-- 图像显示 -->
+          <div class="min-h-[250px] flex items-center justify-center rounded-lg bg-gray-50 sm:min-h-[300px] dark:bg-gray-800">
+            <!-- 加载中 -->
+            <div v-if="nanoIsProcessing" class="flex flex-col items-center gap-4">
+              <Loader2 class="animate-spin text-primary h-8 w-8" />
+              <p class="text-muted-foreground text-sm">
+                正在生成图像...
+              </p>
+            </div>
+
+            <!-- 生成的图片 -->
+            <div v-else-if="nanoGeneratedImageUrl" class="space-y-3 w-full flex flex-col">
+              <!-- 图像显示 -->
+              <div class="flex items-center justify-center p-2 sm:p-4">
+                <div class="group relative max-w-sm w-full cursor-pointer" @click="viewFullImage(nanoGeneratedImageUrl)">
+                  <img
+                    :src="nanoGeneratedImageUrl"
+                    :alt="nanoGeneratedPrompt"
+                    class="border-border object-contain h-auto max-h-[300px] w-full border rounded-lg shadow-lg transition-transform sm:max-h-[350px] hover:scale-105"
+                  >
+                  <!-- 点击查看大图提示 -->
+                  <div class="pointer-events-none absolute inset-0 flex items-center justify-center rounded-lg bg-black/0 opacity-0 transition-opacity group-hover:bg-black/10 group-hover:opacity-100">
+                    <div class="rounded-md bg-black/70 px-3 py-1 text-sm text-white">
+                      点击查看大图
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- 图像信息 -->
+              <div class="space-y-1 bg-muted/10 rounded px-2 py-2 sm:px-4">
+                <div class="text-muted-foreground break-words text-center text-xs">
+                  <span class="font-medium">提示词:</span>
+                  <span class="ml-1">{{ nanoGeneratedPrompt || '无提示词' }}</span>
+                </div>
+              </div>
+
+              <!-- 图像操作按钮 -->
+              <div class="bg-muted/20 border-border flex flex-wrap justify-center gap-2 border-t rounded-b-lg p-2 sm:p-4">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  class="bg-background flex-shrink-0 text-xs sm:text-sm"
+                  @click="insertNanoGeneratedImage"
+                >
+                  <ImageIcon class="mr-1 h-3 w-3 sm:mr-2 sm:h-4 sm:w-4" />
+                  插入
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  class="bg-background flex-shrink-0 text-xs sm:text-sm"
+                  @click="downloadImage(nanoGeneratedImageUrl, 0)"
+                >
+                  <Download class="mr-1 h-3 w-3 sm:mr-2 sm:h-4 sm:w-4" />
+                  下载
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  class="bg-background flex-shrink-0 text-xs sm:text-sm"
+                  @click="copyImageUrl(nanoGeneratedImageUrl)"
+                >
+                  <Copy class="mr-1 h-3 w-3 sm:mr-2 sm:h-4 sm:w-4" />
+                  复制链接
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+
         <!-- 介绍 -->
-        <div class="rounded-lg bg-gradient-to-r from-purple-50 to-pink-50 p-4 dark:from-purple-950/40 dark:to-pink-950/40">
+        <div class="bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-950/40 dark:to-pink-950/40 rounded-lg p-4">
           <div class="flex items-center gap-2">
             <Gem class="h-5 w-5 text-purple-600 dark:text-purple-400" />
             <p class="text-sm text-purple-800 font-medium dark:text-purple-300">
@@ -2209,7 +2335,33 @@ async function insertNanoImageToEditor(imageUrl: string, imagePrompt: string) {
       </div>
 
       <!-- Tab 4: AI 文生图 (原有功能) -->
-      <div v-if="activeTab === 'text2img'" class="space-y-4 flex flex-col flex-1">
+      <div v-if="activeTab === 'text2img'" class="space-y-4 flex flex-1 flex-col">
+        <!-- 工具按钮 -->
+        <div class="flex items-center gap-2">
+          <Button
+            :title="configVisible ? 'AI 文生图' : '配置参数'"
+            :aria-label="configVisible ? 'AI 文生图' : '配置参数'"
+            variant="outline"
+            size="sm"
+            @click="configVisible = !configVisible"
+          >
+            <Settings class="mr-1 h-4 w-4" />
+            模型配置
+          </Button>
+
+          <Button
+            v-if="generatedImages.length > 0"
+            title="清空图像"
+            aria-label="清空图像"
+            variant="outline"
+            size="sm"
+            @click="clearImages"
+          >
+            <Trash2 class="mr-1 h-4 w-4" />
+            清空图像
+          </Button>
+        </div>
+
         <!-- ============ 参数配置面板 ============ -->
         <div
           v-if="configVisible"
@@ -2225,129 +2377,129 @@ async function insertNanoImageToEditor(imageUrl: string, imagePrompt: string) {
           v-if="!configVisible && (loading || generatedImages.length > 0)"
           class="space-y-4 flex flex-shrink-0 flex-col"
         >
-        <!-- 图像显示 -->
-        <div class="min-h-[250px] flex items-center justify-center rounded-lg bg-gray-50 sm:min-h-[300px] dark:bg-gray-800">
-          <div v-if="loading" class="flex flex-col items-center gap-4">
-            <Loader2 class="animate-spin text-primary h-8 w-8" />
-            <div class="flex flex-col items-center gap-2">
-              <p class="text-muted-foreground text-sm">
-                正在生成图像...
-              </p>
-              <p v-if="type === 'aiwriting' && loadingProgress > 0" class="text-primary text-lg font-semibold">
-                {{ loadingProgress }}%
-              </p>
-            </div>
-            <Button
-              variant="outline"
-              size="sm"
-              @click="cancelGeneration"
-            >
-              取消生成
-            </Button>
-          </div>
-
-          <div v-else-if="generatedImages.length > 0" class="space-y-3 w-full flex flex-col">
-            <!-- 图像导航 -->
-            <div v-if="generatedImages.length > 1" class="bg-muted/20 flex items-center justify-between rounded p-2">
+          <!-- 图像显示 -->
+          <div class="min-h-[250px] flex items-center justify-center rounded-lg bg-gray-50 sm:min-h-[300px] dark:bg-gray-800">
+            <div v-if="loading" class="flex flex-col items-center gap-4">
+              <Loader2 class="animate-spin text-primary h-8 w-8" />
+              <div class="flex flex-col items-center gap-2">
+                <p class="text-muted-foreground text-sm">
+                  正在生成图像...
+                </p>
+                <p v-if="type === 'aiwriting' && loadingProgress > 0" class="text-primary text-lg font-semibold">
+                  {{ loadingProgress }}%
+                </p>
+              </div>
               <Button
                 variant="outline"
                 size="sm"
-                :disabled="currentImageIndex <= 0"
-                @click="previousImage"
+                @click="cancelGeneration"
               >
-                上一张
-              </Button>
-              <span class="text-muted-foreground text-sm">
-                {{ currentImageIndex + 1 }} / {{ generatedImages.length }}
-              </span>
-              <Button
-                variant="outline"
-                size="sm"
-                :disabled="currentImageIndex >= generatedImages.length - 1"
-                @click="nextImage"
-              >
-                下一张
+                取消生成
               </Button>
             </div>
 
-            <!-- 图像显示 -->
-            <div class="flex items-center justify-center p-2 sm:p-4">
-              <div class="group relative max-w-sm w-full cursor-pointer" @click="viewFullImage(generatedImages[currentImageIndex])">
-                <img
-                  :src="generatedImages[currentImageIndex]"
-                  :alt="`生成的图像 ${currentImageIndex + 1}`"
-                  class="border-border object-contain h-auto max-h-[300px] w-full border rounded-lg shadow-lg transition-transform sm:max-h-[350px] hover:scale-105"
+            <div v-else-if="generatedImages.length > 0" class="space-y-3 w-full flex flex-col">
+              <!-- 图像导航 -->
+              <div v-if="generatedImages.length > 1" class="bg-muted/20 flex items-center justify-between rounded p-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  :disabled="currentImageIndex <= 0"
+                  @click="previousImage"
                 >
-                <!-- 点击查看大图提示 -->
-                <div class="pointer-events-none absolute inset-0 flex items-center justify-center rounded-lg bg-black/0 opacity-0 transition-opacity group-hover:bg-black/10 group-hover:opacity-100">
-                  <div class="rounded-md bg-black/70 px-3 py-1 text-sm text-white">
-                    点击查看大图
+                  上一张
+                </Button>
+                <span class="text-muted-foreground text-sm">
+                  {{ currentImageIndex + 1 }} / {{ generatedImages.length }}
+                </span>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  :disabled="currentImageIndex >= generatedImages.length - 1"
+                  @click="nextImage"
+                >
+                  下一张
+                </Button>
+              </div>
+
+              <!-- 图像显示 -->
+              <div class="flex items-center justify-center p-2 sm:p-4">
+                <div class="group relative max-w-sm w-full cursor-pointer" @click="viewFullImage(generatedImages[currentImageIndex])">
+                  <img
+                    :src="generatedImages[currentImageIndex]"
+                    :alt="`生成的图像 ${currentImageIndex + 1}`"
+                    class="border-border object-contain h-auto max-h-[300px] w-full border rounded-lg shadow-lg transition-transform sm:max-h-[350px] hover:scale-105"
+                  >
+                  <!-- 点击查看大图提示 -->
+                  <div class="pointer-events-none absolute inset-0 flex items-center justify-center rounded-lg bg-black/0 opacity-0 transition-opacity group-hover:bg-black/10 group-hover:opacity-100">
+                    <div class="rounded-md bg-black/70 px-3 py-1 text-sm text-white">
+                      点击查看大图
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
 
-            <!-- 图像信息 -->
-            <div class="space-y-1 bg-muted/10 rounded px-2 py-2 sm:px-4">
-              <p class="text-muted-foreground text-center text-xs">
-                尺寸: {{ size }}
-              </p>
-              <!-- 提示词 -->
-              <div class="text-muted-foreground break-words text-center text-xs">
-                <span class="font-medium">提示词:</span>
-                <span class="ml-1">{{ imagePrompts[currentImageIndex] || '无关联提示词' }}</span>
+              <!-- 图像信息 -->
+              <div class="space-y-1 bg-muted/10 rounded px-2 py-2 sm:px-4">
+                <p class="text-muted-foreground text-center text-xs">
+                  尺寸: {{ size }}
+                </p>
+                <!-- 提示词 -->
+                <div class="text-muted-foreground break-words text-center text-xs">
+                  <span class="font-medium">提示词:</span>
+                  <span class="ml-1">{{ imagePrompts[currentImageIndex] || '无关联提示词' }}</span>
+                </div>
+                <div class="text-muted-foreground text-center text-xs">
+                  <span class="font-medium">剩余有效期:</span>
+                  <span class="ml-1" :class="getTimeRemainingClass(currentImageIndex)">
+                    {{ getTimeRemaining(currentImageIndex) }}
+                  </span>
+                  <span class="font-medium">，请及时下载保存</span>
+                </div>
               </div>
-              <div class="text-muted-foreground text-center text-xs">
-                <span class="font-medium">剩余有效期:</span>
-                <span class="ml-1" :class="getTimeRemainingClass(currentImageIndex)">
-                  {{ getTimeRemaining(currentImageIndex) }}
-                </span>
-                <span class="font-medium">，请及时下载保存</span>
-              </div>
-            </div>
 
-            <!-- 图像操作按钮 -->
-            <div class="bg-muted/20 border-border flex flex-wrap justify-center gap-2 border-t rounded-b-lg p-2 sm:p-4">
-              <Button
-                variant="outline"
-                size="sm"
-                class="bg-background flex-shrink-0 text-xs sm:text-sm"
-                @click="insertImageToCursor(generatedImages[currentImageIndex])"
-              >
-                <ImageIcon class="mr-1 h-3 w-3 sm:mr-2 sm:h-4 sm:w-4" />
-                插入
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                class="bg-background flex-shrink-0 text-xs sm:text-sm"
-                @click="downloadImage(generatedImages[currentImageIndex], currentImageIndex)"
-              >
-                <Download class="mr-1 h-3 w-3 sm:mr-2 sm:h-4 sm:w-4" />
-                下载
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                class="bg-background flex-shrink-0 text-xs sm:text-sm"
-                @click="copyImageUrl(generatedImages[currentImageIndex])"
-              >
-                <Copy class="mr-1 h-3 w-3 sm:mr-2 sm:h-4 sm:w-4" />
-                复制
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                class="bg-background flex-shrink-0 text-xs sm:text-sm"
-                @click="regenerateImage"
-              >
-                <RefreshCcw class="mr-1 h-3 w-3 sm:mr-2 sm:h-4 sm:w-4" />
-                重新生成
-              </Button>
+              <!-- 图像操作按钮 -->
+              <div class="bg-muted/20 border-border flex flex-wrap justify-center gap-2 border-t rounded-b-lg p-2 sm:p-4">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  class="bg-background flex-shrink-0 text-xs sm:text-sm"
+                  @click="insertImageToCursor(generatedImages[currentImageIndex])"
+                >
+                  <ImageIcon class="mr-1 h-3 w-3 sm:mr-2 sm:h-4 sm:w-4" />
+                  插入
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  class="bg-background flex-shrink-0 text-xs sm:text-sm"
+                  @click="downloadImage(generatedImages[currentImageIndex], currentImageIndex)"
+                >
+                  <Download class="mr-1 h-3 w-3 sm:mr-2 sm:h-4 sm:w-4" />
+                  下载
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  class="bg-background flex-shrink-0 text-xs sm:text-sm"
+                  @click="copyImageUrl(generatedImages[currentImageIndex])"
+                >
+                  <Copy class="mr-1 h-3 w-3 sm:mr-2 sm:h-4 sm:w-4" />
+                  复制
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  class="bg-background flex-shrink-0 text-xs sm:text-sm"
+                  @click="regenerateImage"
+                >
+                  <RefreshCcw class="mr-1 h-3 w-3 sm:mr-2 sm:h-4 sm:w-4" />
+                  重新生成
+                </Button>
+              </div>
             </div>
           </div>
         </div>
-      </div>
 
         <!-- ============ 输入框 ============ -->
         <div v-if="!configVisible" class="relative mt-auto flex-shrink-0">

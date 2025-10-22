@@ -15,27 +15,27 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   'update:visible': [value: boolean]
-  saved: [config: MpConfig]
+  'saved': [config: MpConfig]
 }>()
 
 const mpConfigForm = ref<MpConfig>({
-  appID: props.initialConfig?.appID || '',
-  appsecret: props.initialConfig?.appsecret || '',
+  appID: props.initialConfig?.appID || ``,
+  appsecret: props.initialConfig?.appsecret || ``,
 })
 
 function closeDialog() {
-  emit('update:visible', false)
+  emit(`update:visible`, false)
 }
 
 function saveMpConfig() {
   if (!mpConfigForm.value.appID.trim() || !mpConfigForm.value.appsecret.trim()) {
-    toast.error('AppID 和 AppSecret 不能为空')
+    toast.error(`AppID 和 AppSecret 不能为空`)
     return
   }
 
-  localStorage.setItem('mpConfig', JSON.stringify(mpConfigForm.value))
-  toast.success('公众号配置保存成功')
-  emit('saved', mpConfigForm.value)
+  localStorage.setItem(`mpConfig`, JSON.stringify(mpConfigForm.value))
+  toast.success(`公众号配置保存成功`)
+  emit(`saved`, mpConfigForm.value)
   closeDialog()
 }
 </script>

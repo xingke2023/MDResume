@@ -158,12 +158,12 @@ async function compressImage(file: File, index: number): Promise<File> {
 
               resolve(compressedFile)
             }
- else {
+            else {
               reject(new Error(`图片压缩失败`))
             }
           },
           `image/jpeg`,
-          0.85,  // JPEG质量：0.85对文字识别足够，同时大幅减小文件
+          0.85, // JPEG质量：0.85对文字识别足够，同时大幅减小文件
         )
       }
       img.onerror = () => reject(new Error(`图片加载失败`))

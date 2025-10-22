@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { ref } from 'vue'
 import { ImagePlus } from 'lucide-vue-next'
+import { ref } from 'vue'
 
 const props = defineProps<{
   imageUrl: string

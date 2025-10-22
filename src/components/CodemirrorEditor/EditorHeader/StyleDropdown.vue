@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { storeToRefs } from 'pinia'
 import {
   Bold,
   ChartPie,
@@ -24,6 +23,8 @@ import {
   Undo,
   Wand2,
 } from 'lucide-vue-next'
+import { storeToRefs } from 'pinia'
+import { useImportMarkdownContent } from '@/composables'
 import {
   codeBlockThemeOptions,
   colorOptions,
@@ -31,7 +32,6 @@ import {
   fontSizeOptions,
   legendOptions,
 } from '@/config'
-import { useImportMarkdownContent } from '@/composables'
 import { useDisplayStore, useStore } from '@/stores'
 
 const { onCopy } = defineProps<{
@@ -88,7 +88,7 @@ function openSettings() {
 
 <template>
   <MenubarMenu>
-    <MenubarTrigger class="px-1.5 sm:px-3 !text-base py-2.5 sm:py-1.5">
+    <MenubarTrigger class="px-1.5 py-2.5 sm:px-3 sm:py-1.5 !text-base">
       <Menu class="size-5 sm:size-4" />
     </MenubarTrigger>
     <MenubarContent class="w-40 py-2" align="start">

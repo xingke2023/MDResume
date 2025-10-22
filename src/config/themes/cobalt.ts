@@ -202,7 +202,7 @@ export const cobaltTheme: Theme = {
     },
 
     listitem_content: {
-      'flex': `1`,
+      flex: `1`,
     },
     codespan: {
       'display': `inline`,

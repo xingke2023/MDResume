@@ -1024,7 +1024,7 @@ async function sendMessage() {
             <!-- ============ 引文选择按钮 ============ -->
             <div class="flex flex-wrap items-center gap-2 rounded-lg bg-white/60 p-1.5 dark:bg-gray-800/40">
               <!-- 选择上下文标签 -->
-              <span class="text-xs text-gray-700 font-semibold dark:text-gray-300">引用:</span>
+              <span class="text-xs text-gray-700 font-semibold dark:text-gray-300">①引用:</span>
               <Button
                 size="sm"
                 variant="outline"
@@ -1120,7 +1120,7 @@ async function sendMessage() {
             <!-- ============ 图片素材区域 ============ -->
             <div class="rounded-lg bg-white/60 p-1.5 dark:bg-gray-800/40">
               <div class="mb-2 flex items-center justify-between">
-                <span class="text-xs text-gray-700 font-semibold dark:text-gray-300">图片素材:</span>
+                <span class="text-xs text-gray-700 font-semibold dark:text-gray-300">②图片素材:</span>
                 <div class="flex items-center gap-2">
                   <Button
                     v-if="imageMaterials.length > 0"
@@ -1334,7 +1334,7 @@ async function sendMessage() {
       <!-- ============ 输入框 ============ -->
       <div v-if="!configVisible" class="relative mt-2">
         <div
-          class="item-start from-blue-50 to-white bg-gradient-to-br dark:from-blue-950/30 dark:to-gray-900 flex flex-col items-baseline gap-2 border-1 border-blue-300 rounded-md px-3 py-2 pr-12 shadow-lg transition-all duration-200 dark:border-blue-700 focus-within:border-blue-500 focus-within:shadow-sm focus-within:ring-1 focus-within:ring-blue-300/50 dark:focus-within:border-blue-500 dark:focus-within:ring-blue-700/50"
+          class="from-blue-50 bg-gradient-to-br item-start to-white dark:from-blue-950/30 dark:to-gray-900 flex flex-col items-baseline gap-2 border-1 border-blue-300 rounded-md px-3 py-2 pr-12 shadow-lg transition-all duration-200 dark:border-blue-700 focus-within:border-blue-500 focus-within:shadow-sm focus-within:ring-1 focus-within:ring-blue-300/50 dark:focus-within:border-blue-500 dark:focus-within:ring-blue-700/50"
         >
           <Textarea
             v-model="input"

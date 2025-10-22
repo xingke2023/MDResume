@@ -25,9 +25,9 @@ const isProcessing = ref(false)
 const fileInput = ref<HTMLInputElement | null>(null)
 
 function closeDialog() {
-  emit('update:visible', false)
+  emit(`update:visible`, false)
   // 重置表单
-  prompt.value = ''
+  prompt.value = ``
   imageFiles.value = []
   imagePreviews.value = []
 }
@@ -231,7 +231,7 @@ async function insertImageToEditor(imageUrl: string, imagePrompt: string) {
     // 聚焦编辑器
     store.editor.focus()
 
-    toast.success(`图片已插入编辑器`)
+    toast.success(`图片已插入编辑器，请预览查看`)
     console.log(`✅ 图片已成功插入到编辑器`)
   }
   catch (error) {

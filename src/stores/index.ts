@@ -2,8 +2,8 @@ import { useDark, useStorage, useToggle } from '@vueuse/core'
 import CodeMirror from 'codemirror'
 import { toPng } from 'html-to-image'
 import { defineStore } from 'pinia'
-import { computed, markRaw, onBeforeMount, onBeforeUnmount, onMounted, reactive, ref, toRaw, watch } from 'vue'
 import { v4 as uuid } from 'uuid'
+import { computed, markRaw, onBeforeMount, onBeforeUnmount, onMounted, reactive, ref, toRaw, watch } from 'vue'
 import { toast } from 'vue-sonner'
 import DEFAULT_CONTENT from '@/assets/example/markdown.md?raw'
 
@@ -163,7 +163,7 @@ export const useStore = defineStore(`store`, () => {
     window.addEventListener(`resize`, handleResize)
     // 初始化编辑区字体大小 CSS 变量
     const style = document.documentElement.style
-    style.setProperty('--editor-font-size', editorFontSize.value)
+    style.setProperty(`--editor-font-size`, editorFontSize.value)
   })
 
   onBeforeUnmount(() => {
@@ -597,7 +597,7 @@ export const useStore = defineStore(`store`, () => {
     editorFontSize.value = size
     // 动态更新 CodeMirror 字体大小
     const style = document.documentElement.style
-    style.setProperty('--editor-font-size', size)
+    style.setProperty(`--editor-font-size`, size)
   }
 
   const colorChanged = withAfterRefresh((newColor) => {

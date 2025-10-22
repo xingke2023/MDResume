@@ -4,6 +4,12 @@ import type { ReadTimeResults } from 'reading-time'
 import DOMPurify from 'isomorphic-dompurify'
 import juice from 'juice'
 import { Marked, marked } from 'marked'
+import { prefix } from '@/config/prefix'
+import type { Block, ExtendedProperties, Inline, Theme } from '@/types'
+import type { RendererAPI } from '@/types/renderer-types'
+import { addSpacingToMarkdown } from '@/utils/autoSpace'
+import markedAlert from './MDAlert'
+import { MDKatex } from './MDKatex'
 
 // 懒加载 Prettier
 let prettierLoaded = false
@@ -19,11 +25,11 @@ async function loadPrettier() {
       prettierPluginMarkdown,
       prettierPluginCss,
     ] = await Promise.all([
-      import('prettier/standalone'),
-      import('prettier/plugins/babel'),
-      import('prettier/plugins/estree'),
-      import('prettier/plugins/markdown'),
-      import('prettier/plugins/postcss'),
+      import(`prettier/standalone`),
+      import(`prettier/plugins/babel`),
+      import(`prettier/plugins/estree`),
+      import(`prettier/plugins/markdown`),
+      import(`prettier/plugins/postcss`),
     ])
     prettierFormat = format
     prettierPlugins = {
@@ -34,12 +40,6 @@ async function loadPrettier() {
   }
   return { format: prettierFormat, plugins: prettierPlugins }
 }
-import { prefix } from '@/config/prefix'
-import type { Block, ExtendedProperties, Inline, Theme } from '@/types'
-import type { RendererAPI } from '@/types/renderer-types'
-import { addSpacingToMarkdown } from '@/utils/autoSpace'
-import markedAlert from './MDAlert'
-import { MDKatex } from './MDKatex'
 
 export function addPrefix(str: string) {
   return `${prefix}__${str}`

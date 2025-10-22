@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { nextTick, ref } from 'vue'
 import { Image as ImageIcon } from 'lucide-vue-next'
 import { storeToRefs } from 'pinia'
+import { nextTick, ref } from 'vue'
 import { useDisplayStore, useStore } from '@/stores'
 import AIAssistantPanel from './AIAssistantPanel.vue'
 import AIImageGeneratorPanel from './AIImageGeneratorPanel.vue'

@@ -138,7 +138,7 @@ async function fetchArticle() {
     >
       <!-- 标题图标 -->
       <div class="mb-4 flex items-center justify-center">
-        <div class="bg-gradient-to-r to-blue-600 from-green-500 h-12 w-12 flex items-center justify-center rounded-full">
+        <div class="to-blue-600 from-green-500 bg-gradient-to-r h-12 w-12 flex items-center justify-center rounded-full">
           <Wrench class="h-6 w-6 text-white" />
         </div>
       </div>

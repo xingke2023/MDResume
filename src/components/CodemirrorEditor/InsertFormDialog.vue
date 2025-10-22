@@ -39,7 +39,7 @@ function onUpdate(val: boolean) {
 
 <template>
   <Dialog :open="displayStore.isShowInsertFormDialog" @update:open="onUpdate">
-    <DialogContent class="z-[70] w-[95vw] sm:w-[80vw] sm:max-w-3xl">
+    <DialogContent class="z-[70] w-[95vw] sm:max-w-3xl sm:w-[80vw]">
       <DialogHeader>
         <DialogTitle>插入表格</DialogTitle>
       </DialogHeader>

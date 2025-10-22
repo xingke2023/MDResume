@@ -1425,7 +1425,7 @@ function handleMobileEditButtonClick() {
       </div>
 
       <!-- 右侧按钮组 - 菜单栏 -->
-      <Menubar class="compact-mobile compact-menubar extra-compact menubar sm:border-input sm:dark:border-input h-11 flex-shrink-0 border-gray-400 sm:h-10 dark:border-gray-600">
+      <Menubar class="sm:border-input sm:dark:border-input compact-mobile compact-menubar extra-compact menubar h-11 flex-shrink-0 border-gray-400 sm:h-10 dark:border-gray-600">
         <StyleDropdown :copy-mode="copyMode" :on-copy="handleCopyWithMode" />
       </Menubar>
     </div>

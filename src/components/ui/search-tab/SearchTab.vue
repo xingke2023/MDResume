@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import type CodeMirror from 'codemirror'
 import { useDebounceFn } from '@vueuse/core'
-import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import { ChevronDown, ChevronRight, ChevronUp, Replace, ReplaceAll, X } from 'lucide-vue-next'
+import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 
 const props = defineProps<{
   editor: CodeMirror.Editor

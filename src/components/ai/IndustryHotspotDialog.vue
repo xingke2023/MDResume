@@ -11,7 +11,7 @@ const emit = defineEmits<{
 }>()
 
 function closeDialog() {
-  emit('update:visible', false)
+  emit(`update:visible`, false)
 }
 </script>
 
@@ -57,7 +57,7 @@ function closeDialog() {
       </div>
 
       <!-- 提示信息 -->
-      <div class="mb-6 rounded-lg bg-gradient-to-r from-cyan-50 to-blue-50 p-3 dark:from-cyan-900/20 dark:to-blue-900/20">
+      <div class="bg-gradient-to-r to-blue-50 from-cyan-50 dark:from-cyan-900/20 dark:to-blue-900/20 mb-6 rounded-lg p-3">
         <p class="text-xs text-gray-700 leading-relaxed dark:text-gray-300">
           💡 <strong>使用建议：</strong>定期查看热点推送，把握行业风向，结合自身定位规划内容日历，让您的创作始终紧跟热点、富有时效性。
         </p>

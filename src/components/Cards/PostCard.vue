@@ -19,7 +19,7 @@ const emit = defineEmits<{
 }>()
 
 // 处理点击动画
-const handleClick = (e: MouseEvent) => {
+function handleClick (e: MouseEvent) {
   const card = e.currentTarget as HTMLElement
   const rect = card.getBoundingClientRect()
 
@@ -54,7 +54,7 @@ const handleClick = (e: MouseEvent) => {
 // 获取卡片预览内容（去除Markdown语法）
 const previewContent = computed(() => {
   // 移除 Markdown 标记
-  let text = props.post.content
+  const text = props.post.content
     .replace(/^#+\s+/gm, '') // 移除标题标记
     .replace(/\*\*(.+?)\*\*/g, '$1') // 移除加粗
     .replace(/\*(.+?)\*/g, '$1') // 移除斜体
@@ -65,7 +65,7 @@ const previewContent = computed(() => {
     .trim()
 
   // 限制长度 - 增加到 300 字符让卡片高度更有变化
-  return text.length > 300 ? text.slice(0, 300) + '...' : text
+  return text.length > 300 ? `${text.slice(0, 300)  }...` : text
 })
 
 // 格式化日期
@@ -73,26 +73,30 @@ function formatDate(date: Date) {
   const d = new Date(date)
   const month = d.getMonth() + 1
   const day = d.getDate()
-  const hours = String(d.getHours()).padStart(2, '0')
-  const minutes = String(d.getMinutes()).padStart(2, '0')
+  const hours = String(d.getHours()).padStart(2, `0`)
+  const minutes = String(d.getMinutes()).padStart(2, `0`)
 
   return `${month}月${day}日 ${hours}:${minutes}`
 }
 
 // 卡片背景色 - Keep风格使用纯白
 const cardColor = computed(() => {
-  return 'var(--card-bg, #FFFFFF)'
+  return `var(--card-bg, #FFFFFF)`
 })
 </script>
 
 <template>
-  <div class="post-card" @click="handleClick" :style="{ backgroundColor: cardColor }">
+  <div class="post-card" :style="{ backgroundColor: cardColor }" @click="handleClick">
     <!-- 标题 -->
-    <h3 class="card-title">{{ post.title }}</h3>
+    <h3 class="card-title">
+{{ post.title }}
+</h3>
 
     <!-- 内容预览 -->
     <div class="card-body">
-      <p class="card-preview">{{ previewContent }}</p>
+      <p class="card-preview">
+{{ previewContent }}
+</p>
     </div>
 
     <!-- 底部信息 -->
@@ -112,7 +116,7 @@ const cardColor = computed(() => {
 .post-card {
   border-radius: 0.5rem;
   overflow: hidden;
-  border: 1px solid var(--border-color, #B8BCC4);
+  border: 1px solid var(--border-color, #b8bcc4);
   cursor: pointer;
   transition: all 0.2s ease;
   display: flex;
@@ -121,7 +125,7 @@ const cardColor = computed(() => {
   max-height: 400px;
   position: relative;
   padding: 1rem 1rem 0.375rem 1rem;
-  background: var(--card-bg, #FFFFFF);
+  background: var(--card-bg, #ffffff);
   break-inside: avoid;
   page-break-inside: avoid;
 
@@ -130,19 +134,21 @@ const cardColor = computed(() => {
   --fly-y: 0px;
 
   &:hover {
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.08);
+    box-shadow:
+      0 1px 3px rgba(0, 0, 0, 0.12),
+      0 1px 2px rgba(0, 0, 0, 0.08);
   }
 
   // 飞行动画状态
   &.flying {
-    animation: flyToCenter 0.4s cubic-bezier(0.4, 0.0, 0.2, 1) forwards;
+    animation: flyToCenter 0.4s cubic-bezier(0.4, 0, 0.2, 1) forwards;
     z-index: 1000;
     will-change: transform, opacity;
   }
 }
 
 .card-title {
-  color: var(--text-primary, #1F2937);
+  color: var(--text-primary, #1f2937);
   font-size: 1rem;
   font-weight: 600;
   margin: 0 0 0.5rem 0;
@@ -160,7 +166,7 @@ const cardColor = computed(() => {
 }
 
 .card-preview {
-  color: var(--text-secondary, #6B7280);
+  color: var(--text-secondary, #6b7280);
   font-size: 0.875rem;
   line-height: 1.5;
   margin: 0;
@@ -183,7 +189,7 @@ const cardColor = computed(() => {
   display: flex;
   align-items: center;
   gap: 0.3rem;
-  color: var(--text-secondary, #9CA3AF);
+  color: var(--text-secondary, #9ca3af);
   font-size: 0.75rem;
   margin: 0;
   padding: 0;
@@ -196,10 +202,10 @@ const cardColor = computed(() => {
 // 深色模式支持
 @media (prefers-color-scheme: dark) {
   .post-card {
-    --card-bg: #2C2C2C;
-    --border-color: #5A5A5A;
-    --text-primary: #E5E5E5;
-    --text-secondary: #A0A0A0;
+    --card-bg: #2c2c2c;
+    --border-color: #5a5a5a;
+    --text-primary: #e5e5e5;
+    --text-secondary: #a0a0a0;
   }
 }
 

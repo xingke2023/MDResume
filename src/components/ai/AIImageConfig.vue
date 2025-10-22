@@ -196,7 +196,7 @@ const styleOptions = [
 <template>
   <div class="space-y-4 h-full max-w-full flex flex-col">
     <!-- 可滚动内容区 -->
-    <div class="scrollbar-hidden space-y-4 flex-1 overflow-y-auto">
+    <div class="space-y-4 scrollbar-hidden flex-1 overflow-y-auto">
       <!-- 服务商选择 -->
       <div>
         <Label class="mb-1 block text-sm font-medium">服务商</Label>

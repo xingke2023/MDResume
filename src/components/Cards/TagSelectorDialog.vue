@@ -15,7 +15,7 @@ const emit = defineEmits<{
 const store = useStore()
 
 // 搜索关键词
-const searchQuery = ref('')
+const searchQuery = ref(``)
 // 本地选中的标签
 const localSelectedTags = ref<string[]>([])
 
@@ -23,14 +23,14 @@ const localSelectedTags = ref<string[]>([])
 watch(() => props.open, (isOpen) => {
   if (isOpen) {
     localSelectedTags.value = [...props.selectedTags]
-    searchQuery.value = ''
+    searchQuery.value = ``
   }
 })
 
 // 监听本地标签变化，自动保存
 watch(localSelectedTags, (newTags) => {
   if (props.open) {
-    emit('update', [...newTags])
+    emit(`update`, [...newTags])
   }
 }, { deep: true })
 
@@ -73,22 +73,22 @@ function createNewTag() {
   }
 
   // 清空搜索框
-  searchQuery.value = ''
+  searchQuery.value = ``
 }
 
 // 处理 ESC 键关闭
 function handleKeyDown(e: KeyboardEvent) {
-  if (e.key === 'Escape' && props.open) {
-    emit('close')
+  if (e.key === `Escape` && props.open) {
+    emit(`close`)
   }
 }
 
 onMounted(() => {
-  window.addEventListener('keydown', handleKeyDown)
+  window.addEventListener(`keydown`, handleKeyDown)
 })
 
 onUnmounted(() => {
-  window.removeEventListener('keydown', handleKeyDown)
+  window.removeEventListener(`keydown`, handleKeyDown)
 })
 
 // 阻止对话框内容点击时关闭
@@ -116,7 +116,9 @@ function handleContentClick(e: MouseEvent) {
 
           <!-- 对话框标题 -->
           <div class="dialog-header">
-            <h2 class="dialog-title">选择标签</h2>
+            <h2 class="dialog-title">
+              选择标签
+            </h2>
           </div>
 
           <!-- 对话框内容 -->

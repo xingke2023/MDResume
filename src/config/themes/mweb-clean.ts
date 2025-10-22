@@ -218,7 +218,7 @@ export const mwebCleanTheme: Theme = {
     },
 
     listitem_content: {
-      'flex': `1`,
+      flex: `1`,
     },
 
     codespan: {

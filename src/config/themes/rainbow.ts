@@ -204,8 +204,8 @@ export const rainbowTheme: Theme = {
     },
 
     listitem_content: {
-      'flex': `1`,
-      'color': `#000`,
+      flex: `1`,
+      color: `#000`,
     },
 
     codespan: {

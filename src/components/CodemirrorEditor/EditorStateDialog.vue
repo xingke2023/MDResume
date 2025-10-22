@@ -1,7 +1,7 @@
 <script setup lang="ts">
+import { Expand, UploadCloud } from 'lucide-vue-next'
 import { computed, ref, watch } from 'vue'
 import { toast } from 'vue-sonner'
-import { Expand, UploadCloud } from 'lucide-vue-next'
 import { storeLabels } from '@/config/store'
 import { getAllStoreStates, useDisplayStore, useStore } from '@/stores'
 import { downloadFile } from '@/utils'
