@@ -1499,30 +1499,39 @@ async function insertPosterToEditor(imageUrl: string): Promise<boolean> {
     return false
   }
 
+  let finalImageUrl = imageUrl
+
   try {
     toast.loading(`正在处理图片插入...`, { id: `upload-poster-image` })
 
-    const uploadUrl = getApiUrl(API_ENDPOINTS.IMAGE_UPLOAD_URL)
-    const uploadResponse = await fetch(uploadUrl, {
-      method: `POST`,
-      headers: {
-        'Content-Type': `application/json`,
-        'X-API-Key': API_KEY,
-      },
-      body: JSON.stringify({ imageUrl }),
-    })
+    // 尝试上传到微信图床
+    try {
+      const uploadUrl = getApiUrl(API_ENDPOINTS.IMAGE_UPLOAD_URL)
+      const uploadResponse = await fetch(uploadUrl, {
+        method: `POST`,
+        headers: {
+          'Content-Type': `application/json`,
+          'X-API-Key': API_KEY,
+        },
+        body: JSON.stringify({ imageUrl }),
+      })
 
-    if (!uploadResponse.ok) {
-      throw new Error(`上传失败: ${uploadResponse.status}`)
+      if (uploadResponse.ok) {
+        const data = await uploadResponse.json()
+        if (data.data?.url) {
+          finalImageUrl = data.data.url
+          console.log(`图片已上传到微信图床:`, finalImageUrl)
+        }
+      }
+      else {
+        console.warn(`图片上传失败 (${uploadResponse.status})，将使用原始URL`)
+      }
+    }
+    catch (uploadError) {
+      // 上传失败（如 CORS 错误），降级使用原始 URL
+      console.warn(`图片上传失败，将使用原始URL:`, uploadError)
     }
 
-    const data = await uploadResponse.json()
-
-    if (!data.data || !data.data.url) {
-      throw new Error(`上传成功但未返回图片URL`)
-    }
-
-    const finalImageUrl = data.data.url
     toast.dismiss(`upload-poster-image`)
 
     const imagePrompt = posterImagePrompts.value[posterCurrentImageIndex.value] || ``
@@ -1538,7 +1547,7 @@ async function insertPosterToEditor(imageUrl: string): Promise<boolean> {
     editor.value.setCursor(newCursor)
     editor.value.focus()
 
-    toast.success(`海报已上传并插入`)
+    toast.success(`海报已插入`)
 
     // 切换到预览模式
     window.dispatchEvent(new CustomEvent(`switch-to-preview`))
