@@ -1284,6 +1284,10 @@ async function insertArticleToEditor(article: string): Promise<boolean> {
 
     toast.success(`文稿已插入编辑器`)
     console.log(`✅ 文稿已成功插入到编辑器`)
+
+    // 切换到预览模式
+    window.dispatchEvent(new CustomEvent(`switch-to-preview`))
+
     return true
   }
   catch (error) {
@@ -1528,6 +1532,10 @@ async function insertPosterToEditor(imageUrl: string): Promise<boolean> {
     editor.value.focus()
 
     toast.success(`海报已上传并插入`)
+
+    // 切换到预览模式
+    window.dispatchEvent(new CustomEvent(`switch-to-preview`))
+
     return true
   }
   catch (error) {
@@ -1778,6 +1786,10 @@ async function insertNanoImageToEditor(imageUrl: string, imagePrompt: string): P
 
     toast.success(`图片已插入编辑器，请预览查看`)
     console.log(`✅ 图片已成功插入到编辑器`)
+
+    // 切换到预览模式
+    window.dispatchEvent(new CustomEvent(`switch-to-preview`))
+
     return true
   }
   catch (error) {

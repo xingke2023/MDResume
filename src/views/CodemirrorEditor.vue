@@ -152,8 +152,21 @@ onMounted(() => {
   }
   window.addEventListener(`theme-changed-mobile`, handleThemeChange)
 
+  // 监听切换到预览模式事件
+  const handleSwitchToPreview = () => {
+    if (store.isMobile && showEditor.value) {
+      showEditor.value = false
+      // 收起工具栏
+      if (isShowMobileToolbar.value) {
+        isShowMobileToolbar.value = false
+      }
+    }
+  }
+  window.addEventListener(`switch-to-preview`, handleSwitchToPreview)
+
   onUnmounted(() => {
     window.removeEventListener(`theme-changed-mobile`, handleThemeChange)
+    window.removeEventListener(`switch-to-preview`, handleSwitchToPreview)
   })
 })
 
