@@ -1330,9 +1330,12 @@ async function pollPosterTaskStatus(taskId: string): Promise<string | null> {
         throw new Error(`任务已取消`)
       }
 
-      const queryUrl = `${API_BASE_URL}/extract/api/query_task_simple?task_id=${taskId}`
+      const queryUrl = `${getApiUrl(API_ENDPOINTS.QUERY_TASK)}?task_id=${taskId}`
       const queryRes = await window.fetch(queryUrl, {
         method: `GET`,
+        headers: {
+          'X-API-Key': API_KEY,
+        },
         signal: posterAbortController.value?.signal,
       })
 
@@ -1391,7 +1394,10 @@ async function generatePoster() {
 
     const res = await window.fetch(url, {
       method: `POST`,
-      headers: { 'Content-Type': `application/json` },
+      headers: {
+        'Content-Type': `application/json`,
+        'X-API-Key': API_KEY,
+      },
       body: JSON.stringify({ prompt: currentPrompt }),
       signal: posterAbortController.value.signal,
     })
