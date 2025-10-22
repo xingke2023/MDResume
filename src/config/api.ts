@@ -123,4 +123,14 @@ export const EXTERNAL_APIS = {
   GITHUB: `https://api.github.com`,
   CLOUDINARY: `https://api.cloudinary.com`,
   BSPAPP: `https://api.bspapp.com`,
+  UNSPLASH: `https://api.unsplash.com`,
+} as const
+
+/**
+ * Unsplash API 配置
+ */
+export const UNSPLASH_CONFIG = {
+  ACCESS_KEY: `uXkkuwIrHWcA4-YYl9yU2UVnJ5O9ynM3In4EOFPyVl8`,
+  // Secret key 仅用于服务端，客户端不应使用
+  SECRET_KEY: `wc8DwcJFz5g-XdhU2q3GCs-R6qQrZOF29q2pZapl8vo`,
 } as const

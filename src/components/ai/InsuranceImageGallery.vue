@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ImageIcon, Loader2 } from 'lucide-vue-next'
+import { ImageIcon, Loader2, Search } from 'lucide-vue-next'
 import { computed, onMounted, ref } from 'vue'
 import { toast } from 'vue-sonner'
 import { Button } from '@/components/ui/button'
@@ -9,11 +9,12 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
-import { API_ENDPOINTS, API_KEY, getApiUrl } from '@/config/api'
+import { Input } from '@/components/ui/input'
+import { API_ENDPOINTS, API_KEY, EXTERNAL_APIS, getApiUrl, UNSPLASH_CONFIG } from '@/config/api'
 import { useStore } from '@/stores'
 
 /* ---------- 数据类型定义 ---------- */
-interface GalleryImage {
+interface LocalImage {
   id: number
   url: string
   basename: string
@@ -22,6 +23,28 @@ interface GalleryImage {
   content_type: string
   created_at: string
 }
+
+interface UnsplashImage {
+  id: string
+  created_at: string
+  width: number
+  height: number
+  description: string | null
+  alt_description: string | null
+  urls: {
+    raw: string
+    full: string
+    regular: string
+    small: string
+    thumb: string
+  }
+  user: {
+    name: string
+    username: string
+  }
+}
+
+type GalleryImage = LocalImage | UnsplashImage
 
 /* ---------- 组件事件 ---------- */
 const emit = defineEmits<{
@@ -33,12 +56,18 @@ const store = useStore()
 const editor = computed(() => store.editor)
 
 /* ---------- 状态管理 ---------- */
+const imageSource = ref<`local` | `unsplash`>(`local`)
 const galleryImages = ref<GalleryImage[]>([])
 const selectedCategory = ref(`all`)
 const isLoading = ref(false)
 const hasMore = ref(true)
 const offset = ref(0)
+const page = ref(1)
 const limit = 20
+
+/* ---------- 搜索状态 ---------- */
+const searchQuery = ref(``)
+const searchDebounceTimer = ref<number | null>(null)
 
 /* ---------- 预览状态 ---------- */
 const previewVisible = ref(false)
@@ -56,22 +85,44 @@ const categories = ref([
 /* ---------- 容器引用 ---------- */
 const containerRef = ref<HTMLElement | null>(null)
 
-/* ---------- API 调用 ---------- */
-async function fetchImages(reset = false) {
+/* ---------- 类型守卫 ---------- */
+function isLocalImage(image: GalleryImage): image is LocalImage {
+  return `basename` in image
+}
+
+function isUnsplashImage(image: GalleryImage): image is UnsplashImage {
+  return `urls` in image
+}
+
+/* ---------- 获取图片 URL ---------- */
+function getImageUrl(image: GalleryImage): string {
+  if (isLocalImage(image)) {
+    return image.url
+  }
+  return image.urls.regular
+}
+
+function getImageThumbUrl(image: GalleryImage): string {
+  if (isLocalImage(image)) {
+    return image.url
+  }
+  return image.urls.small
+}
+
+/* ---------- 本地图库 API 调用 ---------- */
+async function fetchLocalImages(reset = false) {
   if (isLoading.value || (!hasMore.value && !reset))
     return
 
   try {
     isLoading.value = true
 
-    // 如果是重置，清空数据
     if (reset) {
       galleryImages.value = []
       offset.value = 0
       hasMore.value = true
     }
 
-    // 构建查询参数
     const currentCategory = categories.value.find(c => c.id === selectedCategory.value)
     const basename = currentCategory?.basename || ``
 
@@ -80,7 +131,6 @@ async function fetchImages(reset = false) {
       offset: offset.value.toString(),
     })
 
-    // 只在有 basename 时才添加
     if (basename) {
       params.append(`basename`, basename)
     }
@@ -100,16 +150,13 @@ async function fetchImages(reset = false) {
 
     const result = await response.json()
 
-    // 检查返回状态
     if (!result.success) {
       throw new Error(result.message || `获取图片失败`)
     }
 
-    // 解析数据
-    const newImages: GalleryImage[] = result.data?.images || []
+    const newImages: LocalImage[] = result.data?.images || []
     const totalCount = result.data?.count || 0
 
-    // 判断是否还有更多数据
     if (newImages.length < limit || galleryImages.value.length + newImages.length >= totalCount) {
       hasMore.value = false
     }
@@ -127,21 +174,100 @@ async function fetchImages(reset = false) {
   }
 }
 
+/* ---------- Unsplash API 调用 ---------- */
+async function fetchUnsplashImages(reset = false) {
+  if (isLoading.value || (!hasMore.value && !reset))
+    return
+
+  try {
+    isLoading.value = true
+
+    if (reset) {
+      galleryImages.value = []
+      page.value = 1
+      hasMore.value = true
+    }
+
+    // 如果有搜索词，使用搜索 API，否则获取随机图片
+    const query = searchQuery.value.trim() || `nature`
+    const url = `${EXTERNAL_APIS.UNSPLASH}/search/photos?query=${encodeURIComponent(query)}&page=${page.value}&per_page=${limit}`
+
+    const response = await fetch(url, {
+      method: `GET`,
+      headers: {
+        Authorization: `Client-ID ${UNSPLASH_CONFIG.ACCESS_KEY}`,
+      },
+    })
+
+    if (!response.ok) {
+      throw new Error(`Failed to fetch Unsplash images: ${response.statusText}`)
+    }
+
+    const result = await response.json()
+    const newImages: UnsplashImage[] = result.results || []
+
+    if (newImages.length < limit || page.value >= result.total_pages) {
+      hasMore.value = false
+    }
+
+    galleryImages.value.push(...newImages)
+    page.value += 1
+  }
+  catch (error) {
+    console.error(`获取 Unsplash 图片失败:`, error)
+    toast.error(`获取 Unsplash 图片失败`)
+    hasMore.value = false
+  }
+  finally {
+    isLoading.value = false
+  }
+}
+
+/* ---------- 统一 fetch 接口 ---------- */
+function fetchImages(reset = false) {
+  if (imageSource.value === `local`) {
+    return fetchLocalImages(reset)
+  }
+  return fetchUnsplashImages(reset)
+}
+
 /* ---------- 滚动加载 ---------- */
 function handleScroll(event: Event) {
   const container = event.target as HTMLElement
   const scrollBottom = container.scrollHeight - container.scrollTop - container.clientHeight
 
-  // 当滚动到距离底部 200px 时加载更多
   if (scrollBottom < 200 && !isLoading.value && hasMore.value) {
     fetchImages()
   }
+}
+
+/* ---------- 源切换 ---------- */
+function handleSourceChange(source: `local` | `unsplash`) {
+  imageSource.value = source
+  // 如果切换到 unsplash，重置分类
+  if (source === `unsplash`) {
+    selectedCategory.value = `all`
+  }
+  fetchImages(true)
 }
 
 /* ---------- 分类切换 ---------- */
 function handleCategoryChange(categoryId: string) {
   selectedCategory.value = categoryId
   fetchImages(true)
+}
+
+/* ---------- 搜索处理 ---------- */
+function handleSearch() {
+  if (searchDebounceTimer.value) {
+    clearTimeout(searchDebounceTimer.value)
+  }
+
+  searchDebounceTimer.value = window.setTimeout(() => {
+    if (imageSource.value === `unsplash`) {
+      fetchImages(true)
+    }
+  }, 500)
 }
 
 /* ---------- 预览图片 ---------- */
@@ -152,8 +278,7 @@ function previewImage(image: GalleryImage) {
 
 /* ---------- 图片插入 ---------- */
 async function insertImage(imageUrl?: string) {
-  // 如果没有传入 imageUrl，使用选中的图片
-  const urlToInsert = imageUrl || selectedImage.value?.url
+  const urlToInsert = imageUrl || (selectedImage.value ? getImageUrl(selectedImage.value) : null)
   if (!urlToInsert) {
     toast.error(`请选择要插入的图片`)
     return
@@ -164,30 +289,22 @@ async function insertImage(imageUrl?: string) {
   }
 
   try {
-    // 显示插入中提示
     toast.loading(`正在插入图片...`, { id: `insert-gallery-image` })
 
-    // 获取光标位置
     const cursor = editor.value.getCursor()
     const line = cursor.line
 
-    // 插入 Markdown 图片语法
     const imageMarkdown = `![](${urlToInsert})\n`
     editor.value.replaceRange(imageMarkdown, { line, ch: 0 })
 
-    // 移动光标到新行
     editor.value.setCursor({ line: line + 1, ch: 0 })
     editor.value.focus()
 
     toast.success(`图片已插入`, { id: `insert-gallery-image` })
 
-    // 关闭预览
     previewVisible.value = false
-
-    // 关闭对话框
     emit(`close`)
 
-    // 切换到预览模式（仅移动端）
     if (store.isMobile) {
       window.dispatchEvent(new CustomEvent(`switch-to-preview`))
     }
@@ -206,8 +323,36 @@ onMounted(() => {
 
 <template>
   <div class="h-full flex flex-col">
-    <!-- 分类筛选 -->
-    <div class="flex flex-shrink-0 flex-wrap gap-2 border-b p-4">
+    <!-- 图片源选择 -->
+    <div class="flex flex-shrink-0 gap-2 border-b p-4">
+      <Button
+        variant="outline"
+        size="sm"
+        :class="[
+          imageSource === 'local'
+            ? 'bg-primary text-primary-foreground'
+            : 'bg-background',
+        ]"
+        @click="handleSourceChange('local')"
+      >
+        本地图库
+      </Button>
+      <Button
+        variant="outline"
+        size="sm"
+        :class="[
+          imageSource === 'unsplash'
+            ? 'bg-primary text-primary-foreground'
+            : 'bg-background',
+        ]"
+        @click="handleSourceChange('unsplash')"
+      >
+        Unsplash
+      </Button>
+    </div>
+
+    <!-- 本地图库分类筛选 -->
+    <div v-if="imageSource === 'local'" class="flex flex-shrink-0 flex-wrap gap-2 border-b p-4">
       <Button
         v-for="category in categories"
         :key="category.id"
@@ -224,6 +369,19 @@ onMounted(() => {
       </Button>
     </div>
 
+    <!-- Unsplash 搜索框 -->
+    <div v-if="imageSource === 'unsplash'" class="flex flex-shrink-0 gap-2 border-b p-4">
+      <div class="relative flex-1">
+        <Search class="text-muted-foreground absolute left-3 top-2.5 h-4 w-4" />
+        <Input
+          v-model="searchQuery"
+          placeholder="搜索图片..."
+          class="pl-9"
+          @input="handleSearch"
+        />
+      </div>
+    </div>
+
     <!-- 图片网格 -->
     <div
       ref="containerRef"
@@ -234,13 +392,13 @@ onMounted(() => {
       <div v-if="galleryImages.length > 0" class="grid grid-cols-2 gap-3 lg:grid-cols-4 md:grid-cols-3">
         <div
           v-for="image in galleryImages"
-          :key="image.id"
+          :key="isLocalImage(image) ? image.id : image.id"
           class="group relative aspect-square cursor-pointer overflow-hidden border rounded-lg transition-all hover:shadow-lg"
           @click="previewImage(image)"
         >
           <img
-            :src="image.url"
-            :alt="`${image.basename} 图片`"
+            :src="getImageThumbUrl(image)"
+            :alt="isLocalImage(image) ? `${image.basename} 图片` : (image.alt_description || image.description || 'Unsplash image')"
             class="object-cover h-full w-full transition-transform group-hover:scale-105"
             loading="lazy"
           >
@@ -249,6 +407,12 @@ onMounted(() => {
             <div class="rounded-md bg-white/90 px-3 py-1 text-sm text-gray-900 font-medium">
               点击查看
             </div>
+          </div>
+          <!-- Unsplash 作者标注 -->
+          <div v-if="isUnsplashImage(image)" class="from-black/60 to-transparent bg-gradient-to-t pointer-events-none absolute bottom-0 left-0 right-0 px-2 py-1 opacity-0 transition-opacity group-hover:opacity-100">
+            <p class="truncate text-xs text-white">
+              by {{ image.user.name }}
+            </p>
           </div>
         </div>
       </div>
@@ -283,26 +447,44 @@ onMounted(() => {
           <!-- 图片显示 -->
           <div class="flex items-center justify-center rounded-lg bg-gray-50 p-4 dark:bg-gray-900">
             <img
-              :src="selectedImage.url"
-              :alt="`${selectedImage.basename} 图片`"
+              :src="getImageUrl(selectedImage)"
+              :alt="isLocalImage(selectedImage) ? `${selectedImage.basename} 图片` : (selectedImage.alt_description || 'Image')"
               class="max-h-[60vh] w-auto rounded-lg"
             >
           </div>
 
           <!-- 图片信息 -->
           <div class="space-y-2 border-t pt-4 text-sm">
-            <div class="flex justify-between">
-              <span class="text-muted-foreground">分类：</span>
-              <span>{{ selectedImage.basename }}</span>
-            </div>
-            <div class="flex justify-between">
-              <span class="text-muted-foreground">大小：</span>
-              <span>{{ (selectedImage.file_size / 1024).toFixed(2) }} KB</span>
-            </div>
-            <div class="flex justify-between">
-              <span class="text-muted-foreground">类型：</span>
-              <span>{{ selectedImage.content_type }}</span>
-            </div>
+            <!-- 本地图片信息 -->
+            <template v-if="isLocalImage(selectedImage)">
+              <div class="flex justify-between">
+                <span class="text-muted-foreground">分类：</span>
+                <span>{{ selectedImage.basename }}</span>
+              </div>
+              <div class="flex justify-between">
+                <span class="text-muted-foreground">大小：</span>
+                <span>{{ (selectedImage.file_size / 1024).toFixed(2) }} KB</span>
+              </div>
+              <div class="flex justify-between">
+                <span class="text-muted-foreground">类型：</span>
+                <span>{{ selectedImage.content_type }}</span>
+              </div>
+            </template>
+            <!-- Unsplash 图片信息 -->
+            <template v-else-if="isUnsplashImage(selectedImage)">
+              <div class="flex justify-between">
+                <span class="text-muted-foreground">作者：</span>
+                <span>{{ selectedImage.user.name }}</span>
+              </div>
+              <div class="flex justify-between">
+                <span class="text-muted-foreground">尺寸：</span>
+                <span>{{ selectedImage.width }} × {{ selectedImage.height }}</span>
+              </div>
+              <div v-if="selectedImage.description" class="flex flex-col gap-1">
+                <span class="text-muted-foreground">描述：</span>
+                <span class="text-sm">{{ selectedImage.description }}</span>
+              </div>
+            </template>
           </div>
 
           <!-- 操作按钮 -->
@@ -331,7 +513,6 @@ onMounted(() => {
 }
 
 @media (pointer: coarse) {
-  /* 触屏设备更细 */
   .custom-scroll::-webkit-scrollbar {
     width: 3px;
   }
