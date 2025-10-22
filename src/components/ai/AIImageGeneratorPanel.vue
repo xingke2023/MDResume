@@ -25,6 +25,7 @@ import {
   DialogHeader,
 } from '@/components/ui/dialog'
 import { Textarea } from '@/components/ui/textarea'
+import { API_BASE_URL, API_ENDPOINTS, API_KEY, getApiUrl } from '@/config/api'
 import { useDisplayStore, useStore } from '@/stores'
 import useAIImageConfigStore from '@/stores/AIImageConfig'
 import { copyPlain } from '@/utils/clipboard'
@@ -303,7 +304,7 @@ async function pollTaskStatus(taskId: string): Promise<string | null> {
         throw new Error(`任务已取消`)
       }
 
-      const queryUrl = `https://api.xingke888.com/extract/api/query_task_simple?task_id=${taskId}`
+      const queryUrl = `${API_BASE_URL}/extract/api/query_task_simple?task_id=${taskId}`
       const queryRes = await window.fetch(queryUrl, {
         method: `GET`,
         signal: abortController.value?.signal,
@@ -770,7 +771,7 @@ async function uploadImageViaProxy(imageUrl: string): Promise<string> {
     console.log(`📤 通过后端上传图片URL到微信图床:`, imageUrl)
 
     // 调用后端接口，发送图片URL，后端下载并上传到微信图床
-    const uploadResponse = await fetch(`https://api.xingke888.com/api/media/upload-image-url`, {
+    const uploadResponse = await fetch(`${API_BASE_URL}/api/media/upload-image-url`, {
       method: `POST`,
       headers: {
         'Content-Type': `application/json`,
@@ -833,7 +834,7 @@ async function uploadToWechat(imageUrl: string): Promise<string> {
     const formData = new FormData()
     formData.append(`media`, file)
 
-    const uploadResponse = await fetch(`https://api.xingke888.com/api/media/upload-image`, {
+    const uploadResponse = await fetch(`${API_BASE_URL}/api/media/upload-image`, {
       method: `POST`,
       headers: {
         'X-API-Key': `0dbe66d87befa7a9d5d7c1bdbc631a9b7dc5ce88be9a20e41c26790060802647`,
@@ -1178,7 +1179,7 @@ async function handleScreenshotSubmit() {
     // 构建请求
     const API_URL = import.meta.env.DEV
       ? `/api/image/generate-article`
-      : `https://api.xingke888.com/api/image/generate-article`
+      : getApiUrl(API_ENDPOINTS.IMAGE_GENERATE_ARTICLE)
     const API_KEY = `0dbe66d87befa7a9d5d7c1bdbc631a9b7dc5ce88be9a20e41c26790060802647`
 
     const headers: Record<string, string> = {
@@ -1321,7 +1322,7 @@ async function pollPosterTaskStatus(taskId: string): Promise<string | null> {
         throw new Error(`任务已取消`)
       }
 
-      const queryUrl = `https://api.xingke888.com/extract/api/query_task_simple?task_id=${taskId}`
+      const queryUrl = `${API_BASE_URL}/extract/api/query_task_simple?task_id=${taskId}`
       const queryRes = await window.fetch(queryUrl, {
         method: `GET`,
         signal: posterAbortController.value?.signal,
@@ -1378,7 +1379,7 @@ async function generatePoster() {
   posterAbortController.value = new AbortController()
 
   try {
-    const url = `https://api.xingke888.com/extract/api/generate_image`
+    const url = getApiUrl(API_ENDPOINTS.GENERATE_IMAGE)
 
     const res = await window.fetch(url, {
       method: `POST`,
@@ -1487,7 +1488,7 @@ async function insertPosterToEditor(imageUrl: string) {
   try {
     toast.loading(`正在处理图片插入...`, { id: `upload-poster-image` })
 
-    const uploadResponse = await fetch(`https://api.xingke888.com/api/media/upload-image-url`, {
+    const uploadResponse = await fetch(`${API_BASE_URL}/api/media/upload-image-url`, {
       method: `POST`,
       headers: {
         'Content-Type': `application/json`,
@@ -1641,7 +1642,7 @@ async function handleNanoSubmit() {
     // 开发环境使用代理，生产环境使用完整 URL
     const API_URL = import.meta.env.DEV
       ? `/api/image/generate-wechat`
-      : `https://api.xingke888.com/api/image/generate-wechat`
+      : getApiUrl(API_ENDPOINTS.IMAGE_GENERATE_WECHAT)
     const API_KEY = `0dbe66d87befa7a9d5d7c1bdbc631a9b7dc5ce88be9a20e41c26790060802647`
 
     const headers: Record<string, string> = {

@@ -44,3 +44,76 @@ export const giteeConfig = {
     `3fc04a9d272ab71doocsmd010c56cb57d88d2ba`,
   ],
 }
+
+/**
+ * API 域名配置
+ * 集中管理所有 API 接口域名
+ */
+
+/**
+ * 主 API 服务器域名
+ */
+export const API_BASE_URL = `https://api.xingke888.com`
+
+/**
+ * API Key（统一管理）
+ */
+export const API_KEY = `0dbe66d87befa7a9d5d7c1bdbc631a9b7dc5ce88be9a20e41c26790060802647`
+
+/**
+ * API 端点
+ */
+export const API_ENDPOINTS = {
+  // 图片相关
+  IMAGE_UPLOAD: `${API_BASE_URL}/api/media/upload-image`,
+  IMAGE_UPLOAD_URL: `${API_BASE_URL}/api/media/upload-image-url`,
+  IMAGE_GENERATE_WECHAT: `${API_BASE_URL}/api/image/generate-wechat`,
+  IMAGE_GENERATE_ARTICLE: `${API_BASE_URL}/api/image/generate-article`,
+  IMAGE_OCR: `${API_BASE_URL}/api/image/ocr`,
+
+  // 提取和生成相关
+  EXTRACT: `${API_BASE_URL}/extract/api/extract`,
+  GENERATE_IMAGE: `${API_BASE_URL}/extract/api/generate_image`,
+  QUERY_TASK: `${API_BASE_URL}/extract/api/query_task_simple`,
+
+  // 草稿相关
+  DRAFT_CREATE: `${API_BASE_URL}/api/draft/create-with-credentials`,
+} as const
+
+/**
+ * 开发环境代理路径
+ */
+export const DEV_PROXY = {
+  EXTRACT: `/api/extract`,
+  IMAGE: `/api/image`,
+} as const
+
+/**
+ * 根据环境获取 API URL
+ * @param endpoint API端点
+ * @returns 根据环境返回实际使用的URL
+ */
+export function getApiUrl(endpoint: string): string {
+  // 开发环境使用代理
+  if (import.meta.env.DEV) {
+    // 判断是否需要使用代理
+    if (endpoint.includes(`/extract/`)) {
+      return endpoint.replace(API_BASE_URL, ``)
+    }
+    if (endpoint.includes(`/api/image/`)) {
+      return endpoint.replace(`${API_BASE_URL}/api/image`, `/api/image`)
+    }
+  }
+  return endpoint
+}
+
+/**
+ * 第三方 API 域名
+ */
+export const EXTERNAL_APIS = {
+  WECHAT: `https://api.weixin.qq.com`,
+  TELEGRAM: `https://api.telegram.org`,
+  GITHUB: `https://api.github.com`,
+  CLOUDINARY: `https://api.cloudinary.com`,
+  BSPAPP: `https://api.bspapp.com`,
+} as const

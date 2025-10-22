@@ -3,6 +3,7 @@ import { ImagePlus, Send, X } from 'lucide-vue-next'
 import { ref } from 'vue'
 import { toast } from 'vue-sonner'
 import { Button } from '@/components/ui/button'
+import { API_ENDPOINTS, API_KEY, getApiUrl } from '@/config/api'
 import { useStore } from '@/stores'
 
 defineProps<{
@@ -205,18 +206,14 @@ async function handleSubmit() {
     })
 
     // 构建请求
-    // 开发环境使用代理，生产环境使用完整 URL
-    const API_URL = import.meta.env.DEV
-      ? `/api/image/generate-article`
-      : `https://api.xingke888.com/api/image/generate-article`
-    const API_KEY = `0dbe66d87befa7a9d5d7c1bdbc631a9b7dc5ce88be9a20e41c26790060802647`
+    const apiUrl = getApiUrl(API_ENDPOINTS.IMAGE_GENERATE_ARTICLE)
 
     const headers: Record<string, string> = {
       'X-API-Key': API_KEY,
       // 不设置 Content-Type，让浏览器自动设置 multipart/form-data 的 boundary
     }
 
-    const response = await fetch(API_URL, {
+    const response = await fetch(apiUrl, {
       method: `POST`,
       headers,
       body: formData,

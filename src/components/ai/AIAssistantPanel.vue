@@ -30,6 +30,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import { Textarea } from '@/components/ui/textarea'
+import { API_ENDPOINTS, API_KEY, getApiUrl } from '@/config/api'
 import { useDisplayStore, useStore } from '@/stores'
 import useAIConfigStore from '@/stores/AIConfig'
 import type { QuickCommandRuntime } from '@/stores/useQuickCommands'
@@ -280,12 +281,9 @@ async function performOCR(material: ImageMaterial) {
     const formData = new FormData()
     formData.append(`images`, compressedFile)
 
-    const API_URL = import.meta.env.DEV
-      ? `/api/image/ocr`
-      : `https://api.xingke888.com/api/image/ocr`
-    const API_KEY = `0dbe66d87befa7a9d5d7c1bdbc631a9b7dc5ce88be9a20e41c26790060802647`
+    const apiUrl = getApiUrl(API_ENDPOINTS.IMAGE_OCR)
 
-    const response = await fetch(API_URL, {
+    const response = await fetch(apiUrl, {
       method: `POST`,
       headers: {
         'X-API-Key': API_KEY,

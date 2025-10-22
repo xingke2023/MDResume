@@ -3,6 +3,7 @@ import { Wrench } from 'lucide-vue-next'
 import { ref, watch } from 'vue'
 import { toast } from 'vue-sonner'
 import { Button } from '@/components/ui/button'
+import { API_ENDPOINTS, getApiUrl } from '@/config/api'
 import { useStore } from '@/stores'
 
 defineProps<{
@@ -50,9 +51,7 @@ async function fetchArticle() {
 
   try {
     // 开发环境使用代理，生产环境直接访问
-    const apiEndpoint = import.meta.env.DEV
-      ? `/api/extract`
-      : `https://api.xingke888.com/extract/api/extract`
+    const apiEndpoint = getApiUrl(API_ENDPOINTS.EXTRACT)
 
     const response = await fetch(apiEndpoint, {
       method: `POST`,
