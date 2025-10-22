@@ -70,6 +70,7 @@ export const API_ENDPOINTS = {
   IMAGE_GENERATE_WECHAT: `${API_BASE_URL}/api/image/generate-wechat`,
   IMAGE_GENERATE_ARTICLE: `${API_BASE_URL}/api/image/generate-article`,
   IMAGE_OCR: `${API_BASE_URL}/api/image/ocr`,
+  IMAGE_LIST: `${API_BASE_URL}/api/images/list`,
 
   // 提取和生成相关
   EXTRACT: `${API_BASE_URL}/extract/api/extract`,
@@ -102,6 +103,9 @@ export function getApiUrl(endpoint: string): string {
     }
     if (endpoint.includes(`/api/image/`)) {
       return endpoint.replace(`${API_BASE_URL}/api/image`, `/api/image`)
+    }
+    if (endpoint.includes(`/api/images/`)) {
+      return endpoint.replace(`${API_BASE_URL}/api/images`, `/api/images`)
     }
     if (endpoint.includes(`/api/media/`)) {
       return endpoint.replace(`${API_BASE_URL}/api/media`, `/api/media`)

@@ -39,6 +39,12 @@ export default defineConfig({
         secure: false,
         rewrite: path => path,
       },
+      '/api/images': {
+        target: `https://api.xingke888.com`,
+        changeOrigin: true,
+        secure: false,
+        rewrite: path => path,
+      },
     },
   },
   plugins: [

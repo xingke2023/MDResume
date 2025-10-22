@@ -2582,7 +2582,7 @@ async function insertNanoImageToEditor(imageUrl: string, imagePrompt: string): P
 
       <!-- Tab 5: 保险人图库 -->
       <div v-if="activeTab === 'gallery'">
-        <InsuranceImageGallery />
+        <InsuranceImageGallery @close="dialogVisible = false" />
       </div>
     </DialogContent>
   </Dialog>
