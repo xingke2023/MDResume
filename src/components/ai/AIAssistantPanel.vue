@@ -1094,7 +1094,7 @@ async function sendMessage() {
                 @click="quotedContent.trim() && clearQuotedContent()"
               >
                 <Check v-if="quotedContent.trim()" class="h-2.5 w-2.5" />
-                <span>鼠标选取</span>
+                <span>鼠标选区</span>
               </Button>
 
               <!-- 引用光标前作为上下文按钮 -->
