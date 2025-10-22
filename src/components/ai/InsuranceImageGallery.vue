@@ -95,18 +95,28 @@ function isUnsplashImage(image: GalleryImage): image is UnsplashImage {
 }
 
 /* ---------- 获取图片 URL ---------- */
+// 用于预览显示的 URL (small)
 function getImageUrl(image: GalleryImage): string {
   if (isLocalImage(image)) {
     return image.url
   }
-  return image.urls.regular
+  return image.urls.small
 }
 
+// 用于列表缩略图的 URL (small)
 function getImageThumbUrl(image: GalleryImage): string {
   if (isLocalImage(image)) {
     return image.url
   }
-  return image.urls.thumb
+  return image.urls.small
+}
+
+// 用于插入编辑器的 URL (regular 高质量)
+function getInsertUrl(image: GalleryImage): string {
+  if (isLocalImage(image)) {
+    return image.url
+  }
+  return image.urls.regular
 }
 
 /* ---------- 本地图库 API 调用 ---------- */
@@ -278,7 +288,7 @@ function previewImage(image: GalleryImage) {
 
 /* ---------- 图片插入 ---------- */
 async function insertImage(imageUrl?: string) {
-  const urlToInsert = imageUrl || (selectedImage.value ? getImageUrl(selectedImage.value) : null)
+  const urlToInsert = imageUrl || (selectedImage.value ? getInsertUrl(selectedImage.value) : null)
   if (!urlToInsert) {
     toast.error(`请选择要插入的图片`)
     return
@@ -329,18 +339,6 @@ onMounted(() => {
         variant="outline"
         size="sm"
         :class="[
-          imageSource === 'local'
-            ? 'bg-primary text-primary-foreground'
-            : 'bg-background',
-        ]"
-        @click="handleSourceChange('local')"
-      >
-        本地图库
-      </Button>
-      <Button
-        variant="outline"
-        size="sm"
-        :class="[
           imageSource === 'unsplash'
             ? 'bg-primary text-primary-foreground'
             : 'bg-background',
@@ -348,6 +346,18 @@ onMounted(() => {
         @click="handleSourceChange('unsplash')"
       >
         Unsplash
+      </Button>
+      <Button
+        variant="outline"
+        size="sm"
+        :class="[
+          imageSource === 'local'
+            ? 'bg-primary text-primary-foreground'
+            : 'bg-background',
+        ]"
+        @click="handleSourceChange('local')"
+      >
+        本地图库
       </Button>
     </div>
 
