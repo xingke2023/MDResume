@@ -947,27 +947,27 @@ async function sendMessage() {
         <div class="w-full flex items-center justify-between">
           <DialogTitle>AI写作助手</DialogTitle>
 
-          <div class="flex items-center gap-1">
+          <div class="flex items-center gap-2">
             <Button
               title="清空对话内容"
               aria-label="清空对话内容"
-              variant="ghost"
+              variant="outline"
               size="sm"
-              class="px-2 text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300"
+              class="h-7 border-red-200 bg-white px-3 py-0.5 text-red-600 shadow-md transition-all dark:border-red-800 hover:border-red-300 dark:bg-gray-800 dark:text-red-400 hover:shadow-lg dark:hover:border-red-700"
               @click="resetMessages"
             >
-              <Trash2 class="mr-1 h-4 w-4" />
+              <Trash2 class="mr-1 h-3.5 w-3.5" />
               清空对话
             </Button>
             <Button
               title="配置参数"
               aria-label="配置参数"
-              variant="ghost"
+              variant="outline"
               size="sm"
-              class="px-2"
+              class="h-7 border-gray-200 bg-white px-3 py-0.5 shadow-md transition-all dark:border-gray-700 dark:bg-gray-800 hover:shadow-lg"
               @click="configVisible = !configVisible"
             >
-              <Settings class="mr-1 h-4 w-4" />
+              <Settings class="mr-1 h-3.5 w-3.5" />
               模型设置
             </Button>
           </div>
