@@ -573,7 +573,7 @@ function getFilteredFullContent(): string {
 function openExpandedView() {
   // 根据当前激活的引用类型获取内容和标题
   if (isQuoteCursorBefore.value) {
-    expandedViewTitle.value = `光标前全文`
+    expandedViewTitle.value = `光标前`
     expandedViewContent.value = getCursorBeforeContent()
   }
   else if (isQuoteAllContent.value) {
@@ -1083,7 +1083,7 @@ async function sendMessage() {
             <!-- ============ 引文选择按钮 ============ -->
             <div class="flex flex-wrap items-center gap-1 rounded-lg bg-white/60 p-1.5 dark:bg-gray-800/40">
               <!-- 选择上下文标签 -->
-              <span class="text-xs text-gray-700 font-semibold dark:text-gray-300"><span class="text-lg">①</span>引用:</span>
+              <span class="text-xs text-gray-700 font-semibold dark:text-gray-300"><span class="text-lg">①</span>上下文:</span>
               <Button
                 size="sm"
                 variant="outline"
@@ -1107,7 +1107,7 @@ async function sendMessage() {
                 @click="() => { console.log('点击光标前，当前状态:', isQuoteCursorBefore); quoteCursorBefore(); nextTick(() => console.log('点击光标前后，新状态:', isQuoteCursorBefore)); }"
               >
                 <Check v-if="isQuoteCursorBefore" class="h-2.5 w-2.5" />
-                <span>光标前全文</span>
+                <span>光标前</span>
               </Button>
 
               <!-- 写光标中间部分按钮 -->
@@ -1144,7 +1144,7 @@ async function sendMessage() {
             >
               <div class="mb-2 pr-20 text-sm text-gray-700 font-semibold dark:text-gray-300">
                 {{
-                  isQuoteCursorBefore ? '光标前全文'
+                  isQuoteCursorBefore ? '光标前'
                   : isQuoteAllContent ? '全文'
                     : isQuoteCursorMiddle ? '光标前后上下文'
                       : '选取的上下文'
