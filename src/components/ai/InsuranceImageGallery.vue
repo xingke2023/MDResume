@@ -3,6 +3,12 @@ import { ImageIcon, Loader2 } from 'lucide-vue-next'
 import { computed, onMounted, ref } from 'vue'
 import { toast } from 'vue-sonner'
 import { Button } from '@/components/ui/button'
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
 import { API_ENDPOINTS, API_KEY, getApiUrl } from '@/config/api'
 import { useStore } from '@/stores'
 
@@ -33,6 +39,10 @@ const isLoading = ref(false)
 const hasMore = ref(true)
 const offset = ref(0)
 const limit = 20
+
+/* ---------- 预览状态 ---------- */
+const previewVisible = ref(false)
+const selectedImage = ref<GalleryImage | null>(null)
 
 /* ---------- 分类列表 ---------- */
 const categories = ref([
@@ -134,8 +144,20 @@ function handleCategoryChange(categoryId: string) {
   fetchImages(true)
 }
 
+/* ---------- 预览图片 ---------- */
+function previewImage(image: GalleryImage) {
+  selectedImage.value = image
+  previewVisible.value = true
+}
+
 /* ---------- 图片插入 ---------- */
-async function insertImage(imageUrl: string) {
+async function insertImage(imageUrl?: string) {
+  // 如果没有传入 imageUrl，使用选中的图片
+  const urlToInsert = imageUrl || selectedImage.value?.url
+  if (!urlToInsert) {
+    toast.error(`请选择要插入的图片`)
+    return
+  }
   if (!editor.value) {
     toast.error(`编辑器未初始化`)
     return
@@ -150,7 +172,7 @@ async function insertImage(imageUrl: string) {
     const line = cursor.line
 
     // 插入 Markdown 图片语法
-    const imageMarkdown = `![](${imageUrl})\n`
+    const imageMarkdown = `![](${urlToInsert})\n`
     editor.value.replaceRange(imageMarkdown, { line, ch: 0 })
 
     // 移动光标到新行
@@ -158,6 +180,9 @@ async function insertImage(imageUrl: string) {
     editor.value.focus()
 
     toast.success(`图片已插入`, { id: `insert-gallery-image` })
+
+    // 关闭预览
+    previewVisible.value = false
 
     // 关闭对话框
     emit(`close`)
@@ -211,7 +236,7 @@ onMounted(() => {
           v-for="image in galleryImages"
           :key="image.id"
           class="group relative aspect-square cursor-pointer overflow-hidden border rounded-lg transition-all hover:shadow-lg"
-          @click="insertImage(image.url)"
+          @click="previewImage(image)"
         >
           <img
             :src="image.url"
@@ -222,7 +247,7 @@ onMounted(() => {
           <!-- 悬浮遮罩 -->
           <div class="pointer-events-none absolute inset-0 flex items-center justify-center bg-black/0 opacity-0 transition-all group-hover:bg-black/30 group-hover:opacity-100">
             <div class="rounded-md bg-white/90 px-3 py-1 text-sm text-gray-900 font-medium">
-              点击插入
+              点击查看
             </div>
           </div>
         </div>
@@ -247,6 +272,56 @@ onMounted(() => {
         没有更多图片了
       </div>
     </div>
+
+    <!-- 图片预览 Dialog -->
+    <Dialog v-model:open="previewVisible">
+      <DialogContent class="max-w-4xl">
+        <DialogHeader>
+          <DialogTitle>图片预览</DialogTitle>
+        </DialogHeader>
+        <div v-if="selectedImage" class="space-y-4">
+          <!-- 图片显示 -->
+          <div class="flex items-center justify-center rounded-lg bg-gray-50 p-4 dark:bg-gray-900">
+            <img
+              :src="selectedImage.url"
+              :alt="`${selectedImage.basename} 图片`"
+              class="max-h-[60vh] w-auto rounded-lg"
+            >
+          </div>
+
+          <!-- 图片信息 -->
+          <div class="space-y-2 border-t pt-4 text-sm">
+            <div class="flex justify-between">
+              <span class="text-muted-foreground">分类：</span>
+              <span>{{ selectedImage.basename }}</span>
+            </div>
+            <div class="flex justify-between">
+              <span class="text-muted-foreground">大小：</span>
+              <span>{{ (selectedImage.file_size / 1024).toFixed(2) }} KB</span>
+            </div>
+            <div class="flex justify-between">
+              <span class="text-muted-foreground">类型：</span>
+              <span>{{ selectedImage.content_type }}</span>
+            </div>
+          </div>
+
+          <!-- 操作按钮 -->
+          <div class="flex justify-end gap-2 border-t pt-4">
+            <Button
+              variant="outline"
+              @click="previewVisible = false"
+            >
+              取消
+            </Button>
+            <Button
+              @click="insertImage()"
+            >
+              插入到编辑器
+            </Button>
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
   </div>
 </template>
 
