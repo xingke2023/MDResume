@@ -1719,19 +1719,24 @@ async function insertNanoGeneratedImage() {
     return
   }
 
-  await insertNanoImageToEditor(nanoGeneratedImageUrl.value, nanoGeneratedPrompt.value)
+  const success = await insertNanoImageToEditor(nanoGeneratedImageUrl.value, nanoGeneratedPrompt.value)
 
-  // 清空生成的图片
-  nanoGeneratedImageUrl.value = ``
-  nanoGeneratedPrompt.value = ``
+  if (success) {
+    // 清空生成的图片
+    nanoGeneratedImageUrl.value = ``
+    nanoGeneratedPrompt.value = ``
+
+    // 关闭对话框
+    dialogVisible.value = false
+  }
 }
 
 // 插入图片到编辑器的具体实现
-async function insertNanoImageToEditor(imageUrl: string, imagePrompt: string) {
+async function insertNanoImageToEditor(imageUrl: string, imagePrompt: string): Promise<boolean> {
   if (!editor.value) {
     console.warn(`编辑器未初始化`)
     toast.error(`编辑器未初始化`)
-    return
+    return false
   }
 
   try {
@@ -1756,11 +1761,13 @@ async function insertNanoImageToEditor(imageUrl: string, imagePrompt: string) {
 
     toast.success(`图片已插入编辑器，请预览查看`)
     console.log(`✅ 图片已成功插入到编辑器`)
+    return true
   }
   catch (error) {
     const errorMsg = (error as Error).message || `插入图片失败`
     toast.error(errorMsg)
     console.error(`❌ 插入图片到编辑器失败:`, error)
+    return false
   }
 }
 </script>
