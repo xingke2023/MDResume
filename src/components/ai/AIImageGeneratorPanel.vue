@@ -30,13 +30,14 @@ import { useDisplayStore, useStore } from '@/stores'
 import useAIImageConfigStore from '@/stores/AIImageConfig'
 import { copyPlain } from '@/utils/clipboard'
 import AIImageConfig from './AIImageConfig.vue'
+import InsuranceImageGallery from './InsuranceImageGallery.vue'
 
 /* ---------- 组件属性 ---------- */
 const props = defineProps<{ open: boolean }>()
 const emit = defineEmits([`update:open`])
 
 /* ---------- Tab 管理 ---------- */
-const activeTab = ref<`screenshot` | `poster` | `nano` | `text2img` | `upload`>(`upload`)
+const activeTab = ref<`screenshot` | `poster` | `nano` | `text2img` | `upload` | `gallery`>(`upload`)
 
 /* ---------- 编辑器引用 ---------- */
 const store = useStore()
@@ -1499,39 +1500,30 @@ async function insertPosterToEditor(imageUrl: string): Promise<boolean> {
     return false
   }
 
-  let finalImageUrl = imageUrl
-
   try {
     toast.loading(`正在处理图片插入...`, { id: `upload-poster-image` })
 
-    // 尝试上传到微信图床
-    try {
-      const uploadUrl = getApiUrl(API_ENDPOINTS.IMAGE_UPLOAD_URL)
-      const uploadResponse = await fetch(uploadUrl, {
-        method: `POST`,
-        headers: {
-          'Content-Type': `application/json`,
-          'X-API-Key': API_KEY,
-        },
-        body: JSON.stringify({ imageUrl }),
-      })
+    const uploadUrl = getApiUrl(API_ENDPOINTS.IMAGE_UPLOAD_URL)
+    const uploadResponse = await fetch(uploadUrl, {
+      method: `POST`,
+      headers: {
+        'Content-Type': `application/json`,
+        'X-API-Key': API_KEY,
+      },
+      body: JSON.stringify({ imageUrl }),
+    })
 
-      if (uploadResponse.ok) {
-        const data = await uploadResponse.json()
-        if (data.data?.url) {
-          finalImageUrl = data.data.url
-          console.log(`图片已上传到微信图床:`, finalImageUrl)
-        }
-      }
-      else {
-        console.warn(`图片上传失败 (${uploadResponse.status})，将使用原始URL`)
-      }
-    }
-    catch (uploadError) {
-      // 上传失败（如 CORS 错误），降级使用原始 URL
-      console.warn(`图片上传失败，将使用原始URL:`, uploadError)
+    if (!uploadResponse.ok) {
+      throw new Error(`上传失败: ${uploadResponse.status}`)
     }
 
+    const data = await uploadResponse.json()
+
+    if (!data.data || !data.data.url) {
+      throw new Error(`上传成功但未返回图片URL`)
+    }
+
+    const finalImageUrl = data.data.url
     toast.dismiss(`upload-poster-image`)
 
     const imagePrompt = posterImagePrompts.value[posterCurrentImageIndex.value] || ``
@@ -1547,7 +1539,7 @@ async function insertPosterToEditor(imageUrl: string): Promise<boolean> {
     editor.value.setCursor(newCursor)
     editor.value.focus()
 
-    toast.success(`海报已插入`)
+    toast.success(`海报已上传并插入`)
 
     // 切换到预览模式
     window.dispatchEvent(new CustomEvent(`switch-to-preview`))
@@ -1878,6 +1870,19 @@ async function insertNanoImageToEditor(imageUrl: string, imagePrompt: string): P
               截图写作
             </button>
 
+            <button
+              type="button"
+              class="flex items-center justify-center whitespace-nowrap border rounded-md px-3 py-1 text-sm font-medium transition-all"
+              :class="[
+                activeTab === 'gallery'
+                  ? 'border-transparent bg-gradient-to-r from-indigo-500 to-blue-500 text-white shadow-lg shadow-indigo-500/50 dark:from-indigo-600 dark:to-blue-600'
+                  : 'border-gray-200 bg-white text-gray-700 hover:border-indigo-300 hover:bg-indigo-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:border-indigo-500/50 dark:hover:bg-indigo-900/30',
+              ]"
+              @click="activeTab = 'gallery'"
+            >
+              保险人图库
+            </button>
+
             <!-- AI文生图 tab 已隐藏 -->
             <button
               v-if="false"
@@ -2198,21 +2203,6 @@ async function insertNanoImageToEditor(imageUrl: string, imagePrompt: string): P
 
       <!-- Tab 3: NanoBanana图片制作 -->
       <div v-if="activeTab === 'nano'" class="space-y-4 flex flex-1 flex-col overflow-y-auto">
-        <!-- 工具按钮 -->
-        <div class="flex items-center gap-2">
-          <Button
-            v-if="nanoGeneratedImageUrl"
-            title="清空图像"
-            aria-label="清空图像"
-            variant="outline"
-            size="sm"
-            @click="() => { nanoGeneratedImageUrl = ''; nanoGeneratedPrompt = '' }"
-          >
-            <Trash2 class="mr-1 h-4 w-4" />
-            清空图像
-          </Button>
-        </div>
-
         <!-- ============ 图像展示区域 ============ -->
         <div
           v-if="nanoIsProcessing || nanoGeneratedImageUrl"
@@ -2283,6 +2273,15 @@ async function insertNanoImageToEditor(imageUrl: string, imagePrompt: string): P
                 >
                   <Copy class="mr-1 h-3 w-3 sm:mr-2 sm:h-4 sm:w-4" />
                   复制链接
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  class="bg-background flex-shrink-0 text-xs sm:text-sm"
+                  @click="() => { nanoGeneratedImageUrl = ''; nanoGeneratedPrompt = '' }"
+                >
+                  <Trash2 class="mr-1 h-3 w-3 sm:mr-2 sm:h-4 sm:w-4" />
+                  清空图像
                 </Button>
               </div>
             </div>
@@ -2579,6 +2578,11 @@ async function insertNanoImageToEditor(imageUrl: string, imagePrompt: string): P
             </Button>
           </div>
         </div>
+      </div>
+
+      <!-- Tab 5: 保险人图库 -->
+      <div v-if="activeTab === 'gallery'">
+        <InsuranceImageGallery />
       </div>
     </DialogContent>
   </Dialog>
