@@ -106,7 +106,7 @@ function getImageThumbUrl(image: GalleryImage): string {
   if (isLocalImage(image)) {
     return image.url
   }
-  return image.urls.small
+  return image.urls.thumb
 }
 
 /* ---------- 本地图库 API 调用 ---------- */
