@@ -56,7 +56,7 @@ const store = useStore()
 const editor = computed(() => store.editor)
 
 /* ---------- 状态管理 ---------- */
-const imageSource = ref<`local` | `unsplash`>(`local`)
+const imageSource = ref<`local` | `unsplash`>(`unsplash`)
 const galleryImages = ref<GalleryImage[]>([])
 const selectedCategory = ref(`all`)
 const isLoading = ref(false)
