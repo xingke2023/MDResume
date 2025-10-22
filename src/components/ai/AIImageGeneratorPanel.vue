@@ -1213,12 +1213,17 @@ async function handleScreenshotSubmit() {
     console.log(`生成的文稿:`, article)
 
     // 将文稿插入到编辑器
-    await insertArticleToEditor(article)
+    const success = await insertArticleToEditor(article)
 
-    // 清空表单
-    screenshotInstruction.value = ``
-    screenshotImageFiles.value = []
-    screenshotImagePreviews.value = []
+    if (success) {
+      // 清空表单
+      screenshotInstruction.value = ``
+      screenshotImageFiles.value = []
+      screenshotImagePreviews.value = []
+
+      // 关闭对话框
+      dialogVisible.value = false
+    }
   }
   catch (error) {
     console.error(`截图写作处理失败:`, error)
@@ -1252,11 +1257,11 @@ async function handleScreenshotSubmit() {
 }
 
 // 插入文稿到编辑器
-async function insertArticleToEditor(article: string) {
+async function insertArticleToEditor(article: string): Promise<boolean> {
   if (!editor.value) {
     console.warn(`编辑器未初始化`)
     toast.error(`编辑器未初始化`)
-    return
+    return false
   }
 
   try {
@@ -1279,11 +1284,13 @@ async function insertArticleToEditor(article: string) {
 
     toast.success(`文稿已插入编辑器`)
     console.log(`✅ 文稿已成功插入到编辑器`)
+    return true
   }
   catch (error) {
     const errorMsg = (error as Error).message || `插入文稿失败`
     toast.error(errorMsg)
     console.error(`❌ 插入文稿到编辑器失败:`, error)
+    return false
   }
 }
 
@@ -1476,10 +1483,10 @@ async function downloadPoster(imageUrl: string, index: number) {
 }
 
 // 插入海报到编辑器
-async function insertPosterToEditor(imageUrl: string) {
+async function insertPosterToEditor(imageUrl: string): Promise<boolean> {
   if (!editor.value) {
     toast.error(`编辑器未初始化`)
-    return
+    return false
   }
 
   try {
@@ -1521,10 +1528,12 @@ async function insertPosterToEditor(imageUrl: string) {
     editor.value.focus()
 
     toast.success(`海报已上传并插入`)
+    return true
   }
   catch (error) {
     toast.dismiss(`upload-poster-image`)
     toast.error((error as Error).message || `插入图片失败`)
+    return false
   }
 }
 
@@ -1538,6 +1547,14 @@ function previousPoster() {
 function nextPoster() {
   if (posterCurrentImageIndex.value < posterGeneratedImages.value.length - 1) {
     posterCurrentImageIndex.value++
+  }
+}
+
+// 处理海报插入并关闭对话框
+async function handleInsertPoster(imageUrl: string) {
+  const success = await insertPosterToEditor(imageUrl)
+  if (success) {
+    dialogVisible.value = false
   }
 }
 
@@ -2096,7 +2113,7 @@ async function insertNanoImageToEditor(imageUrl: string, imagePrompt: string): P
                   variant="outline"
                   size="sm"
                   class="bg-background flex-shrink-0 text-xs sm:text-sm"
-                  @click="insertPosterToEditor(posterGeneratedImages[posterCurrentImageIndex])"
+                  @click="handleInsertPoster(posterGeneratedImages[posterCurrentImageIndex])"
                 >
                   <ImageIcon class="mr-1 h-3 w-3 sm:mr-2 sm:h-4 sm:w-4" />
                   插入
