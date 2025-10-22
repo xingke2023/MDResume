@@ -1502,11 +1502,12 @@ async function insertPosterToEditor(imageUrl: string): Promise<boolean> {
   try {
     toast.loading(`正在处理图片插入...`, { id: `upload-poster-image` })
 
-    const uploadResponse = await fetch(`${API_BASE_URL}/api/media/upload-image-url`, {
+    const uploadUrl = getApiUrl(API_ENDPOINTS.IMAGE_UPLOAD_URL)
+    const uploadResponse = await fetch(uploadUrl, {
       method: `POST`,
       headers: {
         'Content-Type': `application/json`,
-        'X-API-Key': `0dbe66d87befa7a9d5d7c1bdbc631a9b7dc5ce88be9a20e41c26790060802647`,
+        'X-API-Key': API_KEY,
       },
       body: JSON.stringify({ imageUrl }),
     })
@@ -1753,9 +1754,8 @@ async function insertNanoGeneratedImage() {
   const success = await insertNanoImageToEditor(nanoGeneratedImageUrl.value, nanoGeneratedPrompt.value)
 
   if (success) {
-    // 清空生成的图片
-    nanoGeneratedImageUrl.value = ``
-    nanoGeneratedPrompt.value = ``
+    // 不清空图片，保留在对话框中供用户再次使用
+    // 用户可以通过"清空图像"按钮手动清空
 
     // 关闭对话框
     dialogVisible.value = false
@@ -1869,7 +1869,9 @@ async function insertNanoImageToEditor(imageUrl: string, imagePrompt: string): P
               截图写作
             </button>
 
+            <!-- AI文生图 tab 已隐藏 -->
             <button
+              v-if="false"
               type="button"
               class="flex items-center justify-center whitespace-nowrap border rounded-md px-3 py-1 text-sm font-medium transition-all"
               :class="[

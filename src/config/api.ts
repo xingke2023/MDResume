@@ -103,6 +103,9 @@ export function getApiUrl(endpoint: string): string {
     if (endpoint.includes(`/api/image/`)) {
       return endpoint.replace(`${API_BASE_URL}/api/image`, `/api/image`)
     }
+    if (endpoint.includes(`/api/media/`)) {
+      return endpoint.replace(`${API_BASE_URL}/api/media`, `/api/media`)
+    }
   }
   return endpoint
 }
