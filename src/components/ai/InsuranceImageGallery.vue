@@ -66,7 +66,7 @@ const page = ref(1)
 const limit = 20
 
 /* ---------- 搜索状态 ---------- */
-const searchQuery = ref(``)
+const searchQuery = ref(`insurance`)
 const searchDebounceTimer = ref<number | null>(null)
 
 /* ---------- 预览状态 ---------- */
@@ -188,8 +188,8 @@ async function fetchUnsplashImages(reset = false) {
       hasMore.value = true
     }
 
-    // 如果有搜索词，使用搜索 API，否则获取随机图片
-    const query = searchQuery.value.trim() || `nature`
+    // 如果有搜索词，使用搜索 API，否则使用默认关键词 insurance
+    const query = searchQuery.value.trim() || `insurance`
     const url = `${EXTERNAL_APIS.UNSPLASH}/search/photos?query=${encodeURIComponent(query)}&page=${page.value}&per_page=${limit}`
 
     const response = await fetch(url, {
