@@ -26,7 +26,7 @@ const isProcessing = ref(false)
 const fileInput = ref<HTMLInputElement | null>(null)
 
 function closeDialog() {
-  emit(`update:visible`, false)
+  emit('update:visible', false)
   // 重置表单
   instruction.value = ``
   imageFiles.value = []
@@ -189,7 +189,7 @@ async function handleSubmit() {
 
   try {
     // 压缩所有图片
-    toast.loading(`正在压缩图片...`, { id: `compress-images` })
+    toast.loading(`正在压缩图片...', { id: `compress-images` })
     const compressedFiles = await Promise.all(
       imageFiles.value.map((file, index) => compressImage(file, index + 1)),
     )
@@ -198,11 +198,11 @@ async function handleSubmit() {
 
     // 构建 FormData
     const formData = new FormData()
-    formData.append(`instruction`, instruction.value.trim())
+    formData.append(`instruction', instruction.value.trim())
 
     // 添加压缩后的图片到 FormData
     compressedFiles.forEach((file) => {
-      formData.append(`images`, file)
+      formData.append(`images', file)
     })
 
     // 构建请求
@@ -221,7 +221,7 @@ async function handleSubmit() {
 
     if (!response.ok) {
       const errorText = await response.text()
-      console.error(`AI接口错误详情:`, errorText)
+      console.error(`AI接口错误详情:', errorText)
       throw new Error(`AI 接口请求失败 (${response.status}): ${response.statusText}`)
     }
 
@@ -234,13 +234,13 @@ async function handleSubmit() {
     const article = data.data?.article || data.article
 
     if (!article) {
-      console.error(`AI响应数据:`, data)
+      console.error(`AI响应数据:', data)
       throw new Error(`未返回文稿内容`)
     }
 
     // 显示成功并插入文稿
     toast.success(`截图写作完成！文稿已插入编辑器`)
-    console.log(`生成的文稿:`, article)
+    console.log(`生成的文稿:', article)
 
     // 将文稿插入到编辑器
     await insertArticleToEditor(article)
@@ -249,7 +249,7 @@ async function handleSubmit() {
     closeDialog()
   }
   catch (error) {
-    console.error(`截图写作处理失败:`, error)
+    console.error(`截图写作处理失败:', error)
 
     let errorMessage = `处理失败`
     const errorMsg = error instanceof Error ? error.message : String(error)
@@ -292,7 +292,7 @@ async function insertArticleToEditor(article: string) {
     const cursor = store.editor.getCursor()
 
     // 在光标位置插入文稿内容
-    store.editor.replaceRange(`\n${article}\n`, cursor)
+    store.editor.replaceRange(`\n${article}\n', cursor)
 
     // 将光标移动到插入内容后面
     const lines = article.split(`\n`)
@@ -311,7 +311,7 @@ async function insertArticleToEditor(article: string) {
   catch (error) {
     const errorMsg = (error as Error).message || `插入文稿失败`
     toast.error(errorMsg)
-    console.error(`❌ 插入文稿到编辑器失败:`, error)
+    console.error(`❌ 插入文稿到编辑器失败:', error)
   }
 }
 </script>

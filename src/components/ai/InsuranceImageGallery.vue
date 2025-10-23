@@ -734,7 +734,7 @@ watch(() => galleryImages.value.length, () => {
             </div>
             <div class="grid grid-cols-2 gap-3">
               <div class="space-y-2">
-                <label class="text-xs text-muted-foreground">宽度 (px)</label>
+                <label class="text-muted-foreground text-xs">宽度 (px)</label>
                 <Input
                   v-model="customWidth"
                   type="number"
@@ -744,7 +744,7 @@ watch(() => galleryImages.value.length, () => {
                 />
               </div>
               <div class="space-y-2">
-                <label class="text-xs text-muted-foreground">高度 (px)</label>
+                <label class="text-muted-foreground text-xs">高度 (px)</label>
                 <Input
                   v-model="customHeight"
                   type="number"
@@ -754,7 +754,7 @@ watch(() => galleryImages.value.length, () => {
                 />
               </div>
             </div>
-            <p class="text-xs text-muted-foreground">
+            <p class="text-muted-foreground text-xs">
               提示：只填写宽度或高度，另一维度将自动按比例缩放。默认宽度为 1080px
             </p>
           </div>

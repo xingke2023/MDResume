@@ -27,7 +27,7 @@ watch(() => emit, () => {
 })
 
 function closeDialog() {
-  emit(`update:visible`, false)
+  emit('update:visible', false)
 }
 
 // 抓取公众号文章

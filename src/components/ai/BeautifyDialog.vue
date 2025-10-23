@@ -9,9 +9,9 @@ defineProps<{
 }>()
 
 const emit = defineEmits<{
-  'update:confirmVisible': [value: boolean]
-  'update:loadingVisible': [value: boolean]
-  'confirm': [mode: string, customRequirement: string]
+  `update:confirmVisible`: [value: boolean]
+  `update:loadingVisible`: [value: boolean]
+  `confirm`: [mode: string, customRequirement: string]
 }>()
 
 // 排版模式
