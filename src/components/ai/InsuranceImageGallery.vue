@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ImageIcon, Loader2, Search } from 'lucide-vue-next'
-import { computed, onMounted, ref } from 'vue'
+import { computed, nextTick, onMounted, ref, watch } from 'vue'
 import { toast } from 'vue-sonner'
 import { Button } from '@/components/ui/button'
 import {
@@ -10,6 +10,13 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 import { API_ENDPOINTS, API_KEY, EXTERNAL_APIS, getApiUrl, UNSPLASH_CONFIG } from '@/config/api'
 import { useStore } from '@/stores'
 
@@ -63,11 +70,16 @@ const isLoading = ref(false)
 const hasMore = ref(true)
 const offset = ref(0)
 const page = ref(1)
-const limit = 20
+const limit = 10
 
 /* ---------- 搜索状态 ---------- */
 const searchQuery = ref(`insurance`)
 const searchDebounceTimer = ref<number | null>(null)
+
+/* ---------- Unsplash 搜索参数 ---------- */
+const orderBy = ref<`relevant` | `latest`>(`relevant`)
+const orientation = ref<`any` | `landscape` | `portrait` | `squarish`>(`any`)
+const color = ref<string>(`any`)
 
 /* ---------- 预览状态 ---------- */
 const previewVisible = ref(false)
@@ -173,6 +185,11 @@ async function fetchLocalImages(reset = false) {
 
     galleryImages.value.push(...newImages)
     offset.value += limit
+
+    // 加载完成后检查是否需要继续加载
+    nextTick(() => {
+      checkAndLoadMore()
+    })
   }
   catch (error) {
     console.error(`获取图片列表失败:`, error)
@@ -200,7 +217,24 @@ async function fetchUnsplashImages(reset = false) {
 
     // 如果有搜索词，使用搜索 API，否则使用默认关键词 insurance
     const query = searchQuery.value.trim() || `insurance`
-    const url = `${EXTERNAL_APIS.UNSPLASH}/search/photos?query=${encodeURIComponent(query)}&page=${page.value}&per_page=${limit}`
+    const params = new URLSearchParams({
+      query,
+      page: page.value.toString(),
+      per_page: limit.toString(),
+      order_by: orderBy.value,
+    })
+
+    // 添加方向过滤
+    if (orientation.value !== `any`) {
+      params.append(`orientation`, orientation.value)
+    }
+
+    // 添加颜色过滤
+    if (color.value !== `any`) {
+      params.append(`color`, color.value)
+    }
+
+    const url = `${EXTERNAL_APIS.UNSPLASH}/search/photos?${params.toString()}`
 
     const response = await fetch(url, {
       method: `GET`,
@@ -222,6 +256,11 @@ async function fetchUnsplashImages(reset = false) {
 
     galleryImages.value.push(...newImages)
     page.value += 1
+
+    // 加载完成后检查是否需要继续加载
+    nextTick(() => {
+      checkAndLoadMore()
+    })
   }
   catch (error) {
     console.error(`获取 Unsplash 图片失败:`, error)
@@ -246,7 +285,34 @@ function handleScroll(event: Event) {
   const container = event.target as HTMLElement
   const scrollBottom = container.scrollHeight - container.scrollTop - container.clientHeight
 
+  // 调试日志
+  console.log(`滚动检测:`, {
+    scrollBottom,
+    isLoading: isLoading.value,
+    hasMore: hasMore.value,
+    scrollHeight: container.scrollHeight,
+    scrollTop: container.scrollTop,
+    clientHeight: container.clientHeight,
+  })
+
+  // 当距离底部小于 200px 时触发加载
   if (scrollBottom < 200 && !isLoading.value && hasMore.value) {
+    console.log(`触发加载下一页...`)
+    fetchImages()
+  }
+}
+
+/* ---------- 检查是否需要自动加载更多 ---------- */
+function checkAndLoadMore() {
+  if (!containerRef.value)
+    return
+
+  const container = containerRef.value
+  const hasScrollbar = container.scrollHeight > container.clientHeight
+
+  // 如果没有滚动条且还有更多数据，自动加载
+  if (!hasScrollbar && hasMore.value && !isLoading.value) {
+    console.log(`容器未填满，自动加载更多...`)
     fetchImages()
   }
 }
@@ -328,6 +394,20 @@ async function insertImage(imageUrl?: string) {
 /* ---------- 生命周期 ---------- */
 onMounted(() => {
   fetchImages()
+
+  // 初始加载后检查是否需要继续加载
+  nextTick(() => {
+    setTimeout(() => {
+      checkAndLoadMore()
+    }, 500) // 给图片一点时间渲染
+  })
+})
+
+// 监听图片数组变化，自动检查是否需要加载更多
+watch(() => galleryImages.value.length, () => {
+  nextTick(() => {
+    checkAndLoadMore()
+  })
 })
 </script>
 
@@ -345,7 +425,7 @@ onMounted(() => {
         ]"
         @click="handleSourceChange('unsplash')"
       >
-        Unsplash
+        综合图库
       </Button>
       <Button
         variant="outline"
@@ -379,8 +459,9 @@ onMounted(() => {
       </Button>
     </div>
 
-    <!-- Unsplash 搜索框 -->
-    <div v-if="imageSource === 'unsplash'" class="flex flex-shrink-0 gap-2 border-b p-4">
+    <!-- Unsplash 搜索框和过滤器 -->
+    <div v-if="imageSource === 'unsplash'" class="flex flex-col gap-3 border-b p-4">
+      <!-- 搜索输入框 -->
       <div class="relative flex-1">
         <Search class="text-muted-foreground absolute left-3 top-2.5 h-4 w-4" />
         <Input
@@ -389,6 +470,90 @@ onMounted(() => {
           class="pl-9"
           @input="handleSearch"
         />
+      </div>
+
+      <!-- 过滤参数 -->
+      <div class="flex flex-wrap gap-2">
+        <!-- 排序方式 -->
+        <Select v-model="orderBy" @update:model-value="handleSearch">
+          <SelectTrigger class="w-[140px]">
+            <SelectValue placeholder="排序方式" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="relevant">
+              相关性
+            </SelectItem>
+            <SelectItem value="latest">
+              最新
+            </SelectItem>
+          </SelectContent>
+        </Select>
+
+        <!-- 图片方向 -->
+        <Select v-model="orientation" @update:model-value="handleSearch">
+          <SelectTrigger class="w-[140px]">
+            <SelectValue placeholder="图片方向" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="any">
+              任意方向
+            </SelectItem>
+            <SelectItem value="landscape">
+              横向
+            </SelectItem>
+            <SelectItem value="portrait">
+              纵向
+            </SelectItem>
+            <SelectItem value="squarish">
+              方形
+            </SelectItem>
+          </SelectContent>
+        </Select>
+
+        <!-- 颜色过滤 -->
+        <Select v-model="color" @update:model-value="handleSearch">
+          <SelectTrigger class="w-[140px]">
+            <SelectValue placeholder="颜色过滤" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="any">
+              任意颜色
+            </SelectItem>
+            <SelectItem value="black_and_white">
+              黑白
+            </SelectItem>
+            <SelectItem value="black">
+              黑色
+            </SelectItem>
+            <SelectItem value="white">
+              白色
+            </SelectItem>
+            <SelectItem value="yellow">
+              黄色
+            </SelectItem>
+            <SelectItem value="orange">
+              橙色
+            </SelectItem>
+            <SelectItem value="red">
+              红色
+            </SelectItem>
+            <SelectItem value="purple">
+              紫色
+            </SelectItem>
+            <SelectItem value="magenta">
+              品红
+            </SelectItem>
+            <SelectItem value="green">
+              绿色
+            </SelectItem>
+            <SelectItem value="teal">
+              青色
+            </SelectItem>
+            <SelectItem value="blue">
+              蓝色
+            </SelectItem>
+          </SelectContent>
+        </Select>
       </div>
     </div>
 
