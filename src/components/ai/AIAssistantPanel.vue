@@ -947,6 +947,17 @@ async function sendMessage() {
 
           <div class="flex items-center gap-2">
             <Button
+              title="切换到图片助手"
+              aria-label="切换到图片助手"
+              variant="outline"
+              size="sm"
+              class="h-7 border-blue-200 bg-white px-3 py-0.5 text-blue-600 shadow-md transition-all dark:border-blue-800 hover:border-blue-300 dark:bg-gray-800 dark:text-blue-400 hover:shadow-lg dark:hover:border-blue-700"
+              @click="switchToAIImage"
+            >
+              <ImagePlus class="mr-1 h-3.5 w-3.5" />
+              图片助手
+            </Button>
+            <Button
               title="清空对话内容"
               aria-label="清空对话内容"
               variant="outline"
@@ -962,7 +973,7 @@ async function sendMessage() {
               aria-label="配置参数"
               variant="outline"
               size="sm"
-              class="h-7 border-gray-200 bg-white px-3 py-0.5 shadow-md transition-all dark:border-gray-700 dark:bg-gray-800 hover:shadow-lg"
+              class="hidden h-7 border-gray-200 bg-white px-3 py-0.5 shadow-md transition-all dark:border-gray-700 dark:bg-gray-800 hover:shadow-lg"
               @click="configVisible = !configVisible"
             >
               <Settings class="mr-1 h-3.5 w-3.5" />
