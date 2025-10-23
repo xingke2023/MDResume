@@ -12,6 +12,7 @@ import {
   Gem,
   Heading,
   ImagePlus,
+  Images,
   Indent,
   Link,
   List,
@@ -1526,7 +1527,7 @@ function handleMobileEditButtonClick() {
           <Button
             variant="outline"
             size="sm"
-            class="flex-shrink-0"
+            class="hidden flex-shrink-0"
             title="删除线"
             @click="addFormat(`${ctrlKey}-D`)"
           >
@@ -1652,6 +1653,17 @@ function handleMobileEditButtonClick() {
             @click="displayStore.toggleShowUploadImgDialog()"
           >
             <ImagePlus class="size-4" />
+          </Button>
+          <!-- 图库 -->
+          <Button
+            variant="outline"
+            size="sm"
+            class="flex-shrink-0"
+            title="保险人图库"
+            @click="displayStore.toggleAIImageDialog(true, 'gallery')"
+          >
+            <Images class="mr-1 size-4" />
+            图库
           </Button>
           <!-- 清空内容 -->
           <Button

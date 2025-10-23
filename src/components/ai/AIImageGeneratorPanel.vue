@@ -43,6 +43,12 @@ const activeTab = ref<`screenshot` | `poster` | `nano` | `text2img` | `upload` |
 const store = useStore()
 const displayStore = useDisplayStore()
 const { editor } = storeToRefs(store)
+const { aiImageDialogActiveTab } = storeToRefs(displayStore)
+
+// 监听 activeTab 变化，同步到组件内部
+watch(aiImageDialogActiveTab, (newTab) => {
+  activeTab.value = newTab
+})
 
 /* ---------- Tab 1: 截图写作 - 数据 ---------- */
 const screenshotInstruction = ref(``)

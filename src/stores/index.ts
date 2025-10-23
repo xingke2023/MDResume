@@ -860,12 +860,16 @@ export const useDisplayStore = defineStore(`display`, () => {
 
   const aiDialogVisible = ref(false)
   const aiImageDialogVisible = ref(false)
+  const aiImageDialogActiveTab = ref<`screenshot` | `poster` | `nano` | `text2img` | `upload` | `gallery`>(`upload`)
 
   function toggleAIDialog(value?: boolean) {
     aiDialogVisible.value = value ?? !aiDialogVisible.value
   }
 
-  function toggleAIImageDialog(value?: boolean) {
+  function toggleAIImageDialog(value?: boolean, tab?: `screenshot` | `poster` | `nano` | `text2img` | `upload` | `gallery`) {
+    if (tab) {
+      aiImageDialogActiveTab.value = tab
+    }
     aiImageDialogVisible.value = value ?? !aiImageDialogVisible.value
   }
 
@@ -881,6 +885,7 @@ export const useDisplayStore = defineStore(`display`, () => {
     aiDialogVisible,
     toggleAIDialog,
     aiImageDialogVisible,
+    aiImageDialogActiveTab,
     toggleAIImageDialog,
   }
 })

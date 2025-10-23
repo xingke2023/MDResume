@@ -84,6 +84,8 @@ const color = ref<string>(`any`)
 /* ---------- 预览状态 ---------- */
 const previewVisible = ref(false)
 const selectedImage = ref<GalleryImage | null>(null)
+const customWidth = ref<string>(``)
+const customHeight = ref<string>(``)
 
 /* ---------- 分类列表 ---------- */
 const categories = ref([
@@ -346,15 +348,74 @@ function handleSearch() {
   }, 500)
 }
 
+/* ---------- 预览引用 ---------- */
+const previewImageRef = ref<HTMLElement | null>(null)
+
 /* ---------- 预览图片 ---------- */
 function previewImage(image: GalleryImage) {
   selectedImage.value = image
   previewVisible.value = true
+
+  // 如果是 Unsplash 图片，设置默认尺寸
+  if (isUnsplashImage(image)) {
+    customWidth.value = `1080`
+    customHeight.value = ``
+  }
+  else {
+    customWidth.value = ``
+    customHeight.value = ``
+  }
+
+  // 延迟聚焦到图片容器，避免自动聚焦到输入框
+  nextTick(() => {
+    previewImageRef.value?.focus()
+  })
+}
+
+/* ---------- 构建自定义尺寸的 URL ---------- */
+function buildCustomSizedUrl(image: UnsplashImage): string {
+  const rawUrl = image.urls.raw
+  const params = new URLSearchParams()
+
+  // 添加宽度参数
+  if (customWidth.value) {
+    params.append(`w`, customWidth.value)
+  }
+
+  // 添加高度参数
+  if (customHeight.value) {
+    params.append(`h`, customHeight.value)
+  }
+
+  // 如果都没有设置，使用默认宽度 1080
+  if (!customWidth.value && !customHeight.value) {
+    params.append(`w`, `1080`)
+  }
+
+  // 添加其他推荐参数
+  params.append(`fm`, `jpg`)
+  params.append(`q`, `80`)
+
+  return `${rawUrl}&${params.toString()}`
 }
 
 /* ---------- 图片插入 ---------- */
 async function insertImage(imageUrl?: string) {
-  const urlToInsert = imageUrl || (selectedImage.value ? getInsertUrl(selectedImage.value) : null)
+  let urlToInsert: string | null = null
+
+  if (imageUrl) {
+    urlToInsert = imageUrl
+  }
+  else if (selectedImage.value) {
+    // 如果是 Unsplash 图片且有自定义尺寸，使用自定义尺寸
+    if (isUnsplashImage(selectedImage.value) && (customWidth.value || customHeight.value)) {
+      urlToInsert = buildCustomSizedUrl(selectedImage.value)
+    }
+    else {
+      urlToInsert = getInsertUrl(selectedImage.value)
+    }
+  }
+
   if (!urlToInsert) {
     toast.error(`请选择要插入的图片`)
     return
@@ -614,13 +675,17 @@ watch(() => galleryImages.value.length, () => {
 
     <!-- 图片预览 Dialog -->
     <Dialog v-model:open="previewVisible">
-      <DialogContent class="max-w-4xl">
+      <DialogContent class="max-h-[90vh] max-w-4xl overflow-y-auto">
         <DialogHeader>
           <DialogTitle>图片预览</DialogTitle>
         </DialogHeader>
         <div v-if="selectedImage" class="space-y-4">
           <!-- 图片显示 -->
-          <div class="flex items-center justify-center rounded-lg bg-gray-50 p-4 dark:bg-gray-900">
+          <div
+            ref="previewImageRef"
+            tabindex="0"
+            class="flex items-center justify-center rounded-lg bg-gray-50 p-4 outline-none dark:bg-gray-900"
+          >
             <img
               :src="getImageUrl(selectedImage)"
               :alt="isLocalImage(selectedImage) ? `${selectedImage.basename} 图片` : (selectedImage.alt_description || 'Image')"
@@ -652,7 +717,7 @@ watch(() => galleryImages.value.length, () => {
                 <span>{{ selectedImage.user.name }}</span>
               </div>
               <div class="flex justify-between">
-                <span class="text-muted-foreground">尺寸：</span>
+                <span class="text-muted-foreground">原始尺寸：</span>
                 <span>{{ selectedImage.width }} × {{ selectedImage.height }}</span>
               </div>
               <div v-if="selectedImage.description" class="flex flex-col gap-1">
@@ -660,6 +725,38 @@ watch(() => galleryImages.value.length, () => {
                 <span class="text-sm">{{ selectedImage.description }}</span>
               </div>
             </template>
+          </div>
+
+          <!-- Unsplash 图片自定义尺寸 -->
+          <div v-if="selectedImage && isUnsplashImage(selectedImage)" class="space-y-3 border-t pt-4">
+            <div class="text-sm font-medium">
+              自定义图片尺寸
+            </div>
+            <div class="grid grid-cols-2 gap-3">
+              <div class="space-y-2">
+                <label class="text-xs text-muted-foreground">宽度 (px)</label>
+                <Input
+                  v-model="customWidth"
+                  type="number"
+                  placeholder="例如：1080"
+                  min="100"
+                  max="5000"
+                />
+              </div>
+              <div class="space-y-2">
+                <label class="text-xs text-muted-foreground">高度 (px)</label>
+                <Input
+                  v-model="customHeight"
+                  type="number"
+                  placeholder="自动计算"
+                  min="100"
+                  max="5000"
+                />
+              </div>
+            </div>
+            <p class="text-xs text-muted-foreground">
+              提示：只填写宽度或高度，另一维度将自动按比例缩放。默认宽度为 1080px
+            </p>
           </div>
 
           <!-- 操作按钮 -->
