@@ -19,7 +19,7 @@ const emit = defineEmits<{
 }>()
 
 // 处理点击动画
-function handleClick (e: MouseEvent) {
+function handleClick(e: MouseEvent) {
   const card = e.currentTarget as HTMLElement
   const rect = card.getBoundingClientRect()
 
@@ -34,20 +34,20 @@ function handleClick (e: MouseEvent) {
   const deltaY = viewportCenterY - cardCenterY
 
   // 设置 CSS 变量
-  card.style.setProperty('--fly-x', `${deltaX}px`)
-  card.style.setProperty('--fly-y', `${deltaY}px`)
+  card.style.setProperty(`--fly-x`, `${deltaX}px`)
+  card.style.setProperty(`--fly-y`, `${deltaY}px`)
 
   // 添加动画类
-  card.classList.add('flying')
+  card.classList.add(`flying`)
 
   // 延迟触发真正的点击事件 - 更快
   setTimeout(() => {
-    emit('card-click', props.post.id)
+    emit(`card-click`, props.post.id)
   }, 250)
 
   // 动画结束后移除类 - 更快
   setTimeout(() => {
-    card.classList.remove('flying')
+    card.classList.remove(`flying`)
   }, 450)
 }
 
@@ -55,17 +55,17 @@ function handleClick (e: MouseEvent) {
 const previewContent = computed(() => {
   // 移除 Markdown 标记
   const text = props.post.content
-    .replace(/^#+\s+/gm, '') // 移除标题标记
-    .replace(/\*\*(.+?)\*\*/g, '$1') // 移除加粗
-    .replace(/\*(.+?)\*/g, '$1') // 移除斜体
-    .replace(/\[(.+?)\]\(.+?\)/g, '$1') // 移除链接
-    .replace(/`(.+?)`/g, '$1') // 移除行内代码
-    .replace(/```[\s\S]*?```/g, '') // 移除代码块
-    .replace(/!\[.*?\]\(.*?\)/g, '') // 移除图片
+    .replace(/^#+\s+/gm, ``) // 移除标题标记
+    .replace(/\*\*(.+?)\*\*/g, `$1`) // 移除加粗
+    .replace(/\*(.+?)\*/g, `$1`) // 移除斜体
+    .replace(/\[(.+?)\]\(.+?\)/g, `$1`) // 移除链接
+    .replace(/`(.+?)`/g, `$1`) // 移除行内代码
+    .replace(/```[\s\S]*?```/g, ``) // 移除代码块
+    .replace(/!\[.*?\]\(.*?\)/g, ``) // 移除图片
     .trim()
 
   // 限制长度 - 增加到 300 字符让卡片高度更有变化
-  return text.length > 300 ? `${text.slice(0, 300)  }...` : text
+  return text.length > 300 ? `${text.slice(0, 300) }...` : text
 })
 
 // 格式化日期
@@ -89,14 +89,14 @@ const cardColor = computed(() => {
   <div class="post-card" :style="{ backgroundColor: cardColor }" @click="handleClick">
     <!-- 标题 -->
     <h3 class="card-title">
-{{ post.title }}
-</h3>
+      {{ post.title }}
+    </h3>
 
     <!-- 内容预览 -->
     <div class="card-body">
       <p class="card-preview">
-{{ previewContent }}
-</p>
+        {{ previewContent }}
+      </p>
     </div>
 
     <!-- 底部信息 -->
