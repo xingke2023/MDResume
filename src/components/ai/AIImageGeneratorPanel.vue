@@ -1834,7 +1834,7 @@ async function insertNanoImageToEditor(imageUrl: string, imagePrompt: string): P
               ]"
               @click="activeTab = 'upload'"
             >
-              本地上传
+              本地图片上传
             </button>
 
             <button
@@ -1909,7 +1909,7 @@ async function insertNanoImageToEditor(imageUrl: string, imagePrompt: string): P
 
       <!-- ============ Tab 内容区域 ============ -->
 
-      <!-- Tab 0: 本地上传 -->
+      <!-- Tab 0: 本地图片上传 -->
       <div v-if="activeTab === 'upload'" class="space-y-4 flex flex-1 flex-col overflow-y-auto">
         <!-- 介绍 -->
         <div class="from-emerald-50 to-teal-50 bg-gradient-to-r dark:from-emerald-950/40 dark:to-teal-950/40 rounded-lg p-4">
