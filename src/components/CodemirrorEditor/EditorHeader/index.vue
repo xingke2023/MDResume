@@ -1694,7 +1694,7 @@ function handleMobileEditButtonClick() {
             @click="handleDeleteCurrentLine"
           >
             <Trash2 class="mr-1 size-4" />
-            删除行
+            行删除
           </Button>
           <!-- 格式化 -->
           <Button
