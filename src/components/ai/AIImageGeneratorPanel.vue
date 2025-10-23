@@ -1820,10 +1820,10 @@ async function insertNanoImageToEditor(imageUrl: string, imagePrompt: string): P
       class="bg-card text-card-foreground z-[70] h-[92vh] w-[98vw] flex flex-col overflow-y-auto p-3 sm:max-w-4xl"
     >
       <!-- ============ 头部 ============ -->
-      <DialogHeader class="mb-4 flex flex-col items-start">
-        <div class="w-full flex items-start gap-3">
+      <DialogHeader class="mb-0 flex flex-col items-start">
+        <div class="w-full flex items-start gap-3 border-b bg-gray-50 px-1 pb-3 dark:border-gray-700 dark:bg-gray-800/50">
           <!-- Tab 导航 -->
-          <div class="flex flex-wrap gap-1 pr-10">
+          <div class="flex flex-wrap gap-1.5 pr-10">
             <button
               type="button"
               class="flex items-center justify-center whitespace-nowrap border rounded-md px-3 py-1 text-sm font-medium transition-all"
@@ -1910,9 +1910,9 @@ async function insertNanoImageToEditor(imageUrl: string, imagePrompt: string): P
       <!-- ============ Tab 内容区域 ============ -->
 
       <!-- Tab 0: 本地图片上传 -->
-      <div v-if="activeTab === 'upload'" class="space-y-4 flex flex-1 flex-col overflow-y-auto">
+      <div v-if="activeTab === 'upload'" class="mt-4 flex flex-1 flex-col space-y-4 overflow-y-auto">
         <!-- 介绍 -->
-        <div class="from-emerald-50 to-teal-50 bg-gradient-to-r dark:from-emerald-950/40 dark:to-teal-950/40 rounded-lg p-4">
+        <div class="bg-gradient-to-r from-emerald-50 to-teal-50 dark:from-emerald-950/40 dark:to-teal-950/40 rounded-lg p-4">
           <div class="flex items-center gap-2">
             <Upload class="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
             <p class="text-sm text-emerald-800 font-medium dark:text-emerald-300">
@@ -1946,7 +1946,7 @@ async function insertNanoImageToEditor(imageUrl: string, imagePrompt: string): P
       </div>
 
       <!-- Tab 1: 截图写作 -->
-      <div v-if="activeTab === 'screenshot'" class="space-y-4 flex flex-1 flex-col overflow-y-auto">
+      <div v-if="activeTab === 'screenshot'" class="mt-4 flex flex-1 flex-col space-y-4 overflow-y-auto">
         <!-- 介绍 -->
         <div class="bg-gradient-to-r from-blue-50 to-cyan-50 dark:from-blue-950/40 dark:to-cyan-950/40 rounded-lg p-4">
           <div class="flex items-center gap-2">
@@ -2020,7 +2020,7 @@ async function insertNanoImageToEditor(imageUrl: string, imagePrompt: string): P
         <!-- 提交按钮 -->
         <div class="mt-auto pt-4">
           <Button
-            class="bg-gradient-to-r from-blue-500 to-cyan-600 hover:from-blue-600 hover:to-cyan-700 w-full border-0 text-white"
+            class="bg-gradient-to-r from-blue-500 hover:from-blue-600 to-cyan-600 hover:to-cyan-700 w-full border-0 text-white"
             :disabled="screenshotIsProcessing || !screenshotInstruction.trim() || screenshotImageFiles.length === 0"
             @click="handleScreenshotSubmit"
           >
@@ -2042,9 +2042,9 @@ async function insertNanoImageToEditor(imageUrl: string, imagePrompt: string): P
       </div>
 
       <!-- Tab 2: 海报制作 -->
-      <div v-if="activeTab === 'poster'" class="space-y-4 flex flex-1 flex-col overflow-y-auto">
+      <div v-if="activeTab === 'poster'" class="mt-4 flex flex-1 flex-col space-y-4 overflow-y-auto">
         <!-- 介绍 -->
-        <div class="from-pink-50 via-purple-50 to-blue-50 bg-gradient-to-br dark:from-pink-950/40 dark:via-purple-950/40 dark:to-blue-950/40 rounded-lg p-4">
+        <div class="bg-gradient-to-br from-pink-50 via-purple-50 to-blue-50 dark:from-pink-950/40 dark:via-purple-950/40 dark:to-blue-950/40 rounded-lg p-4">
           <div class="flex items-center gap-2">
             <Palette class="h-5 w-5 text-purple-600 dark:text-purple-400" />
             <p class="text-sm text-purple-800 font-medium dark:text-purple-300">
@@ -2137,7 +2137,7 @@ async function insertNanoImageToEditor(imageUrl: string, imagePrompt: string): P
                   <img
                     :src="posterGeneratedImages[posterCurrentImageIndex]"
                     :alt="`生成的海报 ${posterCurrentImageIndex + 1}`"
-                    class="object-contain border-border h-auto max-h-[300px] w-full border rounded-lg shadow-lg transition-transform sm:max-h-[350px] hover:scale-105"
+                    class="border-border object-contain h-auto max-h-[300px] w-full border rounded-lg shadow-lg transition-transform sm:max-h-[350px] hover:scale-105"
                   >
                   <div class="pointer-events-none absolute inset-0 flex items-center justify-center rounded-lg bg-black/0 opacity-0 transition-opacity group-hover:bg-black/10 group-hover:opacity-100">
                     <div class="rounded-md bg-black/70 px-3 py-1 text-sm text-white">
@@ -2208,7 +2208,7 @@ async function insertNanoImageToEditor(imageUrl: string, imagePrompt: string): P
       </div>
 
       <!-- Tab 3: NanoBanana图片制作 -->
-      <div v-if="activeTab === 'nano'" class="space-y-4 flex flex-1 flex-col overflow-y-auto">
+      <div v-if="activeTab === 'nano'" class="mt-4 flex flex-1 flex-col space-y-4 overflow-y-auto">
         <!-- ============ 图像展示区域 ============ -->
         <div
           v-if="nanoIsProcessing || nanoGeneratedImageUrl"
@@ -2387,7 +2387,7 @@ async function insertNanoImageToEditor(imageUrl: string, imagePrompt: string): P
       </div>
 
       <!-- Tab 4: AI 文生图 (原有功能) -->
-      <div v-if="activeTab === 'text2img'" class="space-y-4 flex flex-1 flex-col">
+      <div v-if="activeTab === 'text2img'" class="space-y-4 mt-4 flex flex-1 flex-col">
         <!-- 工具按钮 -->
         <div class="flex items-center gap-2">
           <Button
@@ -2587,7 +2587,7 @@ async function insertNanoImageToEditor(imageUrl: string, imagePrompt: string): P
       </div>
 
       <!-- Tab 5: 保险人图库 -->
-      <div v-if="activeTab === 'gallery'">
+      <div v-if="activeTab === 'gallery'" class="mt-4">
         <InsuranceImageGallery @close="dialogVisible = false" />
       </div>
     </DialogContent>
