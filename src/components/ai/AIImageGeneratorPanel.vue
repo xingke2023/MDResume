@@ -1829,8 +1829,8 @@ async function insertNanoImageToEditor(imageUrl: string, imagePrompt: string): P
               class="flex items-center justify-center whitespace-nowrap border rounded-md px-3 py-1 text-sm font-medium transition-all"
               :class="[
                 activeTab === 'upload'
-                  ? 'border-transparent bg-gradient-to-r from-emerald-500 to-teal-500 text-white shadow-lg shadow-emerald-500/50 dark:from-emerald-600 dark:to-teal-600'
-                  : 'border-gray-200 bg-white text-gray-700 hover:border-emerald-300 hover:bg-emerald-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:border-emerald-500/50 dark:hover:bg-emerald-900/30',
+                  ? 'border-transparent bg-gradient-to-r from-emerald-500 to-teal-500 text-white dark:from-emerald-600 dark:to-teal-600'
+                  : 'border-gray-200 bg-gray-100 text-gray-700 hover:border-emerald-300 hover:bg-emerald-50 dark:border-gray-700 dark:bg-gray-700 dark:text-gray-300 dark:hover:border-emerald-500/50 dark:hover:bg-emerald-900/30',
               ]"
               @click="activeTab = 'upload'"
             >
@@ -1842,8 +1842,8 @@ async function insertNanoImageToEditor(imageUrl: string, imagePrompt: string): P
               class="flex items-center justify-center whitespace-nowrap border rounded-md px-3 py-1 text-sm font-medium transition-all"
               :class="[
                 activeTab === 'nano'
-                  ? 'border-transparent bg-gradient-to-r from-purple-500 to-purple-600 text-white shadow-lg shadow-purple-500/50 dark:from-purple-600 dark:to-purple-700'
-                  : 'border-gray-200 bg-white text-gray-700 hover:border-purple-300 hover:bg-purple-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:border-purple-500/50 dark:hover:bg-purple-900/30',
+                  ? 'border-transparent bg-gradient-to-r from-purple-500 to-purple-600 text-white dark:from-purple-600 dark:to-purple-700'
+                  : 'border-gray-200 bg-gray-100 text-gray-700 hover:border-purple-300 hover:bg-purple-50 dark:border-gray-700 dark:bg-gray-700 dark:text-gray-300 dark:hover:border-purple-500/50 dark:hover:bg-purple-900/30',
               ]"
               @click="activeTab = 'nano'"
             >
@@ -1855,8 +1855,8 @@ async function insertNanoImageToEditor(imageUrl: string, imagePrompt: string): P
               class="flex items-center justify-center whitespace-nowrap border rounded-md px-3 py-1 text-sm font-medium transition-all"
               :class="[
                 activeTab === 'poster'
-                  ? 'border-transparent bg-gradient-to-r from-orange-500 to-pink-500 text-white shadow-lg shadow-orange-500/50 dark:from-orange-600 dark:to-pink-600'
-                  : 'border-gray-200 bg-white text-gray-700 hover:border-orange-300 hover:bg-orange-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:border-orange-500/50 dark:hover:bg-orange-900/30',
+                  ? 'border-transparent bg-gradient-to-r from-orange-500 to-pink-500 text-white dark:from-orange-600 dark:to-pink-600'
+                  : 'border-gray-200 bg-gray-100 text-gray-700 hover:border-orange-300 hover:bg-orange-50 dark:border-gray-700 dark:bg-gray-700 dark:text-gray-300 dark:hover:border-orange-500/50 dark:hover:bg-orange-900/30',
               ]"
               @click="activeTab = 'poster'"
             >
@@ -1868,8 +1868,8 @@ async function insertNanoImageToEditor(imageUrl: string, imagePrompt: string): P
               class="flex items-center justify-center whitespace-nowrap border rounded-md px-3 py-1 text-sm font-medium transition-all"
               :class="[
                 activeTab === 'screenshot'
-                  ? 'border-transparent bg-gradient-to-r from-blue-500 to-cyan-500 text-white shadow-lg shadow-blue-500/50 dark:from-blue-600 dark:to-cyan-600'
-                  : 'border-gray-200 bg-white text-gray-700 hover:border-blue-300 hover:bg-blue-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:border-blue-500/50 dark:hover:bg-blue-900/30',
+                  ? 'border-transparent bg-gradient-to-r from-blue-500 to-cyan-500 text-white dark:from-blue-600 dark:to-cyan-600'
+                  : 'border-gray-200 bg-gray-100 text-gray-700 hover:border-blue-300 hover:bg-blue-50 dark:border-gray-700 dark:bg-gray-700 dark:text-gray-300 dark:hover:border-blue-500/50 dark:hover:bg-blue-900/30',
               ]"
               @click="activeTab = 'screenshot'"
             >
@@ -1881,8 +1881,8 @@ async function insertNanoImageToEditor(imageUrl: string, imagePrompt: string): P
               class="flex items-center justify-center whitespace-nowrap border rounded-md px-3 py-1 text-sm font-medium transition-all"
               :class="[
                 activeTab === 'gallery'
-                  ? 'border-transparent bg-gradient-to-r from-indigo-500 to-blue-500 text-white shadow-lg shadow-indigo-500/50 dark:from-indigo-600 dark:to-blue-600'
-                  : 'border-gray-200 bg-white text-gray-700 hover:border-indigo-300 hover:bg-indigo-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:border-indigo-500/50 dark:hover:bg-indigo-900/30',
+                  ? 'border-transparent bg-gradient-to-r from-indigo-500 to-blue-500 text-white dark:from-indigo-600 dark:to-blue-600'
+                  : 'border-gray-200 bg-gray-100 text-gray-700 hover:border-indigo-300 hover:bg-indigo-50 dark:border-gray-700 dark:bg-gray-700 dark:text-gray-300 dark:hover:border-indigo-500/50 dark:hover:bg-indigo-900/30',
               ]"
               @click="activeTab = 'gallery'"
             >
@@ -1896,8 +1896,8 @@ async function insertNanoImageToEditor(imageUrl: string, imagePrompt: string): P
               class="flex items-center justify-center whitespace-nowrap border rounded-md px-3 py-1 text-sm font-medium transition-all"
               :class="[
                 activeTab === 'text2img'
-                  ? 'border-transparent bg-gradient-to-r from-pink-500 to-violet-600 text-white shadow-lg shadow-pink-500/50 dark:from-pink-600 dark:to-violet-700'
-                  : 'border-gray-200 bg-white text-gray-700 hover:border-pink-300 hover:bg-pink-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:border-pink-500/50 dark:hover:bg-pink-900/30',
+                  ? 'border-transparent bg-gradient-to-r from-pink-500 to-violet-600 text-white dark:from-pink-600 dark:to-violet-700'
+                  : 'border-gray-200 bg-gray-100 text-gray-700 hover:border-pink-300 hover:bg-pink-50 dark:border-gray-700 dark:bg-gray-700 dark:text-gray-300 dark:hover:border-pink-500/50 dark:hover:bg-pink-900/30',
               ]"
               @click="activeTab = 'text2img'"
             >
