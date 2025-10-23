@@ -1275,6 +1275,15 @@ function handleMobileEditButtonClick() {
         <Button
           variant="outline"
           size="icon"
+          title="保险人图库"
+          class="hidden sm:inline-flex"
+          @click="displayStore.toggleAIImageDialog(true, 'gallery')"
+        >
+          <Images class="size-4" />
+        </Button>
+        <Button
+          variant="outline"
+          size="icon"
           title="插入表格"
           class="hidden sm:inline-flex"
           @click="displayStore.toggleShowInsertFormDialog()"
@@ -1692,11 +1701,11 @@ function handleMobileEditButtonClick() {
             variant="outline"
             size="sm"
             class="flex-shrink-0"
-            title="格式化"
+            title="整齐"
             @click="formatContent()"
           >
             <Wand2 class="mr-1 size-4" />
-            格式化
+            整齐
           </Button>
         </div>
       </div>
