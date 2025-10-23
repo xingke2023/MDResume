@@ -117,12 +117,12 @@ async function handleSubmit() {
   try {
     // 构建 FormData
     const formData = new FormData()
-    formData.append(`prompt', prompt.value.trim())
+    formData.append(`prompt`, prompt.value.trim())
 
     // 如果有图片，添加到 FormData（支持多张）
     if (imageFiles.value.length > 0) {
       imageFiles.value.forEach((file) => {
-        formData.append(`images', file)
+        formData.append(`images`, file)
       })
     }
 
@@ -142,7 +142,7 @@ async function handleSubmit() {
 
     if (!response.ok) {
       const errorText = await response.text()
-      console.error(`AI接口错误详情:', errorText)
+      console.error(`AI接口错误详情:`, errorText)
       throw new Error(`AI 接口请求失败 (${response.status}): ${response.statusText}`)
     }
 
@@ -155,13 +155,13 @@ async function handleSubmit() {
     const wechatUrl = data.data?.wechatImageUrl
 
     if (!wechatUrl) {
-      console.error(`AI响应数据:', data)
+      console.error(`AI响应数据:`, data)
       throw new Error(`未返回微信图片URL`)
     }
 
     // 显示成功并插入图片
     toast.success(`Nano Banana 处理完成！`)
-    console.log(`微信图片URL:', wechatUrl)
+    console.log(`微信图片URL:`, wechatUrl)
 
     // 将图片插入到编辑器
     await insertImageToEditor(wechatUrl, data.data?.prompt || prompt.value)
@@ -170,7 +170,7 @@ async function handleSubmit() {
     closeDialog()
   }
   catch (error) {
-    console.error(`Nano Banana 处理失败:', error)
+    console.error(`Nano Banana 处理失败:`, error)
 
     let errorMessage = `处理失败`
     const errorMsg = error instanceof Error ? error.message : String(error)
@@ -234,7 +234,7 @@ async function insertImageToEditor(imageUrl: string, imagePrompt: string) {
   catch (error) {
     const errorMsg = (error as Error).message || `插入图片失败`
     toast.error(errorMsg)
-    console.error(`❌ 插入图片到编辑器失败:', error)
+    console.error(`❌ 插入图片到编辑器失败:`, error)
   }
 }
 </script>
