@@ -1,5 +1,5 @@
 // Type declarations for extension build modules that may not be installed
-declare module `wxt` {
+declare module 'wxt' {
   export interface ResolvedConfig {
     root: string
     outDir: string
@@ -20,11 +20,11 @@ declare module `wxt` {
   }
 }
 
-declare module `wxt/modules` {
+declare module 'wxt/modules' {
   export function defineWxtModule(config: any): any
   export function addViteConfig(wxt: any, config: any): void
 }
 
-declare module `linkedom` {
+declare module 'linkedom' {
   export function parseHTML(html: string): any
 }
