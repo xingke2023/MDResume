@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Calendar, Send, Share2, Sparkles, TrendingUp, Zap } from 'lucide-vue-next'
+import { Calendar, ImageIcon, Send, Share2, Sparkles, TrendingUp, Zap } from 'lucide-vue-next'
 import { computed, ref } from 'vue'
 import { useRouter } from 'vue-router'
 
@@ -20,125 +20,140 @@ const currentLang = ref<Language>(`zh-CN`)
 // 语言内容
 const translations = {
   'zh-CN': {
-    siteTitle: ``,
-    badge: `✨ 为香港保险中介人量身打造`,
-    heroTitle1: `公众号文案制作`,
-    heroTitle2: `及发布利器`,
-    heroSubtitle: `AI 智能创作 · 海报文案一键生成 · 多平台同步发布`,
-    ctaStart: `立即开始创作`,
-    ctaNotes: `我的灵感笔记`,
-    featuresTitle: `核心功能`,
-    featuresSubtitle: `强大的功能组合，让您的内容创作更高效、更专业`,
-    ctaSectionTitle: `开启高效获客之旅`,
-    ctaSectionSubtitle: `专为香港保险中介人设计，让您的公众号运营更轻松，获客更高效`,
-    ctaButton: `开始使用`,
-    footer: `© 2025 香港保险中介人公众号文案制作系统 · 让营销更简单`,
+    siteTitle: `香港保险中介人专业营销平台`,
+    badge: `🏆 专为香港保险中介人量身打造的营销利器`,
+    heroTitle1: `赋能保险中介人`,
+    heroTitle2: `打造专业营销影响力`,
+    heroSubtitle: `AI 驱动内容创作 · 专业海报设计 · 智能热点追踪 · 多平台一键分发`,
+    ctaStart: `开启专业创作`,
+    ctaNotes: `营销灵感库`,
+    featuresTitle: `专业功能矩阵`,
+    featuresSubtitle: `为保险中介人精心打造的全栈营销工具，助力品牌塑造与客户获取`,
+    ctaSectionTitle: `立即开启专业营销之旅`,
+    ctaSectionSubtitle: `加入数千位香港保险精英，运用专业工具提升客户触达率与转化率`,
+    ctaButton: `立即体验`,
+    footerCompany: `© 2025 Hongkong Macrodata Technology Limited`,
+    footerSlogan: `科技赋能，成就专业`,
     features: [
       {
-        title: `海报制作`,
-        description: `AI 智能生成专业保险营销海报，吸引客户眼球`,
+        title: `AI 专业海报设计`,
+        description: `智能生成符合香港市场的保险营销海报，专业视觉呈现提升品牌形象`,
       },
       {
-        title: `文案制作`,
-        description: `AI 辅助创作保险产品文案，提升内容质量`,
+        title: `智能文案创作`,
+        description: `基于保险专业知识库，AI 辅助创作高质量产品介绍与市场分析文章`,
       },
       {
-        title: `行业热点文案推送`,
-        description: `实时推送香港保险行业热点，紧跟市场动态`,
+        title: `实时行业热点`,
+        description: `自动追踪香港保险市场动态与政策变化，第一时间获取专业资讯`,
       },
       {
-        title: `个人写作计划`,
-        description: `智能规划发文计划，保持内容持续输出`,
+        title: `营销日历管理`,
+        description: `智能规划内容发布节奏，建立持续专业的品牌形象输出`,
       },
       {
-        title: `一键发布到微信公众号`,
-        description: `快速发布到微信公众号，节省操作时间`,
+        title: `微信公众号直达`,
+        description: `一键发布至微信公众号，格式完美适配，专业呈现无需二次调整`,
       },
       {
-        title: `一键发布到小红书`,
-        description: `同步发布到小红书平台，扩大影响力`,
+        title: `小红书营销扩展`,
+        description: `同步至小红书平台，扩大专业影响力，触达更多潜在客户群体`,
+      },
+      {
+        title: `专业图库素材库`,
+        description: `海量保险行业专业图片与设计素材，随时取用提升内容视觉效果`,
       },
     ],
   },
   'zh-TW': {
-    siteTitle: ``,
-    badge: `✨ 為香港保險中介人量身打造`,
-    heroTitle1: `公眾號文案製作`,
-    heroTitle2: `及發佈利器`,
-    heroSubtitle: `AI 智能創作 · 海報文案一鍵生成 · 多平台同步發佈`,
-    ctaStart: `立即開始創作`,
-    ctaNotes: `我的靈感筆記`,
-    featuresTitle: `核心功能`,
-    featuresSubtitle: `強大的功能組合，讓您的內容創作更高效、更專業`,
-    ctaSectionTitle: `開啟高效獲客之旅`,
-    ctaSectionSubtitle: `專為香港保險中介人設計，讓您的公眾號運營更輕鬆，獲客更高效`,
-    ctaButton: `開始使用`,
-    footer: `© 2025 香港保險中介人公眾號文案製作系統 · 讓營銷更簡單`,
+    siteTitle: `香港保險中介人專業營銷平台`,
+    badge: `🏆 專為香港保險中介人量身打造的營銷利器`,
+    heroTitle1: `賦能保險中介人`,
+    heroTitle2: `打造專業營銷影響力`,
+    heroSubtitle: `AI 驅動內容創作 · 專業海報設計 · 智能熱點追蹤 · 多平台一鍵分發`,
+    ctaStart: `開啟專業創作`,
+    ctaNotes: `營銷靈感庫`,
+    featuresTitle: `專業功能矩陣`,
+    featuresSubtitle: `為保險中介人精心打造的全棧營銷工具，助力品牌塑造與客戶獲取`,
+    ctaSectionTitle: `立即開啟專業營銷之旅`,
+    ctaSectionSubtitle: `加入數千位香港保險精英，運用專業工具提升客戶觸達率與轉化率`,
+    ctaButton: `立即體驗`,
+    footerCompany: `© 2025 Hongkong Macrodata Technology Limited`,
+    footerSlogan: `科技賦能，成就專業`,
     features: [
       {
-        title: `海報製作`,
-        description: `AI 智能生成專業保險營銷海報，吸引客戶眼球`,
+        title: `AI 專業海報設計`,
+        description: `智能生成符合香港市場的保險營銷海報，專業視覺呈現提升品牌形象`,
       },
       {
-        title: `文案製作`,
-        description: `AI 輔助創作保險產品文案，提升內容質量`,
+        title: `智能文案創作`,
+        description: `基於保險專業知識庫，AI 輔助創作高質量產品介紹與市場分析文章`,
       },
       {
-        title: `行業熱點文案推送`,
-        description: `實時推送香港保險行業熱點，緊跟市場動態`,
+        title: `實時行業熱點`,
+        description: `自動追蹤香港保險市場動態與政策變化，第一時間獲取專業資訊`,
       },
       {
-        title: `個人寫作計劃`,
-        description: `智能規劃發文計劃，保持內容持續輸出`,
+        title: `營銷日曆管理`,
+        description: `智能規劃內容發佈節奏，建立持續專業的品牌形象輸出`,
       },
       {
-        title: `一鍵發佈到微信公眾號`,
-        description: `快速發佈到微信公眾號，節省操作時間`,
+        title: `微信公眾號直達`,
+        description: `一鍵發佈至微信公眾號，格式完美適配，專業呈現無需二次調整`,
       },
       {
-        title: `一鍵發佈到小紅書`,
-        description: `同步發佈到小紅書平台，擴大影響力`,
+        title: `小紅書營銷擴展`,
+        description: `同步至小紅書平台，擴大專業影響力，觸達更多潛在客戶群體`,
+      },
+      {
+        title: `專業圖庫素材庫`,
+        description: `海量保險行業專業圖片與設計素材，隨時取用提升內容視覺效果`,
       },
     ],
   },
   'en': {
-    siteTitle: ``,
-    badge: `✨ Tailored for Hong Kong Insurance Intermediaries`,
-    heroTitle1: `Official Account Content`,
-    heroTitle2: `Creation & Publishing Tool`,
-    heroSubtitle: `AI Smart Creation · One-Click Poster & Copy Generation · Multi-Platform Publishing`,
-    ctaStart: `Start Creating Now`,
-    ctaNotes: `My Inspiration Notes`,
-    featuresTitle: `Core Features`,
-    featuresSubtitle: `Powerful feature combination for more efficient and professional content creation`,
-    ctaSectionTitle: `Start Your Efficient Customer Acquisition Journey`,
-    ctaSectionSubtitle: `Designed specifically for Hong Kong insurance intermediaries to make your official account operations easier and customer acquisition more efficient`,
-    ctaButton: `Get Started`,
-    footer: `© 2025 Hong Kong Insurance Intermediary Official Account Content Creation System · Make Marketing Easier`,
+    siteTitle: `Professional Marketing Platform for HK Insurance Intermediaries`,
+    badge: `🏆 Premium Marketing Arsenal Crafted for Hong Kong Insurance Professionals`,
+    heroTitle1: `Empowering Insurance Intermediaries`,
+    heroTitle2: `Building Professional Marketing Impact`,
+    heroSubtitle: `AI-Driven Content Creation · Professional Poster Design · Smart Trend Tracking · Multi-Platform Distribution`,
+    ctaStart: `Start Professional Creation`,
+    ctaNotes: `Marketing Idea Library`,
+    featuresTitle: `Professional Feature Matrix`,
+    featuresSubtitle: `Full-stack marketing toolkit crafted for insurance intermediaries to enhance brand building and client acquisition`,
+    ctaSectionTitle: `Begin Your Professional Marketing Journey Today`,
+    ctaSectionSubtitle: `Join thousands of Hong Kong insurance elites using professional tools to enhance client reach and conversion rates`,
+    ctaButton: `Experience Now`,
+    footerCompany: `© 2025 Hongkong Macrodata Technology Limited`,
+    footerSlogan: `Technology Empowers Excellence`,
     features: [
       {
-        title: `Poster Creation`,
-        description: `AI-powered professional insurance marketing posters to attract customers`,
+        title: `AI Professional Poster Design`,
+        description: `Generate insurance marketing posters tailored for Hong Kong market with professional visual presentation to elevate brand image`,
       },
       {
-        title: `Copywriting`,
-        description: `AI-assisted insurance product copywriting to enhance content quality`,
+        title: `Intelligent Copywriting`,
+        description: `AI-powered content creation based on insurance knowledge base for high-quality product introductions and market analysis`,
       },
       {
-        title: `Industry Trending Content Push`,
-        description: `Real-time push of Hong Kong insurance industry trends to keep pace with market dynamics`,
+        title: `Real-time Industry Insights`,
+        description: `Automatically track Hong Kong insurance market dynamics and policy changes for timely professional updates`,
       },
       {
-        title: `Personal Writing Plan`,
-        description: `Smart planning of publishing schedules to maintain consistent content output`,
+        title: `Marketing Calendar Management`,
+        description: `Intelligently plan content publishing rhythm to establish continuous professional brand presence`,
       },
       {
-        title: `One-Click WeChat Official Account Publishing`,
-        description: `Quick publishing to WeChat Official Account, saving operation time`,
+        title: `WeChat Direct Publishing`,
+        description: `One-click publishing to WeChat Official Account with perfect format adaptation for professional presentation`,
       },
       {
-        title: `One-Click Xiaohongshu Publishing`,
-        description: `Sync publishing to Xiaohongshu platform to expand influence`,
+        title: `Xiaohongshu Marketing Expansion`,
+        description: `Sync to Xiaohongshu platform to expand professional influence and reach more potential client groups`,
+      },
+      {
+        title: `Professional Asset Library`,
+        description: `Extensive collection of insurance industry images and design assets to enhance visual content quality`,
       },
     ],
   },
@@ -153,19 +168,20 @@ function switchLanguage(lang: Language) {
 }
 
 // 功能图标
-const featureIcons = [Sparkles, Zap, TrendingUp, Calendar, Send, Share2]
+const featureIcons = [Sparkles, Zap, TrendingUp, Calendar, Send, Share2, ImageIcon]
 const featureGradients = [
-  `from-purple-500 to-pink-500`,
-  `from-blue-500 to-cyan-500`,
-  `from-green-500 to-emerald-500`,
-  `from-orange-500 to-red-500`,
-  `from-indigo-500 to-purple-500`,
-  `from-pink-500 to-rose-500`,
+  `from-blue-600 to-indigo-600`,
+  `from-indigo-600 to-purple-600`,
+  `from-purple-600 to-pink-600`,
+  `from-teal-600 to-cyan-600`,
+  `from-cyan-600 to-blue-600`,
+  `from-pink-600 to-rose-600`,
+  `from-violet-600 to-fuchsia-600`,
 ]
 </script>
 
 <template>
-  <div class="bg-gradient-to-br via-purple-600 from-indigo-600 to-pink-500 min-h-screen overflow-x-hidden">
+  <div class="bg-gradient-to-br via-blue-700 from-slate-800 to-indigo-900 min-h-screen overflow-x-hidden">
     <!-- 顶部导航 - 带语言切换 -->
     <header class="absolute left-0 right-0 top-0 z-50">
       <div class="mx-auto max-w-7xl px-4 py-4 lg:px-8 lg:py-8 sm:px-6 sm:py-6">
@@ -236,19 +252,19 @@ const featureGradients = [
     <section class="relative px-4 pb-16 pt-28 lg:px-8 sm:px-6 lg:pb-32 lg:pt-48 sm:pb-24 sm:pt-40">
       <!-- 装饰性背景 -->
       <div class="pointer-events-none absolute inset-0 overflow-hidden">
-        <div class="filter blur-3xl animate-blob mix-blend-multiply absolute h-96 w-96 rounded-full bg-purple-400 opacity-30 -right-40 -top-40" />
-        <div class="mix-blend-multiply filter blur-3xl animate-blob animation-delay-2000 absolute h-96 w-96 rounded-full bg-pink-400 opacity-30 -bottom-40 -left-40" />
-        <div class="mix-blend-multiply filter blur-3xl animate-blob animation-delay-4000 absolute left-1/2 top-1/2 h-96 w-96 transform rounded-full bg-indigo-400 opacity-30 -translate-x-1/2 -translate-y-1/2" />
+        <div class="filter blur-3xl animate-blob mix-blend-screen absolute h-[500px] w-[500px] rounded-full bg-blue-500 opacity-20 -right-40 -top-40" />
+        <div class="mix-blend-screen filter blur-3xl animate-blob animation-delay-2000 absolute h-[500px] w-[500px] rounded-full bg-indigo-500 opacity-20 -bottom-40 -left-40" />
+        <div class="mix-blend-screen filter blur-3xl animate-blob animation-delay-4000 absolute left-1/2 top-1/2 h-[500px] w-[500px] transform rounded-full bg-cyan-500 opacity-15 -translate-x-1/2 -translate-y-1/2" />
       </div>
 
       <div class="relative mx-auto max-w-6xl text-center">
-        <div class="backdrop-blur-sm animate-fade-in mb-6 inline-block rounded-full bg-white/20 px-4 py-1.5 text-xs text-white font-medium sm:mb-8 sm:text-sm">
+        <div class="backdrop-blur-sm animate-fade-in border-white/20 mb-6 inline-block rounded-full border-2 bg-white/10 px-5 py-2 text-sm text-white font-semibold shadow-lg sm:mb-8 sm:px-6 sm:py-2.5 sm:text-base">
           {{ t.badge }}
         </div>
 
-        <h2 class="animate-fade-in-up mb-6 text-3xl text-white font-extrabold leading-tight sm:mb-8 lg:text-7xl md:text-6xl sm:text-5xl xl:text-8xl">
+        <h2 class="animate-fade-in-up mb-6 text-3xl text-white font-extrabold leading-tight tracking-tight sm:mb-8 lg:text-7xl md:text-6xl sm:text-5xl xl:text-8xl">
           {{ t.heroTitle1 }}
-          <span class="bg-gradient-to-r bg-clip-text from-yellow-200 to-pink-200 mt-2 block text-transparent">
+          <span class="bg-gradient-to-r bg-clip-text from-amber-300 via-yellow-200 to-cyan-300 mt-2 block text-transparent">
             {{ t.heroTitle2 }}
           </span>
         </h2>
@@ -257,9 +273,9 @@ const featureGradients = [
           {{ t.heroSubtitle }}
         </p>
 
-        <div class="animate-fade-in-up animation-delay-400 flex flex-col items-center justify-center gap-3 sm:flex-row sm:gap-5">
+        <div class="animate-fade-in-up animation-delay-400 flex flex-col items-center justify-center gap-4 sm:flex-row sm:gap-6">
           <button
-            class="group hover:shadow-3xl max-w-xs w-full flex items-center justify-center gap-2 rounded-2xl bg-white px-8 py-3.5 text-base text-indigo-600 font-bold shadow-2xl transition-all duration-300 sm:w-auto hover:scale-105 sm:gap-3 sm:px-10 sm:py-5 sm:text-xl"
+            class="group hover:shadow-3xl max-w-xs w-full flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-amber-400 to-yellow-300 px-8 py-4 text-base text-slate-900 font-bold shadow-2xl transition-all duration-300 sm:w-auto hover:scale-105 hover:from-amber-300 hover:to-yellow-200 sm:gap-3 sm:px-12 sm:py-5 sm:text-xl"
             @click="goToEditor"
           >
             <svg class="h-5 w-5 transition-transform sm:h-6 sm:w-6 group-hover:rotate-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -269,7 +285,7 @@ const featureGradients = [
           </button>
 
           <button
-            class="backdrop-blur-sm max-w-xs w-full flex items-center justify-center gap-2 border-2 border-white/30 rounded-2xl bg-white/10 px-8 py-3.5 text-base text-white font-bold transition-all duration-300 sm:w-auto sm:gap-3 hover:border-white/50 hover:bg-white/20 sm:px-10 sm:py-5 sm:text-xl"
+            class="backdrop-blur-sm max-w-xs w-full flex items-center justify-center gap-2 border-2 border-white/40 rounded-2xl bg-white/10 px-8 py-4 text-base text-white font-bold transition-all duration-300 sm:w-auto sm:gap-3 hover:scale-105 hover:border-white/60 hover:bg-white/20 sm:px-12 sm:py-5 sm:text-xl"
             @click="goToNotes"
           >
             <svg class="h-5 w-5 sm:h-6 sm:w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -293,29 +309,29 @@ const featureGradients = [
           </p>
         </div>
 
-        <div class="grid grid-cols-1 gap-4 lg:grid-cols-3 md:grid-cols-2 lg:gap-8 sm:gap-6">
+        <div class="grid grid-cols-1 gap-6 lg:grid-cols-3 md:grid-cols-2 lg:gap-8 sm:gap-6">
           <div
             v-for="(feature, index) in t.features"
             :key="feature.title"
-            class="group relative border border-gray-100 rounded-xl bg-white p-5 shadow-lg transition-all duration-300 hover:border-transparent sm:rounded-2xl sm:p-8 hover:shadow-2xl hover:-translate-y-2"
+            class="group relative border border-gray-200 rounded-2xl bg-white p-6 shadow-md transition-all duration-500 hover:border-indigo-200 sm:rounded-3xl sm:p-8 hover:shadow-xl hover:-translate-y-3"
             :class="`animate-fade-in-up animation-delay-${index * 100}`"
           >
             <!-- 渐变背景装饰 -->
             <div
-              class="bg-gradient-to-br absolute inset-0 rounded-xl opacity-0 transition-opacity duration-300 sm:rounded-2xl group-hover:opacity-10"
+              class="bg-gradient-to-br absolute inset-0 rounded-2xl opacity-0 transition-opacity duration-500 sm:rounded-3xl group-hover:opacity-5"
               :class="featureGradients[index]"
             />
 
             <!-- 图标 -->
             <div
-              class="bg-gradient-to-br relative mb-3 inline-flex rounded-lg p-3 shadow-lg sm:mb-4 sm:rounded-xl sm:p-4"
+              class="bg-gradient-to-br relative mb-4 inline-flex rounded-xl p-3.5 shadow-md transition-all duration-300 sm:mb-5 sm:rounded-2xl sm:p-4 group-hover:scale-110 group-hover:shadow-lg"
               :class="featureGradients[index]"
             >
-              <component :is="featureIcons[index]" class="h-5 w-5 text-white sm:h-6 sm:w-6" />
+              <component :is="featureIcons[index]" class="h-6 w-6 text-white sm:h-7 sm:w-7" />
             </div>
 
             <!-- 标题 -->
-            <h4 class="relative mb-2 text-lg text-gray-900 font-bold sm:mb-3 sm:text-xl">
+            <h4 class="relative mb-3 text-lg text-gray-900 font-bold transition-colors duration-300 sm:mb-4 sm:text-xl group-hover:text-indigo-600">
               {{ feature.title }}
             </h4>
 
@@ -329,16 +345,16 @@ const featureGradients = [
     </section>
 
     <!-- CTA 区域 -->
-    <section class="bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-500 relative px-4 py-12 text-center lg:px-8 lg:py-24 sm:px-6 sm:py-20">
+    <section class="bg-gradient-to-br from-slate-800 via-blue-800 to-indigo-900 relative px-4 py-16 text-center lg:px-8 lg:py-28 sm:px-6 sm:py-24">
       <div class="mx-auto max-w-4xl">
-        <h3 class="mb-4 text-2xl text-white font-bold sm:mb-6 lg:text-5xl md:text-4xl sm:text-3xl">
+        <h3 class="mb-5 text-2xl text-white font-extrabold tracking-tight sm:mb-7 lg:text-5xl md:text-4xl sm:text-3xl">
           {{ t.ctaSectionTitle }}
         </h3>
-        <p class="mx-auto mb-8 max-w-2xl px-4 text-sm text-white/90 leading-relaxed sm:mb-10 lg:text-xl md:text-lg sm:text-base">
+        <p class="mx-auto mb-10 max-w-2xl px-4 text-base text-white/90 leading-relaxed sm:mb-12 lg:text-xl md:text-lg sm:text-base">
           {{ t.ctaSectionSubtitle }}
         </p>
         <button
-          class="hover:shadow-3xl inline-block rounded-xl bg-white px-8 py-3.5 text-base text-indigo-600 font-bold shadow-2xl transition-all duration-300 hover:scale-105 sm:px-10 sm:py-4 sm:text-lg"
+          class="hover:shadow-3xl inline-block rounded-xl bg-gradient-to-r from-amber-400 to-yellow-300 px-10 py-4 text-base text-slate-900 font-bold shadow-2xl transition-all duration-300 hover:scale-105 hover:from-amber-300 hover:to-yellow-200 sm:px-12 sm:py-5 sm:text-lg"
           @click="goToEditor"
         >
           {{ t.ctaButton }}
@@ -349,7 +365,10 @@ const featureGradients = [
     <!-- 页脚 -->
     <footer class="backdrop-blur-sm bg-black/20 px-4 py-6 text-center lg:px-8 sm:px-6 sm:py-8">
       <p class="mx-auto max-w-4xl text-xs text-white/70 leading-relaxed sm:text-sm">
-        {{ t.footer }}
+        {{ t.footerCompany }}
+      </p>
+      <p class="mt-2 text-xs text-white/60 sm:text-sm">
+        {{ t.footerSlogan }}
       </p>
     </footer>
   </div>
