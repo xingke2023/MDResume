@@ -1,5 +1,4 @@
 import { createRouter, createWebHistory } from 'vue-router'
-import AdsTxt from '@/views/AdsTxt.vue'
 import CardsView from '@/views/CardsView.vue'
 import CodemirrorEditor from '@/views/CodemirrorEditor.vue'
 import HomePage from '@/views/HomePage.vue'
@@ -21,11 +20,6 @@ const router = createRouter({
       path: `/notes`,
       name: `notes`,
       component: CardsView,
-    },
-    {
-      path: `/ads.txt`,
-      name: `ads`,
-      component: AdsTxt,
     },
     // 404 重定向到首页
     {
