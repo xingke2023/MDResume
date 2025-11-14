@@ -17,6 +17,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
+import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { API_BASE_URL, API_ENDPOINTS, getApiUrl } from '@/config/api'
 import { useStore } from '@/stores'
@@ -64,6 +65,7 @@ const abortController = ref<AbortController | null>(null)
 const currentImageIndex = ref(0)
 const timeUpdateInterval = ref<NodeJS.Timeout | null>(null)
 const selectedStyle = ref<string>(`cartoon`)
+const imageWidthPercent = ref<string>(`75`) // 插入图片时的百分比宽度，默认75%
 
 /* ---------- 预设风格模板 ---------- */
 interface StyleTemplate {
@@ -668,8 +670,15 @@ async function insertImageToCursor(imageUrl: string) {
       ? imagePrompt.trim().substring(0, 30).replace(/\n/g, ` `)
       : `AI生成的海报`
 
-    // 使用HTML格式生成图片代码，宽度为23%
-    const htmlImage = `<div>\n  <img src="${finalImageUrl}" alt="${altText}" style="margin:auto; width: 23%; ">\n</div>`
+    // 获取图片宽度百分比，确保在1-100之间
+    let widthPercent = Number.parseInt(imageWidthPercent.value) || 75
+    if (widthPercent < 1)
+      widthPercent = 1
+    if (widthPercent > 100)
+      widthPercent = 100
+
+    // 使用HTML格式生成图片代码，使用用户设置的百分比宽度
+    const htmlImage = `<div>\n  <img src="${finalImageUrl}" alt="${altText}" style="margin:auto; width: ${widthPercent}%; ">\n</div>`
 
     // 获取当前光标位置
     const cursor = editor.value.getCursor()
@@ -860,6 +869,24 @@ function getTimeRemainingClass(index: number): string {
               </div>
             </button>
           </div>
+        </div>
+
+        <!-- 插入宽度百分比设置 -->
+        <div class="space-y-2 w-full">
+          <label class="text-sm text-gray-700 font-medium dark:text-gray-300">
+            插入图片宽度 (%)
+          </label>
+          <Input
+            v-model="imageWidthPercent"
+            type="number"
+            placeholder="75"
+            min="1"
+            max="100"
+            class="w-full"
+          />
+          <p class="text-xs text-gray-500 dark:text-gray-400">
+            设置插入到编辑器中的图片宽度百分比（1-100），默认为 75%
+          </p>
         </div>
       </DialogHeader>
 
