@@ -95,6 +95,7 @@ const contextSectionCollapsed = ref(false) // 上下文区域折叠状态
 const expandedViewVisible = ref(false) // 放大查看对话框
 const expandedViewContent = ref(``) // 放大查看的内容
 const expandedViewTitle = ref(``) // 放大查看的标题
+const referenceText = ref(``) // 参考文本内容
 
 /* ---------- 图片素材管理 ---------- */
 interface ImageMaterial {
@@ -804,6 +805,14 @@ async function sendMessage() {
     })
   }
 
+  // 如果有参考文本，添加到上下文
+  if (referenceText.value.trim()) {
+    quoteMessages.push({
+      role: `user`,
+      content: `请参考以下文本内容：\n\n${referenceText.value.trim()}`,
+    })
+  }
+
   // 如果启用了引用全文，添加全文到上下文
   if (isQuoteAllContent.value) {
     const fullContent = editor.value!.getValue()
@@ -1074,12 +1083,15 @@ async function sendMessage() {
 
           <!-- 折叠状态摘要 -->
           <div v-if="contextSectionCollapsed" class="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
-            <template v-if="imageMaterials.length > 0 || quotedContent.trim() || isQuoteAllContent || isQuoteCursorBefore || isQuoteCursorMiddle">
+            <template v-if="imageMaterials.length > 0 || quotedContent.trim() || isQuoteAllContent || isQuoteCursorBefore || isQuoteCursorMiddle || referenceText.trim()">
               <span v-if="imageMaterials.filter(m => m.ocrText && !m.error).length > 0" class="rounded bg-blue-100 px-1.5 py-0.5 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300">
                 {{ imageMaterials.filter(m => m.ocrText && !m.error).length }}张图片
               </span>
               <span v-if="quotedContent.trim() || isQuoteAllContent || isQuoteCursorBefore || isQuoteCursorMiddle" class="rounded bg-green-100 px-1.5 py-0.5 text-green-700 dark:bg-green-900/30 dark:text-green-300">
                 已选引文
+              </span>
+              <span v-if="referenceText.trim()" class="rounded bg-purple-100 px-1.5 py-0.5 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300">
+                参考文本
               </span>
             </template>
             <span v-else class="text-gray-400 dark:text-gray-500">无上下文</span>
@@ -1088,9 +1100,9 @@ async function sendMessage() {
 
         <!-- 上下文内容区域（可折叠） -->
         <Transition name="context-collapse">
-          <div v-show="!contextSectionCollapsed" class="space-y-2 bg-white/40 p-2 dark:bg-gray-900/20">
+          <div v-show="!contextSectionCollapsed" class="bg-white/40 p-1 dark:bg-gray-900/20">
             <!-- ============ 引文选择按钮 ============ -->
-            <div class="flex flex-wrap items-center gap-1 rounded-lg bg-white/60 p-1.5 dark:bg-gray-800/40">
+            <div class="flex flex-wrap items-center gap-1 rounded-lg bg-white/60 p-1 dark:bg-gray-800/40">
               <!-- 选择上下文标签 -->
               <span class="text-xs text-gray-700 font-semibold dark:text-gray-300"><span class="text-lg">①</span>上下文:</span>
               <Button
@@ -1201,8 +1213,8 @@ async function sendMessage() {
             </div>
 
             <!-- ============ 图片素材区域 ============ -->
-            <div class="rounded-lg bg-white/60 p-1.5 dark:bg-gray-800/40">
-              <div class="mb-2 flex items-center justify-between">
+            <div class="rounded-lg bg-white/60 p-1 dark:bg-gray-800/40">
+              <div class="mb-0 flex items-center justify-between">
                 <span class="text-xs text-gray-700 font-semibold dark:text-gray-300"><span class="text-lg">②</span>图片素材:</span>
                 <div class="flex items-center gap-2">
                   <Button
@@ -1227,70 +1239,58 @@ async function sendMessage() {
                 </div>
               </div>
 
-              <!-- 图片素材列表 -->
-              <div v-if="imageMaterials.length > 0" class="space-y-2">
+              <!-- 图片素材列表 - 横向排列 -->
+              <div v-if="imageMaterials.length > 0" class="custom-scroll flex gap-2 overflow-x-auto pb-1">
                 <div
                   v-for="material in imageMaterials"
                   :key="material.id"
-                  class="relative border border-gray-200 rounded-lg bg-white p-1.5 shadow-sm dark:border-gray-700 dark:bg-gray-900/70"
+                  class="relative flex-shrink-0 overflow-hidden border border-gray-200 rounded-lg bg-white shadow-sm dark:border-gray-700 dark:bg-gray-900/70"
+                  style="width: 80px; height: 80px;"
                 >
-                  <div class="flex items-start gap-2">
-                    <!-- 图片预览 -->
-                    <div class="relative h-16 w-16 flex-shrink-0 overflow-hidden border rounded bg-white dark:bg-gray-700">
-                      <img
-                        :src="material.preview"
-                        :alt="material.file.name"
-                        class="object-cover h-full w-full"
-                      >
-                      <!-- 处理中遮罩 -->
-                      <div
-                        v-if="material.isProcessing"
-                        class="absolute inset-0 flex items-center justify-center bg-black/50"
-                      >
-                        <Loader2 class="animate-spin h-5 w-5 text-white" />
-                      </div>
-                      <!-- 错误遮罩 -->
-                      <div
-                        v-if="material.error"
-                        class="absolute inset-0 flex items-center justify-center bg-red-500/80"
-                      >
-                        <X class="h-5 w-5 text-white" />
-                      </div>
-                    </div>
+                  <!-- 图片预览 -->
+                  <img
+                    :src="material.preview"
+                    :alt="material.file.name"
+                    class="object-cover h-full w-full"
+                  >
 
-                    <!-- 文件信息和OCR结果 -->
-                    <div class="min-w-0 flex-1">
-                      <div class="mb-1 flex items-center justify-between">
-                        <div class="truncate text-xs text-gray-700 font-medium dark:text-gray-300">
-                          {{ material.file.name }}
-                        </div>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          class="h-5 w-5 flex-shrink-0 p-0.5"
-                          @click="removeImageMaterial(material.id)"
-                        >
-                          <X class="h-3 w-3" />
-                        </Button>
-                      </div>
+                  <!-- 处理中遮罩 -->
+                  <div
+                    v-if="material.isProcessing"
+                    class="absolute inset-0 flex items-center justify-center bg-black/50"
+                  >
+                    <Loader2 class="animate-spin h-4 w-4 text-white" />
+                  </div>
 
-                      <!-- OCR状态 -->
-                      <div v-if="material.isProcessing" class="text-xs text-gray-500 dark:text-gray-400">
-                        正在识别文字...
-                      </div>
-                      <div v-else-if="material.error" class="text-xs text-red-600 dark:text-red-400">
-                        识别失败: {{ material.error }}
-                      </div>
-                      <div v-else-if="material.ocrText" class="text-xs text-gray-600 dark:text-gray-400">
-                        <div class="line-clamp-2">
-                          {{ material.ocrText }}
-                        </div>
-                      </div>
-                      <div v-else class="text-xs text-gray-500 dark:text-gray-400">
-                        无文字内容
-                      </div>
+                  <!-- 错误遮罩 -->
+                  <div
+                    v-if="material.error"
+                    class="absolute inset-0 flex items-center justify-center bg-red-500/80"
+                    :title="material.error"
+                  >
+                    <X class="h-4 w-4 text-white" />
+                  </div>
+
+                  <!-- OCR状态指示 - 顶部 -->
+                  <div
+                    v-if="!material.isProcessing && !material.error"
+                    class="absolute left-0 right-0 top-0 px-1 py-0.5 text-center"
+                    :class="material.ocrText ? 'bg-green-500/80' : 'bg-gray-500/60'"
+                  >
+                    <div class="text-[10px] text-white font-medium">
+                      {{ material.ocrText ? '已识别' : '无文字' }}
                     </div>
                   </div>
+
+                  <!-- 删除按钮 -->
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    class="absolute right-0.5 top-0.5 h-5 w-5 bg-black/50 p-0.5 transition-opacity hover:bg-black/70"
+                    @click="removeImageMaterial(material.id)"
+                  >
+                    <X class="h-3 w-3 text-white" />
+                  </Button>
                 </div>
               </div>
 
@@ -1301,6 +1301,31 @@ async function sendMessage() {
               >
                 点击"添加图片素材"按钮上传图片，AI将自动识别图片中的文字作为对话参考
               </div>
+            </div>
+
+            <!-- ============ 参考文本区域 ============ -->
+            <div class="rounded-lg bg-white/60 p-1.5 dark:bg-gray-800/40">
+              <div class="mb-0 flex items-center justify-between">
+                <span class="text-xs text-gray-700 font-semibold dark:text-gray-300"><span class="text-lg">③</span>参考文本:</span>
+                <Button
+                  v-if="referenceText.trim()"
+                  size="sm"
+                  variant="ghost"
+                  class="h-5 px-2 text-xs text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300"
+                  @click="referenceText = ''"
+                >
+                  <X class="mr-1 h-3 w-3" />
+                  清空文本
+                </Button>
+              </div>
+
+              <!-- 参考文本输入框 -->
+              <Textarea
+                v-model="referenceText"
+                placeholder="粘贴参考文本，作为对话参考..."
+                rows="1"
+                class="custom-scroll min-h-12 w-full resize-none border border-gray-200 rounded-md bg-white px-1 py-1 text-sm"
+              />
             </div>
           </div>
         </Transition>
