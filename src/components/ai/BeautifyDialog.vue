@@ -39,17 +39,17 @@ const modes = [
 ]
 
 function closeConfirm() {
-  emit('update:confirmVisible', false)
+  emit(`update:confirmVisible`, false)
   // 关闭时清空自定义要求
   customRequirement.value = ``
 }
 
 function closeLoading() {
-  emit('update:loadingVisible', false)
+  emit(`update:loadingVisible`, false)
 }
 
 function handleConfirm() {
-  emit('confirm', selectedMode.value, customRequirement.value)
+  emit(`confirm`, selectedMode.value, customRequirement.value)
 }
 </script>
 

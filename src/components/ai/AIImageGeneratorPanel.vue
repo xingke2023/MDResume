@@ -905,15 +905,15 @@ async function insertImageToCursor(imageUrl: string) {
       ? imagePrompt.trim().substring(0, 30).replace(/\n/g, ` `)
       : `AI生成的图像`
 
-    // 使用微信图床的URL生成Markdown图片语法
-    const markdownImage = `![${altText}](${finalImageUrl})`
+    // 使用HTML格式生成图片代码，宽度为23%
+    const htmlImage = `<div>\n  <img src="${finalImageUrl}" alt="${altText}" style="margin:auto; width: 23%; ">\n</div>`
 
     // 获取当前光标位置并插入
     const cursor = editor.value.getCursor()
-    editor.value.replaceRange(markdownImage, cursor)
+    editor.value.replaceRange(htmlImage, cursor)
 
     // 将光标移动到插入内容后面
-    const newCursor = { line: cursor.line, ch: cursor.ch + markdownImage.length }
+    const newCursor = { line: cursor.line, ch: cursor.ch + htmlImage.length }
     editor.value.setCursor(newCursor)
 
     // 聚焦编辑器
@@ -1537,11 +1537,11 @@ async function insertPosterToEditor(imageUrl: string): Promise<boolean> {
       ? imagePrompt.trim().substring(0, 30).replace(/\n/g, ` `)
       : `AI生成的海报`
 
-    const markdownImage = `![${altText}](${finalImageUrl})`
+    const htmlImage = `<div>\n  <img src="${finalImageUrl}" alt="${altText}" style="margin:auto; width: 23%; ">\n</div>`
     const cursor = editor.value.getCursor()
-    editor.value.replaceRange(markdownImage, cursor)
+    editor.value.replaceRange(htmlImage, cursor)
 
-    const newCursor = { line: cursor.line, ch: cursor.ch + markdownImage.length }
+    const newCursor = { line: cursor.line, ch: cursor.ch + htmlImage.length }
     editor.value.setCursor(newCursor)
     editor.value.focus()
 
@@ -1783,15 +1783,15 @@ async function insertNanoImageToEditor(imageUrl: string, imagePrompt: string): P
       ? imagePrompt.trim().substring(0, 30).replace(/\n/g, ` `)
       : `Nano Banana 生成的图片`
 
-    // 生成Markdown图片语法
-    const markdownImage = `![${altText}](${imageUrl})`
+    // 使用HTML格式生成图片代码，宽度为23%
+    const htmlImage = `<div>\n  <img src="${imageUrl}" alt="${altText}" style="margin:auto; width: 23%; ">\n</div>`
 
     // 获取当前光标位置并插入
     const cursor = editor.value.getCursor()
-    editor.value.replaceRange(markdownImage, cursor)
+    editor.value.replaceRange(htmlImage, cursor)
 
     // 将光标移动到插入内容后面
-    const newCursor = { line: cursor.line, ch: cursor.ch + markdownImage.length }
+    const newCursor = { line: cursor.line, ch: cursor.ch + htmlImage.length }
     editor.value.setCursor(newCursor)
 
     // 聚焦编辑器
@@ -1912,7 +1912,7 @@ async function insertNanoImageToEditor(imageUrl: string, imagePrompt: string): P
       <!-- Tab 0: 本地图片上传 -->
       <div v-if="activeTab === 'upload'" class="space-y-4 mt-4 flex flex-1 flex-col overflow-y-auto">
         <!-- 介绍 -->
-        <div class="from-emerald-50 to-teal-50 bg-gradient-to-r dark:from-emerald-950/40 dark:to-teal-950/40 rounded-lg p-4">
+        <div class="bg-gradient-to-r from-emerald-50 to-teal-50 dark:from-emerald-950/40 dark:to-teal-950/40 rounded-lg p-4">
           <div class="flex items-center gap-2">
             <Upload class="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
             <p class="text-sm text-emerald-800 font-medium dark:text-emerald-300">
@@ -2020,7 +2020,7 @@ async function insertNanoImageToEditor(imageUrl: string, imagePrompt: string): P
         <!-- 提交按钮 -->
         <div class="mt-auto pt-4">
           <Button
-            class="bg-gradient-to-r from-blue-500 to-cyan-600 hover:from-blue-600 hover:to-cyan-700 w-full border-0 text-white"
+            class="bg-gradient-to-r from-blue-500 hover:from-blue-600 to-cyan-600 hover:to-cyan-700 w-full border-0 text-white"
             :disabled="screenshotIsProcessing || !screenshotInstruction.trim() || screenshotImageFiles.length === 0"
             @click="handleScreenshotSubmit"
           >
@@ -2044,7 +2044,7 @@ async function insertNanoImageToEditor(imageUrl: string, imagePrompt: string): P
       <!-- Tab 2: 海报制作 -->
       <div v-if="activeTab === 'poster'" class="space-y-4 mt-4 flex flex-1 flex-col overflow-y-auto">
         <!-- 介绍 -->
-        <div class="from-pink-50 via-purple-50 to-blue-50 bg-gradient-to-br dark:from-pink-950/40 dark:via-purple-950/40 dark:to-blue-950/40 rounded-lg p-4">
+        <div class="bg-gradient-to-br from-pink-50 via-purple-50 to-blue-50 dark:from-pink-950/40 dark:via-purple-950/40 dark:to-blue-950/40 rounded-lg p-4">
           <div class="flex items-center gap-2">
             <Palette class="h-5 w-5 text-purple-600 dark:text-purple-400" />
             <p class="text-sm text-purple-800 font-medium dark:text-purple-300">
@@ -2137,7 +2137,7 @@ async function insertNanoImageToEditor(imageUrl: string, imagePrompt: string): P
                   <img
                     :src="posterGeneratedImages[posterCurrentImageIndex]"
                     :alt="`生成的海报 ${posterCurrentImageIndex + 1}`"
-                    class="object-contain border-border h-auto max-h-[300px] w-full border rounded-lg shadow-lg transition-transform sm:max-h-[350px] hover:scale-105"
+                    class="border-border object-contain h-auto max-h-[300px] w-full border rounded-lg shadow-lg transition-transform sm:max-h-[350px] hover:scale-105"
                   >
                   <div class="pointer-events-none absolute inset-0 flex items-center justify-center rounded-lg bg-black/0 opacity-0 transition-opacity group-hover:bg-black/10 group-hover:opacity-100">
                     <div class="rounded-md bg-black/70 px-3 py-1 text-sm text-white">
@@ -2196,7 +2196,7 @@ async function insertNanoImageToEditor(imageUrl: string, imagePrompt: string): P
               :disabled="!posterSelectedStyle || (!posterPrompt.trim() && !posterLoading)"
               size="icon"
               :title="!posterSelectedStyle ? '请先选择风格' : (posterLoading ? '取消' : '生成')"
-              class="bg-primary text-primary-foreground hover:bg-primary/90 absolute bottom-3 right-3 rounded-full disabled:opacity-40"
+              class="hover:bg-primary/90 bg-primary text-primary-foreground absolute bottom-3 right-3 rounded-full disabled:opacity-40"
               :aria-label="posterLoading ? '取消' : '生成'"
               @click="posterLoading ? cancelPosterGeneration() : generatePoster()"
             >

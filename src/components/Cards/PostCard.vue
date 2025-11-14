@@ -65,7 +65,7 @@ const previewContent = computed(() => {
     .trim()
 
   // 限制长度 - 增加到 300 字符让卡片高度更有变化
-  return text.length > 300 ? `${text.slice(0, 300) }...` : text
+  return text.length > 300 ? `${text.slice(0, 300)}...` : text
 })
 
 // 格式化日期

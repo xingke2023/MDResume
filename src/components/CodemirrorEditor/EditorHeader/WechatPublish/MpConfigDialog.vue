@@ -24,7 +24,7 @@ const mpConfigForm = ref<MpConfig>({
 })
 
 function closeDialog() {
-  emit('update:visible', false)
+  emit(`update:visible`, false)
 }
 
 function saveMpConfig() {
@@ -35,7 +35,7 @@ function saveMpConfig() {
 
   localStorage.setItem(`mpConfig`, JSON.stringify(mpConfigForm.value))
   toast.success(`公众号配置保存成功`)
-  emit('saved', mpConfigForm.value)
+  emit(`saved`, mpConfigForm.value)
   closeDialog()
 }
 </script>

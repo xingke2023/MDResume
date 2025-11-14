@@ -258,7 +258,7 @@ const featureGradients = [
       </div>
 
       <div class="relative mx-auto max-w-6xl text-center">
-        <div class="backdrop-blur-sm animate-fade-in border-white/20 mb-6 inline-block rounded-full border-2 bg-white/10 px-5 py-2 text-sm text-white font-semibold shadow-lg sm:mb-8 sm:px-6 sm:py-2.5 sm:text-base">
+        <div class="backdrop-blur-sm animate-fade-in mb-6 inline-block border-2 border-white/20 rounded-full bg-white/10 px-5 py-2 text-sm text-white font-semibold shadow-lg sm:mb-8 sm:px-6 sm:py-2.5 sm:text-base">
           {{ t.badge }}
         </div>
 
@@ -275,7 +275,7 @@ const featureGradients = [
 
         <div class="animate-fade-in-up animation-delay-400 flex flex-col items-center justify-center gap-4 sm:flex-row sm:gap-6">
           <button
-            class="group hover:shadow-3xl max-w-xs w-full flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-amber-400 to-yellow-300 px-8 py-4 text-base text-slate-900 font-bold shadow-2xl transition-all duration-300 sm:w-auto hover:scale-105 hover:from-amber-300 hover:to-yellow-200 sm:gap-3 sm:px-12 sm:py-5 sm:text-xl"
+            class="group bg-gradient-to-r from-amber-400 to-yellow-300 hover:from-amber-300 hover:to-yellow-200 hover:shadow-3xl max-w-xs w-full flex items-center justify-center gap-2 rounded-2xl px-8 py-4 text-base text-slate-900 font-bold shadow-2xl transition-all duration-300 sm:w-auto hover:scale-105 sm:gap-3 sm:px-12 sm:py-5 sm:text-xl"
             @click="goToEditor"
           >
             <svg class="h-5 w-5 transition-transform sm:h-6 sm:w-6 group-hover:rotate-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -285,7 +285,7 @@ const featureGradients = [
           </button>
 
           <button
-            class="backdrop-blur-sm max-w-xs w-full flex items-center justify-center gap-2 border-2 border-white/40 rounded-2xl bg-white/10 px-8 py-4 text-base text-white font-bold transition-all duration-300 sm:w-auto sm:gap-3 hover:scale-105 hover:border-white/60 hover:bg-white/20 sm:px-12 sm:py-5 sm:text-xl"
+            class="backdrop-blur-sm max-w-xs w-full flex items-center justify-center gap-2 border-2 border-white/40 rounded-2xl bg-white/10 px-8 py-4 text-base text-white font-bold transition-all duration-300 sm:w-auto hover:scale-105 sm:gap-3 hover:border-white/60 hover:bg-white/20 sm:px-12 sm:py-5 sm:text-xl"
             @click="goToNotes"
           >
             <svg class="h-5 w-5 sm:h-6 sm:w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -324,7 +324,7 @@ const featureGradients = [
 
             <!-- 图标 -->
             <div
-              class="bg-gradient-to-br relative mb-4 inline-flex rounded-xl p-3.5 shadow-md transition-all duration-300 sm:mb-5 sm:rounded-2xl sm:p-4 group-hover:scale-110 group-hover:shadow-lg"
+              class="bg-gradient-to-br relative mb-4 inline-flex rounded-xl p-3.5 shadow-md transition-all duration-300 sm:mb-5 group-hover:scale-110 sm:rounded-2xl sm:p-4 group-hover:shadow-lg"
               :class="featureGradients[index]"
             >
               <component :is="featureIcons[index]" class="h-6 w-6 text-white sm:h-7 sm:w-7" />
@@ -345,7 +345,7 @@ const featureGradients = [
     </section>
 
     <!-- CTA 区域 -->
-    <section class="bg-gradient-to-br from-slate-800 via-blue-800 to-indigo-900 relative px-4 py-16 text-center lg:px-8 lg:py-28 sm:px-6 sm:py-24">
+    <section class="bg-gradient-to-br from-slate-800 to-indigo-900 via-blue-800 relative px-4 py-16 text-center lg:px-8 lg:py-28 sm:px-6 sm:py-24">
       <div class="mx-auto max-w-4xl">
         <h3 class="mb-5 text-2xl text-white font-extrabold tracking-tight sm:mb-7 lg:text-5xl md:text-4xl sm:text-3xl">
           {{ t.ctaSectionTitle }}
@@ -354,7 +354,7 @@ const featureGradients = [
           {{ t.ctaSectionSubtitle }}
         </p>
         <button
-          class="hover:shadow-3xl inline-block rounded-xl bg-gradient-to-r from-amber-400 to-yellow-300 px-10 py-4 text-base text-slate-900 font-bold shadow-2xl transition-all duration-300 hover:scale-105 hover:from-amber-300 hover:to-yellow-200 sm:px-12 sm:py-5 sm:text-lg"
+          class="hover:shadow-3xl bg-gradient-to-r from-amber-400 to-yellow-300 hover:from-amber-300 hover:to-yellow-200 inline-block rounded-xl px-10 py-4 text-base text-slate-900 font-bold shadow-2xl transition-all duration-300 hover:scale-105 sm:px-12 sm:py-5 sm:text-lg"
           @click="goToEditor"
         >
           {{ t.ctaButton }}

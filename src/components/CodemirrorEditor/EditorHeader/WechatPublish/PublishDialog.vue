@@ -16,22 +16,22 @@ const props = defineProps<{
   }
 }>()
 
-const emit = defineEmits(['update:visible', 'publish', 'selectImage', 'updateCrop', 'update:title', 'update:author', 'update:digest'])
+const emit = defineEmits([`update:visible`, `publish`, `selectImage`, `updateCrop`, `update:title`, `update:author`, `update:digest`])
 
 function handleClose() {
-  emit('update:visible', false)
+  emit(`update:visible`, false)
 }
 
 function handlePublish() {
-  emit('publish')
+  emit(`publish`)
 }
 
 function handleSelectImage() {
-  emit('selectImage')
+  emit(`selectImage`)
 }
 
 function handleUpdateCrop(crop235: string, crop1: string) {
-  emit('updateCrop', crop235, crop1)
+  emit(`updateCrop`, crop235, crop1)
 }
 
 /* eslint-disable vue/no-mutating-props */

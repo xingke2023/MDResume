@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button'
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
@@ -428,13 +429,18 @@ async function insertImage(imageUrl?: string) {
   try {
     toast.loading(`正在插入图片...`, { id: `insert-gallery-image` })
 
+    // 使用HTML格式生成图片代码，宽度为23%
+    const htmlImage = `<div>\n  <img src="${urlToInsert}" alt="图片" style="margin:auto; width: 23%; ">\n</div>`
+
+    // 获取光标位置
     const cursor = editor.value.getCursor()
-    const line = cursor.line
 
-    const imageMarkdown = `![](${urlToInsert})\n`
-    editor.value.replaceRange(imageMarkdown, { line, ch: 0 })
+    // 使用 replaceSelection 方法在光标位置插入
+    editor.value.replaceSelection(`\n${htmlImage}\n`, cursor as any)
 
-    editor.value.setCursor({ line: line + 1, ch: 0 })
+    // 等待 DOM 更新
+    await nextTick()
+
     editor.value.focus()
 
     toast.success(`图片已插入`, { id: `insert-gallery-image` })
@@ -678,6 +684,9 @@ watch(() => galleryImages.value.length, () => {
       <DialogContent class="max-h-[90vh] max-w-4xl overflow-y-auto">
         <DialogHeader>
           <DialogTitle>图片预览</DialogTitle>
+          <DialogDescription>
+            预览并调整图片尺寸后插入到编辑器
+          </DialogDescription>
         </DialogHeader>
         <div v-if="selectedImage" class="space-y-4">
           <!-- 图片显示 -->

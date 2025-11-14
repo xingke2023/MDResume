@@ -11,7 +11,7 @@ const emit = defineEmits<{
 }>()
 
 function closeDialog() {
-  emit('update:visible', false)
+  emit(`update:visible`, false)
 }
 </script>
 

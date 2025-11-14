@@ -26,7 +26,7 @@ const isProcessing = ref(false)
 const fileInput = ref<HTMLInputElement | null>(null)
 
 function closeDialog() {
-  emit('update:visible', false)
+  emit(`update:visible`, false)
   // 重置表单
   prompt.value = ``
   imageFiles.value = []
@@ -214,15 +214,15 @@ async function insertImageToEditor(imageUrl: string, imagePrompt: string) {
       ? imagePrompt.trim().substring(0, 30).replace(/\n/g, ` `)
       : `Nano Banana 生成的图片`
 
-    // 生成Markdown图片语法
-    const markdownImage = `![${altText}](${imageUrl})`
+    // 使用HTML格式生成图片代码，宽度为23%
+    const htmlImage = `<div>\n  <img src="${imageUrl}" alt="${altText}" style="margin:auto; width: 23%; ">\n</div>`
 
     // 获取当前光标位置并插入
     const cursor = store.editor.getCursor()
-    store.editor.replaceRange(markdownImage, cursor)
+    store.editor.replaceRange(htmlImage, cursor)
 
     // 将光标移动到插入内容后面
-    const newCursor = { line: cursor.line, ch: cursor.ch + markdownImage.length }
+    const newCursor = { line: cursor.line, ch: cursor.ch + htmlImage.length }
     store.editor.setCursor(newCursor)
 
     // 聚焦编辑器

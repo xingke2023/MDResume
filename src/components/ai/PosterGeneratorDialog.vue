@@ -668,15 +668,15 @@ async function insertImageToCursor(imageUrl: string) {
       ? imagePrompt.trim().substring(0, 30).replace(/\n/g, ` `)
       : `AI生成的海报`
 
-    // 使用微信图床的URL生成Markdown图片语法
-    const markdownImage = `![${altText}](${finalImageUrl})`
+    // 使用HTML格式生成图片代码，宽度为23%
+    const htmlImage = `<div>\n  <img src="${finalImageUrl}" alt="${altText}" style="margin:auto; width: 23%; ">\n</div>`
 
     // 获取当前光标位置并插入
     const cursor = editor.value.getCursor()
-    editor.value.replaceRange(markdownImage, cursor)
+    editor.value.replaceRange(htmlImage, cursor)
 
     // 将光标移动到插入内容后面
-    const newCursor = { line: cursor.line, ch: cursor.ch + markdownImage.length }
+    const newCursor = { line: cursor.line, ch: cursor.ch + htmlImage.length }
     editor.value.setCursor(newCursor)
 
     // 聚焦编辑器

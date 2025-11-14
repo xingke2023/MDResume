@@ -26,7 +26,7 @@ const isProcessing = ref(false)
 const fileInput = ref<HTMLInputElement | null>(null)
 
 function closeDialog() {
-  emit('update:visible', false)
+  emit(`update:visible`, false)
   // 重置表单
   instruction.value = ``
   imageFiles.value = []
