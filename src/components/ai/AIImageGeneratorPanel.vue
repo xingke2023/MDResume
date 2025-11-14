@@ -24,6 +24,7 @@ import {
   DialogContent,
   DialogHeader,
 } from '@/components/ui/dialog'
+import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { API_BASE_URL, API_ENDPOINTS, API_KEY, getApiUrl } from '@/config/api'
 import { useDisplayStore, useStore } from '@/stores'
@@ -137,6 +138,7 @@ const nanoIsProcessing = ref(false)
 const nanoFileInput = ref<HTMLInputElement | null>(null)
 const nanoGeneratedImageUrl = ref(``)
 const nanoGeneratedPrompt = ref(``)
+const nanoImageWidthPercent = ref<string>(`75`) // 插入图片时的百分比宽度，默认75%
 
 /* ---------- 弹窗开关 ---------- */
 const dialogVisible = ref(props.open)
@@ -1765,8 +1767,15 @@ async function insertNanoImageToEditor(imageUrl: string, imagePrompt: string): P
       ? imagePrompt.trim().substring(0, 30).replace(/\n/g, ` `)
       : `Nano Banana 生成的图片`
 
-    // 使用HTML格式生成图片代码，宽度为23%
-    const htmlImage = `<div>\n  <img src="${imageUrl}" alt="${altText}" style="margin:auto; width: 23%; ">\n</div>`
+    // 获取图片宽度百分比，确保在1-100之间
+    let widthPercent = Number.parseInt(nanoImageWidthPercent.value) || 75
+    if (widthPercent < 1)
+      widthPercent = 1
+    if (widthPercent > 100)
+      widthPercent = 100
+
+    // 使用HTML格式生成图片代码，使用用户设置的百分比宽度
+    const htmlImage = `<div>\n  <img src="${imageUrl}" alt="${altText}" style="margin:auto; width: ${widthPercent}%; ">\n</div>`
 
     // 获取当前光标位置
     const cursor = editor.value.getCursor()
@@ -2330,6 +2339,24 @@ async function insertNanoImageToEditor(imageUrl: string, imagePrompt: string): P
               </button>
             </div>
           </div>
+        </div>
+
+        <!-- 插入宽度百分比设置 -->
+        <div class="space-y-2">
+          <label class="text-sm text-gray-700 font-medium dark:text-gray-300">
+            插入图片宽度 (%)
+          </label>
+          <Input
+            v-model="nanoImageWidthPercent"
+            type="number"
+            placeholder="75"
+            min="1"
+            max="100"
+            class="w-full"
+          />
+          <p class="text-xs text-gray-500 dark:text-gray-400">
+            设置插入到编辑器中的图片宽度百分比（1-100），默认为 75%
+          </p>
         </div>
 
         <!-- 提示信息 -->
