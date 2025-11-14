@@ -87,6 +87,7 @@ const previewVisible = ref(false)
 const selectedImage = ref<GalleryImage | null>(null)
 const customWidth = ref<string>(``)
 const customHeight = ref<string>(``)
+const imageWidthPercent = ref<string>(`70`) // 插入图片时的百分比宽度，默认70%
 
 /* ---------- 分类列表 ---------- */
 const categories = ref([
@@ -429,19 +430,38 @@ async function insertImage(imageUrl?: string) {
   try {
     toast.loading(`正在插入图片...`, { id: `insert-gallery-image` })
 
-    // 使用HTML格式生成图片代码，宽度为23%
-    const htmlImage = `<div>\n  <img src="${urlToInsert}" alt="图片" style="margin:auto; width: 23%; ">\n</div>`
+    // 获取图片宽度百分比，确保在1-100之间
+    let widthPercent = Number.parseInt(imageWidthPercent.value) || 70
+    if (widthPercent < 1)
+      widthPercent = 1
+    if (widthPercent > 100)
+      widthPercent = 100
 
-    // 获取光标位置
-    const cursor = editor.value.getCursor()
+    // 使用HTML格式生成图片代码，使用用户设置的百分比宽度
+    const htmlImage = `<div>\n  <img src="${urlToInsert}" alt="图片" style="margin:auto; width: ${widthPercent}%; ">\n</div>`
 
-    // 使用 replaceSelection 方法在光标位置插入
-    editor.value.replaceSelection(`\n${htmlImage}\n`, cursor as any)
+    // 获取原始的 CodeMirror 实例（使用 toRaw 避免响应式问题）
+    const cm = toRaw(store.editor!)
 
-    // 等待 DOM 更新
+    // 获取当前光标位置
+    const cursor = cm.getCursor()
+
+    // 在光标位置插入内容，前后加换行
+    const textToInsert = `\n${htmlImage}\n`
+    cm.replaceRange(textToInsert, cursor)
+
+    // 计算新的光标位置（移动到插入内容之后）
+    const newLine = cursor.line + textToInsert.split(`\n`).length - 1
+    const lastLine = textToInsert.split(`\n`).pop() || ``
+    const newCh = lastLine.length
+    cm.setCursor({ line: newLine, ch: newCh })
+
+    // 等待 DOM 更新后刷新编辑器
     await nextTick()
+    cm.refresh()
 
-    editor.value.focus()
+    // 聚焦编辑器
+    cm.focus()
 
     toast.success(`图片已插入`, { id: `insert-gallery-image` })
 
@@ -734,6 +754,26 @@ watch(() => galleryImages.value.length, () => {
                 <span class="text-sm">{{ selectedImage.description }}</span>
               </div>
             </template>
+          </div>
+
+          <!-- 插入宽度百分比设置 -->
+          <div class="space-y-3 border-t pt-4">
+            <div class="text-sm font-medium">
+              插入图片宽度
+            </div>
+            <div class="space-y-2">
+              <label class="text-muted-foreground text-xs">宽度百分比 (%)</label>
+              <Input
+                v-model="imageWidthPercent"
+                type="number"
+                placeholder="70"
+                min="1"
+                max="100"
+              />
+            </div>
+            <p class="text-muted-foreground text-xs">
+              提示：设置插入到编辑器中的图片宽度百分比（1-100），默认为 70%
+            </p>
           </div>
 
           <!-- Unsplash 图片自定义尺寸 -->
