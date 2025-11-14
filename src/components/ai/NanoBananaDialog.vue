@@ -326,17 +326,19 @@ async function insertImageToEditor(imageUrl: string, imagePrompt: string) {
 
         <!-- 插入宽度百分比设置 -->
         <div>
-          <label class="mb-2 block text-sm text-gray-700 font-medium dark:text-gray-300">
-            插入图片宽度 (%)
-          </label>
-          <Input
-            v-model="imageWidthPercent"
-            type="number"
-            placeholder="75"
-            min="1"
-            max="100"
-            class="w-full"
-          />
+          <div class="flex items-center gap-2">
+            <label class="text-sm text-gray-700 font-medium whitespace-nowrap dark:text-gray-300">
+              插入图片宽度 (%):
+            </label>
+            <Input
+              v-model="imageWidthPercent"
+              type="number"
+              placeholder="75"
+              min="1"
+              max="100"
+              class="w-20"
+            />
+          </div>
           <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
             设置插入到编辑器中的图片宽度百分比（1-100），默认为 75%
           </p>

@@ -740,18 +740,16 @@ watch(() => galleryImages.value.length, () => {
           </div>
 
           <!-- 插入宽度百分比设置 -->
-          <div class="space-y-3 border-t pt-4">
-            <div class="text-sm font-medium">
-              插入图片宽度
-            </div>
-            <div class="space-y-2">
-              <label class="text-muted-foreground text-xs">宽度百分比 (%)</label>
+          <div class="space-y-2 border-t pt-4">
+            <div class="flex items-center gap-2">
+              <label class="text-sm font-medium whitespace-nowrap">插入图片宽度 (%):</label>
               <Input
                 v-model="imageWidthPercent"
                 type="number"
                 placeholder="70"
                 min="1"
                 max="100"
+                class="w-20"
               />
             </div>
             <p class="text-muted-foreground text-xs">
