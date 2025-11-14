@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ImagePlus, Send, X } from 'lucide-vue-next'
-import { ref } from 'vue'
+import { ref, toRaw } from 'vue'
 import { toast } from 'vue-sonner'
 import { Button } from '@/components/ui/button'
 import { API_ENDPOINTS, API_KEY, getApiUrl } from '@/config/api'
@@ -288,22 +288,11 @@ async function insertArticleToEditor(article: string) {
   }
 
   try {
-    // 获取当前光标位置并插入
+    // 获取当前光标位置
     const cursor = store.editor.getCursor()
 
-    // 在光标位置插入文稿内容
-    store.editor.replaceRange(`\n${article}\n`, cursor)
-
-    // 将光标移动到插入内容后面
-    const lines = article.split(`\n`)
-    const newCursor = {
-      line: cursor.line + lines.length + 1,
-      ch: 0,
-    }
-    store.editor.setCursor(newCursor)
-
-    // 聚焦编辑器
-    store.editor.focus()
+    // 使用 toRaw 获取原始编辑器实例并插入（完全模仿本地上传方式）
+    toRaw(store.editor!).replaceSelection(`\n${article}\n`, cursor as any)
 
     toast.success(`文稿已插入编辑器`)
     console.log(`✅ 文稿已成功插入到编辑器`)

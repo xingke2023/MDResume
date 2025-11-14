@@ -15,7 +15,7 @@ import {
   Upload,
 } from 'lucide-vue-next'
 import { storeToRefs } from 'pinia'
-import { onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { onBeforeUnmount, onMounted, ref, toRaw, watch } from 'vue'
 import { toast } from 'vue-sonner'
 import CustomUploadForm from '@/components/CustomUploadForm.vue'
 import { Button } from '@/components/ui/button'
@@ -908,16 +908,11 @@ async function insertImageToCursor(imageUrl: string) {
     // 使用HTML格式生成图片代码，宽度为23%
     const htmlImage = `<div>\n  <img src="${finalImageUrl}" alt="${altText}" style="margin:auto; width: 23%; ">\n</div>`
 
-    // 获取当前光标位置并插入
+    // 获取当前光标位置
     const cursor = editor.value.getCursor()
-    editor.value.replaceRange(htmlImage, cursor)
 
-    // 将光标移动到插入内容后面
-    const newCursor = { line: cursor.line, ch: cursor.ch + htmlImage.length }
-    editor.value.setCursor(newCursor)
-
-    // 聚焦编辑器
-    editor.value.focus()
+    // 使用 toRaw 获取原始编辑器实例并插入（完全模仿本地上传方式）
+    toRaw(store.editor!).replaceSelection(`\n${htmlImage}\n`, cursor as any)
 
     // 关闭弹窗
     dialogVisible.value = false
@@ -1272,22 +1267,11 @@ async function insertArticleToEditor(article: string): Promise<boolean> {
   }
 
   try {
-    // 获取当前光标位置并插入
+    // 获取当前光标位置
     const cursor = editor.value.getCursor()
 
-    // 在光标位置插入文稿内容
-    editor.value.replaceRange(`\n${article}\n`, cursor)
-
-    // 将光标移动到插入内容后面
-    const lines = article.split(`\n`)
-    const newCursor = {
-      line: cursor.line + lines.length + 1,
-      ch: 0,
-    }
-    editor.value.setCursor(newCursor)
-
-    // 聚焦编辑器
-    editor.value.focus()
+    // 使用 toRaw 获取原始编辑器实例并插入（完全模仿本地上传方式）
+    toRaw(store.editor!).replaceSelection(`\n${article}\n`, cursor as any)
 
     toast.success(`文稿已插入编辑器`)
     console.log(`✅ 文稿已成功插入到编辑器`)
@@ -1539,11 +1523,9 @@ async function insertPosterToEditor(imageUrl: string): Promise<boolean> {
 
     const htmlImage = `<div>\n  <img src="${finalImageUrl}" alt="${altText}" style="margin:auto; width: 23%; ">\n</div>`
     const cursor = editor.value.getCursor()
-    editor.value.replaceRange(htmlImage, cursor)
 
-    const newCursor = { line: cursor.line, ch: cursor.ch + htmlImage.length }
-    editor.value.setCursor(newCursor)
-    editor.value.focus()
+    // 使用 toRaw 获取原始编辑器实例并插入（完全模仿本地上传方式）
+    toRaw(store.editor!).replaceSelection(`\n${htmlImage}\n`, cursor as any)
 
     toast.success(`海报已上传并插入`)
 
@@ -1786,16 +1768,11 @@ async function insertNanoImageToEditor(imageUrl: string, imagePrompt: string): P
     // 使用HTML格式生成图片代码，宽度为23%
     const htmlImage = `<div>\n  <img src="${imageUrl}" alt="${altText}" style="margin:auto; width: 23%; ">\n</div>`
 
-    // 获取当前光标位置并插入
+    // 获取当前光标位置
     const cursor = editor.value.getCursor()
-    editor.value.replaceRange(htmlImage, cursor)
 
-    // 将光标移动到插入内容后面
-    const newCursor = { line: cursor.line, ch: cursor.ch + htmlImage.length }
-    editor.value.setCursor(newCursor)
-
-    // 聚焦编辑器
-    editor.value.focus()
+    // 使用 toRaw 获取原始编辑器实例并插入（完全模仿本地上传方式）
+    toRaw(store.editor!).replaceSelection(`\n${htmlImage}\n`, cursor as any)
 
     toast.success(`图片已插入编辑器，请预览查看`)
     console.log(`✅ 图片已成功插入到编辑器`)

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Gem, ImagePlus, Send } from 'lucide-vue-next'
-import { ref } from 'vue'
+import { ref, toRaw } from 'vue'
 import { toast } from 'vue-sonner'
 import { Button } from '@/components/ui/button'
 import { API_ENDPOINTS, API_KEY, getApiUrl } from '@/config/api'
@@ -217,16 +217,11 @@ async function insertImageToEditor(imageUrl: string, imagePrompt: string) {
     // 使用HTML格式生成图片代码，宽度为23%
     const htmlImage = `<div>\n  <img src="${imageUrl}" alt="${altText}" style="margin:auto; width: 23%; ">\n</div>`
 
-    // 获取当前光标位置并插入
+    // 获取当前光标位置
     const cursor = store.editor.getCursor()
-    store.editor.replaceRange(htmlImage, cursor)
 
-    // 将光标移动到插入内容后面
-    const newCursor = { line: cursor.line, ch: cursor.ch + htmlImage.length }
-    store.editor.setCursor(newCursor)
-
-    // 聚焦编辑器
-    store.editor.focus()
+    // 使用 toRaw 获取原始编辑器实例并插入（完全模仿本地上传方式）
+    toRaw(store.editor!).replaceSelection(`\n${htmlImage}\n`, cursor as any)
 
     toast.success(`图片已插入编辑器，请预览查看`)
     console.log(`✅ 图片已成功插入到编辑器`)

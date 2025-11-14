@@ -440,28 +440,11 @@ async function insertImage(imageUrl?: string) {
     // 使用HTML格式生成图片代码，使用用户设置的百分比宽度
     const htmlImage = `<div>\n  <img src="${urlToInsert}" alt="图片" style="margin:auto; width: ${widthPercent}%; ">\n</div>`
 
-    // 获取原始的 CodeMirror 实例（使用 toRaw 避免响应式问题）
-    const cm = toRaw(store.editor!)
-
     // 获取当前光标位置
-    const cursor = cm.getCursor()
+    const cursor = editor.value.getCursor()
 
-    // 在光标位置插入内容，前后加换行
-    const textToInsert = `\n${htmlImage}\n`
-    cm.replaceRange(textToInsert, cursor)
-
-    // 计算新的光标位置（移动到插入内容之后）
-    const newLine = cursor.line + textToInsert.split(`\n`).length - 1
-    const lastLine = textToInsert.split(`\n`).pop() || ``
-    const newCh = lastLine.length
-    cm.setCursor({ line: newLine, ch: newCh })
-
-    // 等待 DOM 更新后刷新编辑器
-    await nextTick()
-    cm.refresh()
-
-    // 聚焦编辑器
-    cm.focus()
+    // 使用 toRaw 获取原始编辑器实例并插入（完全模仿本地上传方式）
+    toRaw(store.editor!).replaceSelection(`\n${htmlImage}\n`, cursor as any)
 
     toast.success(`图片已插入`, { id: `insert-gallery-image` })
 

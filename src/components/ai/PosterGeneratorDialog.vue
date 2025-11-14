@@ -8,7 +8,7 @@ import {
   Trash2,
 } from 'lucide-vue-next'
 import { storeToRefs } from 'pinia'
-import { onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { onBeforeUnmount, onMounted, ref, toRaw, watch } from 'vue'
 import { toast } from 'vue-sonner'
 import { Button } from '@/components/ui/button'
 import {
@@ -671,16 +671,11 @@ async function insertImageToCursor(imageUrl: string) {
     // 使用HTML格式生成图片代码，宽度为23%
     const htmlImage = `<div>\n  <img src="${finalImageUrl}" alt="${altText}" style="margin:auto; width: 23%; ">\n</div>`
 
-    // 获取当前光标位置并插入
+    // 获取当前光标位置
     const cursor = editor.value.getCursor()
-    editor.value.replaceRange(htmlImage, cursor)
 
-    // 将光标移动到插入内容后面
-    const newCursor = { line: cursor.line, ch: cursor.ch + htmlImage.length }
-    editor.value.setCursor(newCursor)
-
-    // 聚焦编辑器
-    editor.value.focus()
+    // 使用 toRaw 获取原始编辑器实例并插入（完全模仿本地上传方式）
+    toRaw(store.editor!).replaceSelection(`\n${htmlImage}\n`, cursor as any)
 
     // 关闭弹窗
     dialogVisible.value = false
