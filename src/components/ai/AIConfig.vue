@@ -279,7 +279,7 @@ async function testConnection() {
         type="number"
         min="1"
         max="32768"
-        placeholder="比如 1024"
+        placeholder="推荐 8000"
         class="flex-1 focus:border-gray-400 focus:ring-1 focus:ring-gray-300"
       />
     </div>
