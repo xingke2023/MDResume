@@ -120,7 +120,8 @@ onBeforeMount(() => {
 
 <template>
   <Dialog v-model:open="dialogVisible" @update:open="onUpdate">
-    <DialogTrigger>
+    <!-- 第三方插件发布按钮已移除，使用左侧"发布"下拉菜单代替 -->
+    <DialogTrigger v-if="false">
       <Button v-if="!store.isMobile" variant="outline" @click="prePost">
         发布
       </Button>

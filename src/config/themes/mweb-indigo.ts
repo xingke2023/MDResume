@@ -289,6 +289,9 @@ export const mwebIndigoTheme: Theme = {
     strong: {
       'font-weight': `bold`,
       'color': `#5a67d8`,
+      'background-color': `#fffacd`,
+      'padding': `2px 4px`,
+      'border-radius': `2px`,
     },
 
     em: {

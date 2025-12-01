@@ -237,10 +237,9 @@ export const notionLikeTheme: Theme = {
     strong: {
       'font-weight': `700`,
       'color': `#4f3b2a`,
-      'background-color': `#feecc8`,
-      'padding': `2px 0px`,
-      'border-radius': `4px`,
-      'margin': `0 2px`,
+      'background-color': `#fffacd`,
+      'padding': `2px 4px`,
+      'border-radius': `2px`,
     },
 
     em: {

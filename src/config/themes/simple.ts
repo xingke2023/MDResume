@@ -172,5 +172,11 @@ export const simpleTheme: Theme = toMerged(defaultTheme, {
     listitem_content: {
       flex: `1`,
     },
+
+    strong: {
+      'background-color': `#fffacd`,
+      'padding': `2px 4px`,
+      'border-radius': `2px`,
+    },
   },
 })

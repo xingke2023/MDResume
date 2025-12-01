@@ -8,6 +8,7 @@ export const mwebCleanTheme: Theme = {
     '-webkit-text-size-adjust': `100%`,
     'text-rendering': `optimizeLegibility`,
     'font': `300 1em/1.8 PingFang SC, Lantinghei SC, Microsoft Yahei, Hiragino Sans GB, Microsoft Sans Serif, WenQuanYi Micro Hei, sans-serif`,
+    'text-align': `justify`,
   },
   block: {
     container: {
@@ -92,6 +93,7 @@ export const mwebCleanTheme: Theme = {
       'padding': `0`,
       'margin-bottom': `1.2em`,
       'color': `#333`,
+      'text-align': `justify`,
     },
 
     blockquote: {
@@ -242,6 +244,9 @@ export const mwebCleanTheme: Theme = {
     strong: {
       'font-weight': `bold`,
       'color': `#000`,
+      'background-color': `#fffacd`,
+      'padding': `2px 4px`,
+      'border-radius': `2px`,
     },
 
     em: {

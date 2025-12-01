@@ -2,10 +2,11 @@ import type { Theme } from '@/types'
 
 export const rainbowTheme: Theme = {
   base: {
-    '--md-primary-color': `rgb(255, 191, 191)`,
+    '--md-primary-color': `rgb(173, 216, 230)`,
     'font-family': `"Noto Sans SC Medium", "Noto Sans SC", sans-serif`,
     'color': `#000`,
     'background-color': `#fff`,
+    'text-align': `justify`,
   },
   block: {
     container: {
@@ -30,19 +31,19 @@ export const rainbowTheme: Theme = {
       'margin-left': `-0.5rem`,
       'margin-right': `-0.5rem`,
       'margin-bottom': `1.5rem`,
-      'background-color': `rgb(255, 232, 232)`,
+      'background-color': `rgb(224, 242, 250)`,
       'padding-left': `1rem`,
       'padding-right': `1rem`,
       'padding-top': `0.5rem`,
       'padding-bottom': `0.5rem`,
-      'border-left': `0.5rem solid rgb(255, 191, 191)`,
+      'border-left': `0.5rem solid rgb(173, 216, 230)`,
       'border-radius': `0.4rem`,
       'font-weight': `500`,
     },
 
     h3: {
       'font-size': `1.3rem`,
-      'text-decoration': `underline double rgb(255, 191, 191) 0.15rem`,
+      'text-decoration': `underline double rgb(173, 216, 230) 0.15rem`,
       'margin-top': `1.6rem`,
       'margin-bottom': `1rem`,
       'font-weight': `500`,
@@ -50,7 +51,7 @@ export const rainbowTheme: Theme = {
 
     h4: {
       'font-size': `1.3rem`,
-      'text-decoration': `underline dotted rgb(255, 191, 191) 0.2rem`,
+      'text-decoration': `underline dotted rgb(173, 216, 230) 0.2rem`,
       'margin-top': `1.3rem`,
       'margin-bottom': `1rem`,
       'font-weight': `500`,
@@ -75,11 +76,12 @@ export const rainbowTheme: Theme = {
       'line-height': `1.6rem`,
       'margin-top': `1rem`,
       'margin-bottom': `1rem`,
+      'text-align': `justify`,
     },
 
     blockquote: {
       'color': `rgb(102, 102, 102)`,
-      'border-left': `0.25rem solid rgb(169, 202, 255)`,
+      'border-left': `0.25rem solid rgb(135, 206, 250)`,
       'padding': `0.5rem 1rem 0.6rem 1rem`,
       'margin': `1rem 0`,
       'position': `relative`,
@@ -232,6 +234,9 @@ export const rainbowTheme: Theme = {
     strong: {
       'font-weight': `bold`,
       'color': `#000`,
+      'background-color': `#fffacd`,
+      'padding': `2px 4px`,
+      'border-radius': `2px`,
     },
 
     em: {
@@ -241,18 +246,18 @@ export const rainbowTheme: Theme = {
 
     table: {
       'border-collapse': `collapse`,
-      'border': `0.25rem solid rgb(255, 235, 211)`,
+      'border': `0.25rem solid rgb(173, 216, 230)`,
       'margin': `1rem 0`,
       'width': `100%`,
     },
 
     thead: {
-      'background-color': `rgb(255, 243, 228)`,
+      'background-color': `rgb(224, 242, 250)`,
     },
 
     td: {
       'text-align': `center`,
-      'border': `0.13rem dashed rgb(255, 235, 211)`,
+      'border': `0.13rem dashed rgb(173, 216, 230)`,
       'padding': `0.5rem`,
     },
 

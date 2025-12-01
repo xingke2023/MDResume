@@ -286,6 +286,9 @@ export const defaultTheme: Theme = {
       'color': `var(--md-primary-color)`,
       'font-weight': `bold`,
       'font-size': `inherit`,
+      'background-color': `#fffacd`,
+      'padding': `2px 4px`,
+      'border-radius': `2px`,
     },
 
     table: {

@@ -223,6 +223,9 @@ export const cobaltTheme: Theme = {
     },
     strong: {
       'font-weight': `bold`,
+      'background-color': `#fffacd`,
+      'padding': `2px 4px`,
+      'border-radius': `2px`,
     },
     em: {
       'font-style': `italic`,
