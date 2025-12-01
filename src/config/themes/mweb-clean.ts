@@ -3,7 +3,7 @@ import type { Theme } from '@/types'
 export const mwebCleanTheme: Theme = {
   base: {
     '--md-primary-color': `#1abc9c`,
-    'color': `#333`,
+    'color': `#111`,
     'background': `#fff`,
     '-webkit-text-size-adjust': `100%`,
     'text-rendering': `optimizeLegibility`,
@@ -99,15 +99,13 @@ export const mwebCleanTheme: Theme = {
     blockquote: {
       'padding': `0`,
       'position': `relative`,
-      'color': `#999`,
       'font-weight': `400`,
-      'border-left': `1px solid #1abc9c`,
-      'padding-left': `1em`,
-      'margin': `1em 3em 1em 2em`,
+      'border-left': `3px solid #CCC`,
+      'padding-left': `0.5em`,
+      'margin': `1em 0em 1em 0em`,
     },
 
     blockquote_p: {
-      color: `#999`,
       margin: `0`,
     },
 

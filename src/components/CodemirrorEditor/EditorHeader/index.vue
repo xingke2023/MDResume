@@ -140,19 +140,28 @@ function insertQuote() {
     editorInstance.replaceSelection(quoted)
   }
   else {
-    // 无选中文本，插入引用前缀
+    // 无选中文本，为当前行添加引用前缀
     const line = editorInstance.getLine(cursor.line)
     if (line.startsWith(`> `)) {
       // 如果已经是引用，移除引用符号
+      const newLine = line.substring(2)
       editorInstance.replaceRange(
-        line.substring(2),
+        newLine,
         { line: cursor.line, ch: 0 },
         { line: cursor.line, ch: line.length },
       )
+      // 调整光标位置
+      editorInstance.setCursor({ line: cursor.line, ch: Math.max(0, cursor.ch - 2) })
     }
     else {
-      // 添加引用符号
-      editorInstance.replaceRange(`> `, { line: cursor.line, ch: 0 })
+      // 为整行内容添加引用符号
+      const newLine = `> ${line}`
+      editorInstance.replaceRange(
+        newLine,
+        { line: cursor.line, ch: 0 },
+        { line: cursor.line, ch: line.length },
+      )
+      // 调整光标位置
       editorInstance.setCursor({ line: cursor.line, ch: cursor.ch + 2 })
     }
   }
@@ -1652,16 +1661,6 @@ function handleMobileEditButtonClick() {
             @click="displayStore.toggleShowInsertFormDialog()"
           >
             <Table class="size-4" />
-          </Button>
-          <!-- 上传图片 -->
-          <Button
-            variant="outline"
-            size="sm"
-            class="flex-shrink-0"
-            title="上传图片"
-            @click="displayStore.toggleShowUploadImgDialog()"
-          >
-            <ImagePlus class="size-4" />
           </Button>
           <!-- 图库 -->
           <Button

@@ -81,7 +81,7 @@ export const rainbowTheme: Theme = {
 
     blockquote: {
       'color': `rgb(102, 102, 102)`,
-      'border-left': `0.25rem solid rgb(135, 206, 250)`,
+      'border-left': `0.2rem solid #CCC`,
       'padding': `0.5rem 1rem 0.6rem 1rem`,
       'margin': `1rem 0`,
       'position': `relative`,
