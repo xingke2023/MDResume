@@ -265,11 +265,26 @@ function leftAndRightScroll() {
       }, 300)
     }
 
-    const percentage
-      = source.scrollTop / (source.scrollHeight - source.offsetHeight)
-    const height = percentage * (target.scrollHeight - target.offsetHeight)
+    // 计算源和目标的可滚动范围
+    const sourceScrollableHeight = source.scrollHeight - source.offsetHeight
+    const targetScrollableHeight = target.scrollHeight - target.offsetHeight
 
-    target.scrollTo(0, height)
+    // 防止除以零
+    if (sourceScrollableHeight <= 0 || targetScrollableHeight <= 0) {
+      return
+    }
+
+    // 计算滚动百分比（0 到 1）
+    const percentage = source.scrollTop / sourceScrollableHeight
+
+    // 计算目标滚动位置
+    const targetScrollTop = percentage * targetScrollableHeight
+
+    // 使用 requestAnimationFrame 实现平滑滚动
+    target.scrollTo({
+      top: targetScrollTop,
+      behavior: `instant`, // 使用 instant 避免冲突，同步需要即时响应
+    })
   }
 
   function editorScrollCB() {

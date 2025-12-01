@@ -223,8 +223,8 @@ export const cobaltTheme: Theme = {
     },
     strong: {
       'font-weight': `bold`,
+      'font-size': `inherit`,
       'background-color': `#fffacd`,
-      'padding': `2px 4px`,
       'border-radius': `2px`,
     },
     em: {

@@ -288,9 +288,9 @@ export const mwebIndigoTheme: Theme = {
 
     strong: {
       'font-weight': `bold`,
+      'font-size': `inherit`,
       'color': `#5a67d8`,
       'background-color': `#fffacd`,
-      'padding': `2px 4px`,
       'border-radius': `2px`,
     },
 

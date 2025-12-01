@@ -167,10 +167,10 @@ export const graceTheme: Theme = toMerged(defaultTheme, {
 
     strong: {
       'font-family': `PingFang SC, Lantinghei SC, Microsoft Yahei, Hiragino Sans GB, Microsoft Sans Serif, WenQuanYi Micro Hei, sans-serif`,
-      'background-color': `#fffacd`,
-      'padding': `2px 4px`,
-      'border-radius': `2px`,
       'font-weight': `bold`,
+      'font-size': `inherit`,
+      'background-color': `#fffacd`,
+      'border-radius': `2px`,
     },
 
     table: {

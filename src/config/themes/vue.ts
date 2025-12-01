@@ -245,9 +245,9 @@ export const vueTheme: Theme = {
 
     strong: {
       'font-weight': `bold`,
+      'font-size': `inherit`,
       'color': `#34495e`,
       'background-color': `#fffacd`,
-      'padding': `2px 4px`,
       'border-radius': `2px`,
     },
 

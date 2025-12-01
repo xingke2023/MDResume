@@ -236,9 +236,9 @@ export const notionLikeTheme: Theme = {
 
     strong: {
       'font-weight': `700`,
+      'font-size': `inherit`,
       'color': `#4f3b2a`,
       'background-color': `#fffacd`,
-      'padding': `2px 4px`,
       'border-radius': `2px`,
     },
 
