@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+        xmlns:xhtml="http://www.w3.org/1999/xhtml">
+
+  <!-- 首页 - 三语言版本 -->
+  <url>
+    <loc>https://md.macrodata.hk/</loc>
+    <lastmod>2025-12-06</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>1.0</priority>
+    <xhtml:link rel="alternate" hreflang="zh-CN" href="https://md.macrodata.hk/?lang=zh-CN" />
+    <xhtml:link rel="alternate" hreflang="zh-TW" href="https://md.macrodata.hk/?lang=zh-TW" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://md.macrodata.hk/?lang=en" />
+  </url>
+
+  <!-- 编辑器页面 -->
+  <url>
+    <loc>https://md.macrodata.hk/editor</loc>
+    <lastmod>2025-12-06</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.9</priority>
+  </url>
+
+  <!-- 卡片视图 -->
+  <url>
+    <loc>https://md.macrodata.hk/cards</loc>
+    <lastmod>2025-12-06</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+
+</urlset>

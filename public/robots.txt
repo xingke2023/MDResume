@@ -1,0 +1,25 @@
+# robots.txt for 公众号排版发文工具
+# Website: https://md.macrodata.hk
+
+User-agent: *
+Allow: /
+Disallow: /api/
+Disallow: /admin/
+Disallow: /upload/
+Disallow: /*.json$
+
+# 主要爬虫
+User-agent: Googlebot
+Allow: /
+Crawl-delay: 0
+
+User-agent: Bingbot
+Allow: /
+Crawl-delay: 0
+
+User-agent: Baiduspider
+Allow: /
+Crawl-delay: 1
+
+# Sitemap 位置
+Sitemap: https://md.macrodata.hk/sitemap.xml
