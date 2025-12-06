@@ -16,10 +16,8 @@ export const mwebIndigoTheme: Theme = {
   },
   block: {
     container: {
-      'min-width': `200px`,
       'width': `100%`,
       'margin': `0`,
-      'padding': `1em`,
     },
 
     h1: {
@@ -193,7 +191,7 @@ export const mwebIndigoTheme: Theme = {
       'padding': `0`,
       'list-style': `none`,
       'margin-bottom': `1rem`,
-      'margin-left': `-1.3em`,
+      'margin-left': `-0.8em`,
       'display': `flex`,
       'flex-direction': `column`,
       'counter-reset': `list-counter`,
@@ -204,7 +202,7 @@ export const mwebIndigoTheme: Theme = {
       'padding': `0`,
       'list-style': `none`,
       'margin-bottom': `1rem`,
-      'margin-left': `-1.3em`,
+      'margin-left': `-0.8em`,
       'display': `flex`,
       'flex-direction': `column`,
     },

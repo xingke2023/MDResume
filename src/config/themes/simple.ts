@@ -6,7 +6,10 @@ export const simpleTheme: Theme = toMerged(defaultTheme, {
   base: {
   },
   block: {
-    container: {},
+    container: {
+      'width': `100%`,
+      'margin': `0`,
+    },
     h1: {
       'padding': `0.5em 1em`,
       'font-size': `1.4em`,

@@ -7,16 +7,14 @@ export const mwebCleanTheme: Theme = {
     'background': `#fff`,
     '-webkit-text-size-adjust': `100%`,
     'text-rendering': `optimizeLegibility`,
-    'font': `300 1em/1.8 PingFang SC, Lantinghei SC, Microsoft Yahei, Hiragino Sans GB, Microsoft Sans Serif, WenQuanYi Micro Hei, sans-serif`,
+    'font': `400 1em/1.8 PingFang SC, Lantinghei SC, Microsoft Yahei, Hiragino Sans GB, Microsoft Sans Serif, WenQuanYi Micro Hei, sans-serif`,
     'text-align': `justify`,
   },
   block: {
     container: {
-      'min-width': `200px`,
-      'max-width': `760px`,
-      'margin': `0 auto`,
-      'padding': `1rem`,
-      'font-size': `1.3rem`,
+      'font': `400 1em/1.8 PingFang SC, Lantinghei SC, Microsoft Yahei, Hiragino Sans GB, Microsoft Sans Serif, WenQuanYi Micro Hei, sans-serif`,
+      'width': `100%`,
+      'margin': `0`,
     },
 
     // 重置所有元素的 margin 和 padding
@@ -92,8 +90,9 @@ export const mwebCleanTheme: Theme = {
       'margin': `0`,
       'padding': `0`,
       'margin-bottom': `1.2em`,
-      'color': `#333`,
+      'color': `#000`,
       'text-align': `justify`,
+      'font-weight': `400`,
     },
 
     blockquote: {
@@ -162,7 +161,7 @@ export const mwebCleanTheme: Theme = {
       'flex-direction': `column`,
       'counter-reset': `list-counter`,
       'margin-bottom': `1.2em`,
-      'margin-left': `-1.7em`,
+      'margin-left': `-1.4em`,
     },
 
     ul: {
@@ -172,7 +171,7 @@ export const mwebCleanTheme: Theme = {
       'display': `flex`,
       'flex-direction': `column`,
       'margin-bottom': `1.2em`,
-      'margin-left': `-1.7em`,
+      'margin-left': `-1.4em`,
     },
 
     hr: {

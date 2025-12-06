@@ -7,7 +7,10 @@ export const defaultTheme: Theme = {
     'line-height': `1.75`,
   },
   block: {
-    container: {},
+    container: {
+      'width': `100%`,
+      'margin': `0`,
+    },
     // 一级标题
     h1: {
       'display': `table`,
