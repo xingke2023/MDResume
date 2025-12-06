@@ -44,71 +44,143 @@
         z-index: 99999;
         display: flex;
         flex-direction: column;
-        justify-content: center;
         align-items: center;
+        justify-content: center;
         width: 100vw;
         height: 100vh;
-        background: linear-gradient(135deg, #1f70c1 0%, #0f4c9e 100%);
+        background: linear-gradient(135deg, #1e293b 0%, #1e40af 50%, #312e81 100%);
         color: white;
         font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+        padding: 1rem;
       }
 
-      .loading::before {
-        content: '';
-        font-size: 2.5em;
+      /* 装饰性背景 */
+      .loading-bg-blur-1 {
+        position: fixed;
+        right: -10rem;
+        top: -10rem;
+        height: 31.25rem;
+        width: 31.25rem;
+        border-radius: 9999px;
+        background-color: rgb(59 130 246);
+        opacity: 0.2;
+        filter: blur(96px);
+        pointer-events: none;
+      }
+
+      .loading-bg-blur-2 {
+        position: fixed;
+        bottom: -10rem;
+        left: -10rem;
+        height: 31.25rem;
+        width: 31.25rem;
+        border-radius: 9999px;
+        background-color: rgb(99 102 241);
+        opacity: 0.2;
+        filter: blur(96px);
+        pointer-events: none;
+      }
+
+      .loading-bg-blur-3 {
+        position: fixed;
+        left: 50%;
+        top: 50%;
+        height: 31.25rem;
+        width: 31.25rem;
+        transform: translate(-50%, -50%);
+        border-radius: 9999px;
+        background-color: rgb(6 182 212);
+        opacity: 0.15;
+        filter: blur(96px);
+        pointer-events: none;
+      }
+
+      /* 语言切换按钮 */
+      .loading-lang-switcher {
+        position: fixed;
+        top: 1rem;
+        right: 1rem;
+        z-index: 100000;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+      }
+
+      .loading-lang-btn {
+        border-radius: 0.5rem;
+        padding: 0.375rem 0.75rem;
+        font-size: 0.875rem;
+        font-weight: 500;
+        transition: all 0.2s;
+        cursor: pointer;
+        border: none;
+      }
+
+      .loading-lang-btn.active {
+        background-color: white;
+        color: rgb(99 102 241);
+        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+      }
+
+      .loading-lang-btn:not(.active) {
+        background-color: rgba(255, 255, 255, 0.2);
+        color: white;
+      }
+
+      .loading-lang-btn:not(.active):hover {
+        background-color: rgba(255, 255, 255, 0.3);
+      }
+
+      /* 主要内容 */
+      .loading-content {
+        position: relative;
+        width: 100%;
+        max-width: 42rem;
+        text-align: center;
+        margin: 0 auto;
+      }
+
+      .loading-title {
+        margin-top: 10rem;
+        margin-bottom: 1.5rem;
+        margin-left: auto;
+        margin-right: auto;
+        font-size: 2.25rem;
         font-weight: 700;
-        margin-bottom: 40px;
-        color: rgba(255, 255, 255, 0.9);
-        text-shadow: 0 4px 8px rgba(0, 0, 0, 0.4);
-        animation: logoFloat 3s ease-in-out infinite;
-      }
-
-      .loading.dark {
-        background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
-        color: #ffffff;
-      }
-
-      .main-title {
-        font-size: 5em;
-        font-weight: 900;
-        margin-bottom: 30px;
+        letter-spacing: -0.025em;
+        color: white;
         text-align: center;
-        background: linear-gradient(45deg, #fff, #f0f0f0);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        background-clip: text;
-        text-shadow: 0 6px 12px rgba(0, 0, 0, 0.4);
-        animation: titlePulse 2s ease-in-out infinite alternate;
-        letter-spacing: 0.1em;
+        text-shadow: 0 4px 12px rgba(0, 0, 0, 0.6), 0 8px 24px rgba(0, 0, 0, 0.4);
       }
 
-      .sub-title {
-        font-size: 1.8em;
-        font-weight: 600;
-        margin-bottom: 15px;
-        text-align: center;
-        opacity: 0.95;
-        animation: slideInUp 1s ease-out 0.5s both;
+      .loading-subtitle {
+        margin-top: 0;
+        margin-bottom: 0;
+        font-size: 1.125rem;
+        line-height: 1.625;
+        color: rgba(255, 255, 255, 0.7);
       }
 
-      .feature-line {
-        font-size: 1.4em;
+      .loading-features {
+        margin-top: 0;
+        margin-bottom: 3rem;
+        font-size: 1.125rem;
+        line-height: 1.625;
+        color: rgba(255, 255, 255, 0.7);
+      }
+
+      /* Loading 文字 */
+      .loading-text {
+        position: fixed;
+        bottom: 20%;
+        left: 50%;
+        transform: translateX(-50%);
+        font-size: 1.2rem;
         font-weight: 500;
-        margin-bottom: 10px;
-        text-align: center;
-        opacity: 0.9;
-        animation: slideInUp 1s ease-out 1s both;
+        color: rgba(255, 255, 255, 0.8);
       }
 
-      .loading .txt {
-        position: absolute;
-        bottom: 15%;
-        font-size: 1.2em;
-        font-weight: 500;
-        opacity: 0.8;
-      }
-
-      .loading .txt::after {
+      .loading-dots::after {
         content: '...';
         animation: dots 1.5s steps(4, end) infinite;
       }
@@ -128,58 +200,46 @@
         }
       }
 
-      @keyframes logoFloat {
-        0%,
-        100% {
-          transform: translateY(0px);
-        }
-        50% {
-          transform: translateY(-10px);
-        }
+      /* 页脚 */
+      .loading-footer {
+        position: relative;
+        margin-top: 10rem;
+        padding: 1.5rem 0;
+        text-align: center;
       }
 
-      @keyframes titlePulse {
-        0% {
-          transform: scale(1);
-        }
-        100% {
-          transform: scale(1.05);
-        }
+      .loading-footer-company {
+        font-size: 0.875rem;
+        color: rgba(255, 255, 255, 0.7);
       }
 
-      @keyframes slideInUp {
-        from {
-          opacity: 0;
-          transform: translateY(30px);
-        }
-        to {
-          opacity: 1;
-          transform: translateY(0);
-        }
+      .loading-footer-slogan {
+        margin-top: 0.5rem;
+        font-size: 0.75rem;
+        color: rgba(255, 255, 255, 0.6);
       }
 
       /* 响应式设计 */
-      @media (max-width: 768px) {
-        .main-title {
-          font-size: 3.5em;
+      @media (min-width: 640px) {
+        .loading-title {
+          font-size: 3rem;
         }
-        .sub-title {
-          font-size: 1.4em;
+
+        .loading-subtitle,
+        .loading-features {
+          font-size: 1.25rem;
+          line-height: 1.75rem;
         }
-        .feature-line {
-          font-size: 1.1em;
+
+        .loading-lang-switcher {
+          top: 2rem;
+          right: 2rem;
         }
       }
 
-      @media (max-width: 480px) {
-        .main-title {
-          font-size: 2.8em;
-        }
-        .sub-title {
-          font-size: 1.2em;
-        }
-        .feature-line {
-          font-size: 1em;
+      @media (min-width: 768px) {
+        .loading-title {
+          font-size: 3.75rem;
         }
       }
     </style>
@@ -191,19 +251,87 @@
     </noscript>
     <div id="app">
       <div class="loading">
-        <div class="main-title">EasyWrite</div>
+        <!-- 语言切换 - 右上角 -->
+        <div class="loading-lang-switcher">
+          <button class="loading-lang-btn active" data-lang="zh-CN">简体</button>
+          <button class="loading-lang-btn" data-lang="zh-TW">繁體</button>
+          <button class="loading-lang-btn" data-lang="en">EN</button>
+        </div>
 
-        <div class="feature-line">最方便的公众号写作工具</div>
-        <div class="feature-line">Markdown编辑 · AI助手</div>
-        <div class="feature-line">一键排版 · 实时预览 · 快速发布</div>
-        <p class="txt">Loading...</p>
+        <!-- 装饰性背景 -->
+        <div class="loading-bg-blur-1"></div>
+        <div class="loading-bg-blur-2"></div>
+        <div class="loading-bg-blur-3"></div>
+
+        <!-- 主要内容 -->
+        <div class="loading-content">
+          <h1 class="loading-title" id="loading-title">公众号排版发文工具</h1>
+          <p class="loading-subtitle" id="loading-subtitle">香港保险经纪人工具系列</p>
+          <p class="loading-features" id="loading-features">AI辅助 · 一键排版 · 一键发布</p>
+        </div>
+
+        <!-- Loading 文字 -->
+        <p class="loading-text">Loading<span class="loading-dots"></span></p>
+
+        <!-- 页脚 -->
+        <footer class="loading-footer">
+          <p class="loading-footer-company" id="loading-footer-company">© 2025 Hongkong Macrodata Technology Limited</p>
+          <p class="loading-footer-slogan" id="loading-footer-slogan">简单、高效</p>
+        </footer>
       </div>
     </div>
     <script>
-      const theme = localStorage.getItem('vueuse-color-scheme')
-      if (theme === 'dark' || (theme === 'auto' && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
-        document.querySelector('.loading').classList.add('dark')
+      // 语言内容
+      const translations = {
+        'zh-CN': {
+          title: '公众号排版发文工具',
+          subtitle: '香港保险经纪人工具系列',
+          features: 'AI辅助 · 一键排版 · 一键发布',
+          footerCompany: '© 2025 Hongkong Macrodata Technology Limited',
+          footerSlogan: '简单、高效',
+        },
+        'zh-TW': {
+          title: '公眾號排版發文工具',
+          subtitle: '香港保險經紀人工具系列',
+          features: 'AI輔助 · 一鍵排版 · 一鍵發布',
+          footerCompany: '© 2025 Hongkong Macrodata Technology Limited',
+          footerSlogan: '簡單、高效',
+        },
+        'en': {
+          title: 'WeChat Article Publishing Tool',
+          subtitle: 'Hong Kong Insurance Broker Tool Suite',
+          features: 'AI Assisted · One-Click Formatting · One-Click Publishing',
+          footerCompany: '© 2025 Hongkong Macrodata Technology Limited',
+          footerSlogan: 'Simple, Efficient',
+        },
       }
+
+      // 切换语言
+      function switchLoadingLanguage(lang) {
+        const t = translations[lang]
+        document.getElementById('loading-title').textContent = t.title
+        document.getElementById('loading-subtitle').textContent = t.subtitle
+        document.getElementById('loading-features').textContent = t.features
+        document.getElementById('loading-footer-company').textContent = t.footerCompany
+        document.getElementById('loading-footer-slogan').textContent = t.footerSlogan
+
+        // 更新按钮状态
+        document.querySelectorAll('.loading-lang-btn').forEach(btn => {
+          if (btn.getAttribute('data-lang') === lang) {
+            btn.classList.add('active')
+          } else {
+            btn.classList.remove('active')
+          }
+        })
+      }
+
+      // 语言切换按钮点击事件
+      document.querySelectorAll('.loading-lang-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const lang = btn.getAttribute('data-lang')
+          switchLoadingLanguage(lang)
+        })
+      })
     </script>
     <script>
       window.MathJax = {

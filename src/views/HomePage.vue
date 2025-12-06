@@ -82,7 +82,7 @@ function switchLanguage(lang: Language) {
     <!-- 主要内容 -->
     <div class="relative mx-auto w-full max-w-2xl text-center">
       <!-- 标题 -->
-      <h1 class="mb-6 mt-40 text-4xl text-white font-bold tracking-tight sm:text-5xl md:text-6xl">
+      <h1 class="mb-6 mt-40 text-4xl text-white font-bold tracking-tight shadow-2xl sm:text-5xl md:text-6xl" style="text-shadow: 0 4px 12px rgba(0, 0, 0, 0.6), 0 8px 24px rgba(0, 0, 0, 0.4);">
         {{ t.title }}
       </h1>
 
@@ -96,7 +96,7 @@ function switchLanguage(lang: Language) {
 
       <!-- 开始按钮 -->
       <button
-        class="inline-flex items-center gap-2 border-2 border-white rounded-lg bg-white px-8 py-4 text-base text-gray-900 font-semibold transition-all duration-200 hover:bg-white/90 sm:text-lg"
+        class="inline-flex items-center gap-2 border-2 border-transparent rounded-lg bg-gradient-to-r from-amber-400 to-yellow-300 px-8 py-4 text-base text-gray-900 font-semibold shadow-lg transition-all duration-200 hover:shadow-xl hover:from-amber-300 hover:to-yellow-200 hover:scale-105 sm:text-lg"
         @click="goToEditor"
       >
         <svg class="h-5 w-5 sm:h-6 sm:w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
