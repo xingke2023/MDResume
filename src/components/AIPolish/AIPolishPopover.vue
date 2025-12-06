@@ -184,13 +184,26 @@ async function runAIAction() {
     'Content-Type': `application/json`,
   }
   if (apiKey.value && type.value !== `default`) {
-    headers.Authorization = `Bearer ${apiKey.value}`
+    // 对于 DeepSeek 使用星科代理的情况，使用 X-API-Key
+    if (type.value === `deepseek` && endpoint.value.includes(`xingke888.com`)) {
+      headers[`X-API-Key`] = apiKey.value
+    }
+    else {
+      headers.Authorization = `Bearer ${apiKey.value}`
+    }
   }
 
   try {
     const url = new URL(endpoint.value)
-    if (!url.pathname.endsWith(`/chat/completions`)) {
-      url.pathname = url.pathname.replace(/\/?$/, `/chat/completions`)
+    // 对于星科代理的 DeepSeek API，endpoint 已经包含完整路径
+    if (!(type.value === `deepseek` && endpoint.value.includes(`xingke888.com`))) {
+      if (!url.pathname.endsWith(`/chat/completions`))
+        url.pathname = url.pathname.replace(/\/?$/, `/chat/completions`)
+    }
+    else {
+      // 星科代理需要添加 /chat 路径
+      if (!url.pathname.endsWith(`/chat`))
+        url.pathname = url.pathname.replace(/\/?$/, `/chat`)
     }
 
     const res = await window.fetch(url.toString(), {

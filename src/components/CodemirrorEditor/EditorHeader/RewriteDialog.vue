@@ -97,8 +97,15 @@ ${content}
 
     // 构建正确的API URL
     const url = new URL(endpoint)
-    if (!url.pathname.endsWith(`/chat/completions`)) {
-      url.pathname = url.pathname.replace(/\/?$/, `/chat/completions`)
+    // 对于星科代理的 DeepSeek API，endpoint 已经包含完整路径
+    if (!(type === `deepseek` && endpoint.includes(`xingke888.com`))) {
+      if (!url.pathname.endsWith(`/chat/completions`))
+        url.pathname = url.pathname.replace(/\/?$/, `/chat/completions`)
+    }
+    else {
+      // 星科代理需要添加 /chat 路径
+      if (!url.pathname.endsWith(`/chat`))
+        url.pathname = url.pathname.replace(/\/?$/, `/chat`)
     }
 
     const headers: Record<string, string> = {
@@ -107,7 +114,13 @@ ${content}
 
     // 只有非默认服务才需要API密钥
     if (apiKey && type !== `default`) {
-      headers.Authorization = `Bearer ${apiKey}`
+      // 对于 DeepSeek 使用星科代理的情况，使用 X-API-Key
+      if (type === `deepseek` && endpoint.includes(`xingke888.com`)) {
+        headers[`X-API-Key`] = apiKey
+      }
+      else {
+        headers.Authorization = `Bearer ${apiKey}`
+      }
     }
 
     const response = await fetch(url.toString(), {
@@ -120,7 +133,7 @@ ${content}
           { role: `user`, content: userPrompt },
         ],
         temperature: temperature || 0.7,
-        max_tokens: aiConfigStore.maxToken || 4000,
+        max_tokens: aiConfigStore.maxToken || 8192,
         stream: false,
       }),
     })
@@ -132,7 +145,21 @@ ${content}
     }
 
     const data = await response.json()
-    const rewrittenContent = data.choices?.[0]?.message?.content
+    let rewrittenContent = ``
+
+    // 处理星科代理的包装格式
+    if (type === `deepseek` && endpoint.includes(`xingke888.com`)) {
+      if (data.success && data.data) {
+        rewrittenContent = data.data.message || data.data.raw?.choices?.[0]?.message?.content || ``
+      }
+      else {
+        throw new Error(data.message || `API 调用失败`)
+      }
+    }
+    else {
+      // 标准 OpenAI 格式
+      rewrittenContent = data.choices?.[0]?.message?.content || ``
+    }
 
     if (!rewrittenContent) {
       console.error(`AI响应数据:`, data)

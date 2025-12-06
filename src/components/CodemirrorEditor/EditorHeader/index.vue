@@ -174,7 +174,7 @@ function insertIndent() {
     return
   const editorInstance = toRaw(editor.value)
   const cursor = editorInstance.getCursor()
-  editorInstance.replaceRange(`　　`, cursor) // 两个全角空格
+  editorInstance.replaceRange(`\u3000\u3000`, cursor) // 两个全角空格
   editorInstance.setCursor({ line: cursor.line, ch: cursor.ch + 2 })
   setTimeout(() => editorInstance.focus(), 100)
 }
@@ -478,6 +478,7 @@ const copyMode = useStorage(addPrefix(`copyMode`), `txt`)
 const isBeautifying = ref(false)
 const beautifyDialogVisible = ref(false)
 const beautifyConfirmVisible = ref(false)
+const beautifyAbortController = ref<AbortController | null>(null)
 
 // 显示一键美化确认对话框
 function showBeautifyConfirm() {
@@ -493,59 +494,56 @@ function showBeautifyConfirm() {
   beautifyConfirmVisible.value = true
 }
 
-// 不同排版模式的 prompt
-const beautifyPrompts = {
-  simple: `你是一个 Markdown 格式优化专家。请将原文优化为良好的 Markdown 格式。
+// 停止一键美化
+function stopBeautifying() {
+  if (beautifyAbortController.value) {
+    beautifyAbortController.value.abort()
+    beautifyAbortController.value = null
+  }
+  isBeautifying.value = false
+  beautifyDialogVisible.value = false
+  toast.info(`已停止一键排版`)
+}
+
+// 排版 prompt
+const beautifyPrompt = `你是一个 Markdown 格式优化专家。请将原文优化为良好的 Markdown 格式，注意标题的层次关系合理使用h2 h3 h4 h5。
 
 【重要规则】
 - 严禁修改、增加、删除、改写原文的任何文字内容
 - 只能添加修改 Markdown 格式标记（#、**、空行等）
 - 段落间要有空行，内容分段落空一行
-- 标题统一使用 H4（#### ），不使用其他级别的标题
+- 标题使用 H2 H3 H4 H5，不使用H1
 - 不要使用无序列表和有序列表
 
-【格式要求】
-1. 直接输出 Markdown 源码，不要包含 \`\`\`markdown 或任何代码块标记
-2. 确保输出符合标准 Markdown 语法`,
+【样式控制重要说明】
+如果用户提出了样式要求（如字体大小、颜色、间距、对齐等），使用 HTML 时必须注意：
 
-  standard: `你是一个 Markdown 格式优化专家。请将原文优化为良好的 Markdown 格式。
+⚠️ 关键：Markdown 格式标记（如 #、**、- 等）在 HTML 标签内部会失效！
 
-【重要规则】
-- 严禁修改、增加、删除、改写原文的任何文字内容
-- 严禁调整原文的语序、用词、语气
-- 只能添加 Markdown 格式标记（#、**、*、>、空行等）
-- 原文是什么就输出什么，一字不改
+正确做法：
+1. 将 HTML style 属性直接添加到 Markdown 标题标记上（不要用 div 包裹）
+   例如：<h2 style="color: #2196F3; font-size: 20px;">标题内容</h2>
 
-【格式要求】
-1. 直接输出 Markdown 源码，不要包含 \`\`\`markdown 或任何代码块标记
-2. 根据内容智能分段并合理设置各级标题（使用h3 h4 h5 不使用h1 h2）
-3. 适当使用引用、粗体、斜体等格式标记
-4. 不要使用无序列表和有序列表
-5. 内容分段落空一行
-6. 只优化 Markdown 格式，不修改任何文字内容
-7. 确保输出符合标准 Markdown 语法`,
+2. 对于段落文本，可以使用 <p style=""> 或 <div style="">，但内部不能有 Markdown 标记
+   例如：<div style="font-size: 16px; color: #333;">这是纯文本段落</div>
 
-  professional: `你是一个 Markdown 格式优化专家。请将原文优化为专业级的 Markdown 格式。
+3. 如果要保持 Markdown 格式化（如加粗 **text**），不要用 div 包裹，而是用 HTML 标签
+   例如：<span style="color: red;">**加粗的红色文字**</span>
 
-【重要规则】
-- 严禁修改、增加、删除、改写原文的任何文字内容
-- 严禁调整原文的语序、用词、语气
-- 只能添加 Markdown 格式标记（#、**、*、>、-、---、空行等）
-- 原文是什么就输出什么，一字不改
+4. 对于整篇文章样式，在最外层用一个 div 包裹所有内容
+   例如：<div style="line-height: 1.8; font-size: 16px;">
+         ## 标题
+         内容段落
+         </div>
 
 【格式要求】
 1. 直接输出 Markdown 源码，不要包含 \`\`\`markdown 或任何代码块标记
-2. 深度分析内容结构，设置清晰的标题层级（使用h3 h4 h5 不使用h1 h2）
-3. 充分使用 Markdown 格式：引用、粗体、斜体、代码块等标记
-4. 合理使用列表（有序列表、无序列表）组织要点
-5. 优化段落结构，确保逻辑清晰，内容分段落空一行
-6. 添加适当的分隔线增强可读性
-7. 只做深度 Markdown 格式优化，不修改任何文字内容
-8. 确保输出符合标准 Markdown 语法，适合正式发布`,
-}
+2. 确保输出符合标准 Markdown 语法
+3. 如有自定义样式要求，正确使用 HTML 标签和 style 属性，避免破坏 Markdown 格式
+4. 样式应该符合微信公众号文章的规范`
 
 // 一键美化功能
-async function beautifyMarkdown(mode: string = `simple`, customRequirement: string = ``) {
+async function beautifyMarkdown(_mode: string = `simple`, customRequirement: string = ``) {
   beautifyConfirmVisible.value = false
 
   if (!editor.value || isBeautifying.value)
@@ -559,6 +557,9 @@ async function beautifyMarkdown(mode: string = `simple`, customRequirement: stri
 
   isBeautifying.value = true
   beautifyDialogVisible.value = true
+
+  // 创建 AbortController 用于取消请求
+  beautifyAbortController.value = new AbortController()
 
   try {
     const { apiKey, model, endpoint, temperature, type } = aiConfigStore
@@ -583,8 +584,8 @@ async function beautifyMarkdown(mode: string = `simple`, customRequirement: stri
       return
     }
 
-    // 根据模式选择对应的 prompt
-    let systemPrompt = beautifyPrompts[mode as keyof typeof beautifyPrompts] || beautifyPrompts.simple
+    // 使用统一的排版 prompt
+    let systemPrompt = beautifyPrompt
 
     // 如果有自定义要求，添加到 prompt 中
     if (customRequirement && customRequirement.trim()) {
@@ -597,8 +598,15 @@ ${content}`
 
     // 构建正确的API URL，匹配现有AI功能的模式
     const url = new URL(endpoint)
-    if (!url.pathname.endsWith(`/chat/completions`)) {
-      url.pathname = url.pathname.replace(/\/?$/, `/chat/completions`)
+    // 对于星科代理的 DeepSeek API，endpoint 已经包含完整路径
+    if (!(type === `deepseek` && endpoint.includes(`xingke888.com`))) {
+      if (!url.pathname.endsWith(`/chat/completions`))
+        url.pathname = url.pathname.replace(/\/?$/, `/chat/completions`)
+    }
+    else {
+      // 星科代理需要添加 /chat 路径
+      if (!url.pathname.endsWith(`/chat`))
+        url.pathname = url.pathname.replace(/\/?$/, `/chat`)
     }
 
     const headers: Record<string, string> = {
@@ -607,7 +615,13 @@ ${content}`
 
     // 只有非默认服务才需要API密钥
     if (apiKey && aiConfigStore.type !== `default`) {
-      headers.Authorization = `Bearer ${apiKey}`
+      // 对于 DeepSeek 使用星科代理的情况，使用 X-API-Key
+      if (type === `deepseek` && endpoint.includes(`xingke888.com`)) {
+        headers[`X-API-Key`] = apiKey
+      }
+      else {
+        headers.Authorization = `Bearer ${apiKey}`
+      }
     }
 
     const response = await fetch(url.toString(), {
@@ -620,30 +634,84 @@ ${content}`
           { role: `user`, content: userPrompt },
         ],
         temperature: temperature || 0.3,
-        max_tokens: aiConfigStore.maxToken || 4000,
-        stream: false,
+        max_tokens: aiConfigStore.maxToken || 8192,
+        stream: true,
       }),
+      signal: beautifyAbortController.value.signal,
     })
 
-    if (!response.ok) {
+    if (!response.ok || !response.body) {
       const errorText = await response.text()
       console.error(`AI接口错误详情:`, errorText)
       throw new Error(`AI 接口请求失败 (${response.status}): ${response.statusText}`)
     }
 
-    const data = await response.json()
-    const beautifiedContent = data.choices?.[0]?.message?.content
+    // 流式响应处理
+    const reader = response.body.getReader()
+    const decoder = new TextDecoder(`utf-8`)
+    let buffer = ``
+    let beautifiedContent = ``
+    let lastUpdateTime = 0
+    const UPDATE_INTERVAL = 100 // 每100ms更新一次
+
+    while (true) {
+      const { value, done } = await reader.read()
+      if (done) {
+        // 流结束时做最后一次更新
+        if (beautifiedContent) {
+          const cm = toRaw(editor.value)
+          cm.setValue(beautifiedContent)
+          // 滚动到底部
+          const lastLine = cm.lineCount() - 1
+          cm.scrollIntoView({ line: lastLine, ch: 0 }, 100)
+        }
+        break
+      }
+
+      buffer += decoder.decode(value, { stream: true })
+      const lines = buffer.split(`\n`)
+      buffer = lines.pop() || ``
+
+      for (const line of lines) {
+        if (!line.trim() || line.trim() === `data: [DONE]` || line.trim() === `data:[DONE]`)
+          continue
+        try {
+          const json = JSON.parse(line.replace(/^data:\s*/, ``))
+          const delta = json.choices?.[0]?.delta?.content || ``
+          if (delta) {
+            beautifiedContent += delta
+
+            // 使用节流更新编辑器，避免更新过于频繁
+            const now = Date.now()
+            if (now - lastUpdateTime >= UPDATE_INTERVAL) {
+              const cm = toRaw(editor.value)
+              cm.setValue(beautifiedContent)
+              // 自动滚动到底部，让用户看到实时生成的内容
+              const lastLine = cm.lineCount() - 1
+              cm.scrollIntoView({ line: lastLine, ch: 0 }, 100)
+              lastUpdateTime = now
+            }
+          }
+        }
+        catch (e) {
+          console.error(`解析失败:`, e)
+        }
+      }
+    }
 
     if (!beautifiedContent) {
-      console.error(`AI响应数据:`, data)
       throw new Error(`AI 返回内容为空，请检查API配置`)
     }
 
-    // 替换编辑器内容
-    toRaw(editor.value).setValue(beautifiedContent)
     toast.success(`一键美化完成！内容已自动格式化`)
   }
   catch (error) {
+    // 如果是用户主动中止，不显示错误
+    if (error instanceof Error && error.name === `AbortError`) {
+      console.log(`一键排版已被用户中止`)
+      return
+    }
+
     console.error(`一键美化失败:`, error)
 
     // 提供更友好的错误提示
@@ -673,6 +741,7 @@ ${content}`
   finally {
     isBeautifying.value = false
     beautifyDialogVisible.value = false
+    beautifyAbortController.value = null
   }
 }
 
@@ -1344,13 +1413,13 @@ function handleMobileEditButtonClick() {
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="start" class="py-2">
-            <DropdownMenuItem class="py-3 text-base" @click="showRewriteDialog()">
-              <Wand2 class="mr-2 size-5" />
-              全文一键改写
-            </DropdownMenuItem>
             <DropdownMenuItem :disabled="isBeautifying" class="py-3 text-base" @click="showBeautifyConfirm()">
               <Sparkles class="mr-2 size-5" />
               {{ isBeautifying ? '美化中...' : '全文一键排版' }}
+            </DropdownMenuItem>
+            <DropdownMenuItem class="py-3 text-base" @click="showRewriteDialog()">
+              <Wand2 class="mr-2 size-5" />
+              全文改写
             </DropdownMenuItem>
             <DropdownMenuItem class="py-3 text-base" @click="showFetchDialog()">
               <Wrench class="mr-2 size-5" />
@@ -1716,6 +1785,7 @@ function handleMobileEditButtonClick() {
     v-model:confirm-visible="beautifyConfirmVisible"
     v-model:loading-visible="beautifyDialogVisible"
     @confirm="beautifyMarkdown"
+    @stop="stopBeautifying"
   />
 
   <!-- 抓取工具对话框 -->

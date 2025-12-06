@@ -46,7 +46,7 @@ export const serviceOptions: ServiceOption[] = [
   {
     value: `deepseek`,
     label: `DeepSeek`,
-    endpoint: `https://api.deepseek.com/v1`,
+    endpoint: `https://api.xingke888.com/api/deepseek`,
     models: [`deepseek-chat`, `deepseek-reasoner`],
   },
   {
