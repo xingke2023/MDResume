@@ -506,13 +506,13 @@ function stopBeautifying() {
 }
 
 // 排版 prompt
-const beautifyPrompt = `你是一个 Markdown 格式优化专家。请将原文优化为良好的 Markdown 格式，注意标题的层次关系合理使用h2 h3 h4 h5。
+const beautifyPrompt = `你是一个 Markdown 格式优化专家。请将原文优化为良好的 Markdown 格式，注意标题的层次关系，合理使用h2 h3 h4 h5。
 
 【重要规则】
 - 严禁修改、增加、删除、改写原文的任何文字内容
 - 只能添加修改 Markdown 格式标记（#、**、空行等）
 - 段落间要有空行，内容分段落空一行
-- 标题使用 H2 H3 H4 H5，不使用H1
+- 标题使用 H2 H3 H4 H5，只有第一行才会使用H1，或者不使用H1
 - 不要使用无序列表和有序列表
 
 【样式控制重要说明】
