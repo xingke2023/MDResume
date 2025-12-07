@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { useStorage } from '@vueuse/core'
-import { ArrowUpNarrowWide, ChevronsDownUp, ChevronsUpDown, PlusSquare, X } from 'lucide-vue-next'
+import { ArrowUpNarrowWide, ChevronsDownUp, ChevronsUpDown, FileText, PlusSquare, X } from 'lucide-vue-next'
 import { computed, nextTick, onMounted, onUnmounted, ref, toRaw, watch } from 'vue'
 import { toast } from 'vue-sonner'
 import { useStore } from '@/stores'
@@ -142,10 +142,25 @@ function recoverHistory() {
   isOpenHistoryDialog.value = false
 }
 
+/* ============ 筛选笔记 ============ */
+const showNotesOnly = ref(false)
+
+function toggleNotesFilter() {
+  showNotesOnly.value = !showNotesOnly.value
+}
+
 /* ============ 排序 ============ */
 const sortMode = useStorage(addPrefix(`sort_mode`), `create-old-new`)
 const sortedPosts = computed(() => {
-  return [...store.posts].sort((a, b) => {
+  // 先筛选，再排序
+  let posts = [...store.posts]
+
+  // 如果开启了笔记筛选，只显示笔记
+  if (showNotesOnly.value) {
+    posts = posts.filter(p => p.parentId === store.NOTES_PARENT_ID)
+  }
+
+  return posts.sort((a, b) => {
     switch (sortMode.value) {
       case `A-Z`:
         return a.title.localeCompare(b.title)
@@ -263,6 +278,26 @@ function handleDragEnd() {
 
         <!-- 右侧：工具按钮组 -->
         <div class="flex items-center gap-2">
+          <!-- 笔记筛选按钮 -->
+          <TooltipProvider :delay-duration="200">
+            <Tooltip>
+              <TooltipTrigger as-child>
+                <Button
+                  variant="ghost"
+                  size="xs"
+                  class="h-max p-1"
+                  :class="{ 'bg-blue-100 dark:bg-blue-900': showNotesOnly }"
+                  @click="toggleNotesFilter"
+                >
+                  <FileText class="size-5" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent side="bottom">
+                {{ showNotesOnly ? '显示全部文章' : '只显示笔记' }}
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+
           <!-- 排序 -->
           <DropdownMenu :modal="true">
             <DropdownMenuTrigger>
@@ -343,8 +378,9 @@ function handleDragEnd() {
       <!-- 列表 -->
       <div class="space-y-1 flex-1 overflow-y-auto px-1">
         <!-- 包裹根文章和子文章，保持间距 -->
+        <!-- 如果显示笔记，显示所有笔记（parentId = notes-parent）；否则显示顶级文章（parentId = null） -->
         <PostItem
-          :parent-id="null"
+          :parent-id="showNotesOnly ? store.NOTES_PARENT_ID : null"
           :sorted-posts="sortedPosts"
           :start-rename-post="startRenamePost"
           :open-history-dialog="openHistoryDialog"
