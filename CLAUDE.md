@@ -102,6 +102,24 @@ The project includes browser extensions:
 5. Use `--md-primary-color` CSS variable for consistent theming
 6. Test theme across different content types (headers, lists, code blocks, etc.)
 
-```
+## Recent Updates
 
-```
+### Mobile Article Management (2025-12-07)
+
+Enhanced mobile user experience with improved article management features:
+
+**New Features:**
+- Added quick-access article management button in mobile header (Files icon)
+- Positioned to the left of the "Edit" button for easy thumb access
+- Opens the article management dialog (draft box) with one tap
+
+**Article Management Dialog Improvements:**
+- Added ESC key support to close the dialog
+- New expand/collapse all articles functionality
+- Improved animation effects for mobile devices
+- Optimized dialog layout and styling for better mobile UX
+
+**Key Files Modified:**
+- `src/components/CodemirrorEditor/EditorHeader/index.vue` - Mobile header button
+- `src/components/CodemirrorEditor/PostSlider/index.vue` - Dialog improvements
+- `src/components/CodemirrorEditor/PostSlider/PostItem.vue` - Individual post item enhancements
