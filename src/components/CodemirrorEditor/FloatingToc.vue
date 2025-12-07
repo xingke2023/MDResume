@@ -58,9 +58,9 @@ onBeforeUnmount(() => {
 <template>
   <div
     ref="tocRef"
-    class="bg-background absolute left-0 top-0 border rounded-2 rounded-lt-none p-2 text-sm shadow"
+    class="bg-background absolute left-0 top-0 border rounded-2 rounded-lt-none p-1.5 text-sm shadow"
   >
-    <List class="size-6 cursor-pointer" @click="toggleToc" />
+    <List class="size-5 cursor-pointer" @click="toggleToc" />
     <ul
       class="overflow-auto transition-all"
       :class="{
