@@ -50,7 +50,6 @@ const {
   legend,
   isMacCodeBlock,
   cssEditor,
-  isOpenPostSlider,
   isDark,
 } = storeToRefs(store)
 
