@@ -285,11 +285,12 @@ function handleDragEnd() {
                 <Button
                   variant="ghost"
                   size="xs"
-                  class="h-max p-1"
+                  class="h-max px-2 py-1 flex items-center gap-1"
                   :class="{ 'bg-blue-100 dark:bg-blue-900': showNotesOnly }"
                   @click="toggleNotesFilter"
                 >
-                  <FileText class="size-5" />
+                  <FileText class="size-4" />
+                  <span class="text-xs">笔记</span>
                 </Button>
               </TooltipTrigger>
               <TooltipContent side="bottom">
