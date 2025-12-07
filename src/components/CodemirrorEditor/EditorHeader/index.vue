@@ -8,7 +8,6 @@ import {
   ChartPie,
   Code,
   CreditCard,
-  FileText,
   FileX2,
   Files,
   Gem,
