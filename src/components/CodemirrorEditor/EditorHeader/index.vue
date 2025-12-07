@@ -1481,14 +1481,14 @@ function handleMobileEditButtonClick() {
           </DropdownMenuContent>
         </DropdownMenu>
 
-        <!-- 便笺按钮 -->
+        <!-- 灵感按钮 -->
         <Button
           variant="outline"
           class="sm:border-input sm:dark:border-input h-11 min-w-0 flex-1 border-gray-400 px-1 sm:h-10 dark:border-gray-600 sm:px-2 !text-sm sm:!text-base"
-          title="便笺"
+          title="灵感"
           @click="router.push('/notes')"
         >
-          便笺
+          灵感
         </Button>
 
         <!-- 主题选择 -->
