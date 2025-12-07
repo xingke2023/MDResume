@@ -53,6 +53,15 @@ const props = defineProps<{
 
 const store = useStore()
 
+// 点击文章切换并关闭对话框
+function handlePostClick(postId: string) {
+  store.currentPostId = postId
+  // 延迟关闭对话框，确保内容已加载
+  setTimeout(() => {
+    store.isOpenPostSlider = false
+  }, 100)
+}
+
 /* ============ 新增内容 ============ */
 const isOpenAddDialog = ref(false)
 const addPostInputVal = ref(``)
@@ -85,14 +94,37 @@ function isHasChild(postId: string) {
 </script>
 
 <template>
-  <div v-for="post in props.sortedPosts.filter(p => (props.parentId == null && p.parentId == null) || p.parentId === props.parentId)" :key="post.id">
-    <!-- 根文章外层容器 -->
+  <template v-for="post in props.sortedPosts.filter(p => (props.parentId == null && p.parentId == null) || p.parentId === props.parentId)" :key="post.id">
+  <div class="flex items-center gap-0">
+    <!-- 折叠展开图标 - 在背景外 -->
+    <div class="h-8 w-6 flex flex-shrink-0 items-center justify-center">
+      <Button
+        v-if="isHasChild(post.id)"
+        size="xs"
+        variant="ghost"
+        class="h-max p-0.5"
+        @click.stop="togglePostExpanded(post.id)"
+      >
+        <!-- 有子文章显示三角形 -->
+        <ChevronRight
+          class="size-4 transition-transform"
+          :class="{ 'rotate-90': !post.collapsed }"
+        />
+      </Button>
+      <!-- 无子文章显示圆点 -->
+      <div
+        v-else
+        class="size-1.5 rounded-full bg-gray-400 dark:bg-gray-500"
+      />
+    </div>
+
+    <!-- 文章外层容器 -->
     <a
-      class="hover:bg-primary hover:text-primary-foreground w-full inline-flex cursor-pointer items-center gap-1 rounded p-2 text-sm transition-colors"
+      class="hover:bg-blue-50 hover:text-blue-900 dark:hover:bg-blue-900/30 dark:hover:text-blue-100 w-full inline-flex cursor-pointer items-center gap-1 rounded p-2 text-base transition-colors"
       :class="{
-        'bg-primary text-primary-foreground shadow': store.currentPostId === post.id,
+        'bg-blue-100 text-blue-900 dark:bg-blue-900/50 dark:text-blue-100 shadow': store.currentPostId === post.id,
         'opacity-50': props.dragSourceId === post.id,
-        'outline-2 outline-dashed outline-primary  border-gray-200 bg-gray-400/50 dark:border-gray-200 dark:bg-gray-500/50':
+        'outline-2 outline-dashed outline-blue-400 border-gray-200 bg-gray-400/50 dark:border-gray-200 dark:bg-gray-500/50':
           props.dropTargetId === post.id,
       }"
       draggable="true"
@@ -101,38 +133,25 @@ function isHasChild(postId: string) {
       @drop.prevent="props.handleDrop(post.id)"
       @dragover.stop.prevent="props.setDropTargetId(post.id)"
       @dragleave.prevent="props.setDropTargetId(null)"
-      @click="store.currentPostId = post.id"
+      @click="handlePostClick(post.id)"
     >
-      <!-- 折叠展开图标 -->
-      <Button
-        size="xs"
-        variant="ghost"
-        class="h-max p-0.5"
-        :class="isHasChild(post.id) ? 'opacity-100' : 'opacity-0'"
-        @click.stop="isHasChild(post.id) && togglePostExpanded(post.id)"
-      >
-        <ChevronRight
-          class="size-4 transition-transform"
-          :class="{ 'rotate-90': !post.collapsed }"
-        />
-      </Button>
-
       <span class="line-clamp-1">{{ post.title }}</span>
 
       <!-- 每条文章操作 -->
-      <DropdownMenu>
+      <DropdownMenu :modal="true">
         <DropdownMenuTrigger as-child>
           <Button
             size="xs"
             variant="ghost"
             class="ml-auto h-max p-0.5"
+            @click.stop
           >
             <Ellipsis class="size-4" />
           </Button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent>
+        <DropdownMenuContent class="z-[120]" side="bottom" align="end">
           <DropdownMenuItem @click.stop="props.openAddPostDialog(post.id)">
-            <PlusSquare class="mr-2 size-4" /> 新增内容
+            <PlusSquare class="mr-2 size-4" /> 新增文章
           </DropdownMenuItem>
           <DropdownMenuItem @click.stop="props.startRenamePost(post.id)">
             <Edit3 class="mr-2 size-4" /> 重命名
@@ -149,25 +168,27 @@ function isHasChild(postId: string) {
         </DropdownMenuContent>
       </DropdownMenu>
     </a>
-
-    <div
-      v-if="isHasChild(post.id) && !post.collapsed"
-      class="space-y-1 ml-4 mt-1 border-l-2 border-gray-300 pl-1 dark:border-gray-700"
-    >
-      <PostItem
-        :parent-id="post.id"
-        :sorted-posts="props.sortedPosts"
-        :start-rename-post="props.startRenamePost"
-        :open-history-dialog="props.openHistoryDialog"
-        :start-del-post="props.startDelPost"
-        :drag-source-id="props.dragSourceId"
-        :set-drag-source-id="props.setDragSourceId"
-        :drop-target-id="props.dropTargetId"
-        :set-drop-target-id="props.setDropTargetId"
-        :handle-drag-end="props.handleDragEnd"
-        :handle-drop="props.handleDrop"
-        :open-add-post-dialog="props.openAddPostDialog"
-      />
-    </div>
   </div>
+
+  <!-- 子文章容器 - 独立在外层 -->
+  <div
+    v-if="isHasChild(post.id) && !post.collapsed"
+    class="space-y-1 ml-6 mt-1"
+  >
+    <PostItem
+      :parent-id="post.id"
+      :sorted-posts="props.sortedPosts"
+      :start-rename-post="props.startRenamePost"
+      :open-history-dialog="props.openHistoryDialog"
+      :start-del-post="props.startDelPost"
+      :drag-source-id="props.dragSourceId"
+      :set-drag-source-id="props.setDragSourceId"
+      :drop-target-id="props.dropTargetId"
+      :set-drop-target-id="props.setDropTargetId"
+      :handle-drag-end="props.handleDragEnd"
+      :handle-drop="props.handleDrop"
+      :open-add-post-dialog="props.openAddPostDialog"
+    />
+  </div>
+  </template>
 </template>
