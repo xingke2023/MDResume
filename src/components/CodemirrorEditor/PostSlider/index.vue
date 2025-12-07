@@ -286,7 +286,7 @@ function handleDragEnd() {
                   variant="ghost"
                   size="xs"
                   class="h-max px-2 py-1 flex items-center gap-1"
-                  :class="{ 'bg-blue-100 dark:bg-blue-900': showNotesOnly }"
+                  :class="showNotesOnly ? 'bg-blue-500 hover:bg-blue-600 text-white' : 'hover:bg-gray-100 dark:hover:bg-gray-700'"
                   @click="toggleNotesFilter"
                 >
                   <FileText class="size-4" />
