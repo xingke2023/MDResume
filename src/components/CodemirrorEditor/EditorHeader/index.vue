@@ -8,7 +8,9 @@ import {
   ChartPie,
   Code,
   CreditCard,
+  FileText,
   FileX2,
+  Files,
   Gem,
   Heading,
   ImagePlus,
@@ -1192,6 +1194,18 @@ function handleMobileEditButtonClick() {
     <div class="w-full flex items-center gap-1 sm:min-w-0 sm:flex-1 sm:gap-2">
       <!-- 左侧按钮组 - 占满剩余空间,所有按钮等宽 -->
       <div class="min-w-0 flex flex-1 items-center gap-1">
+        <!-- 移动端文章管理按钮 -->
+        <Button
+          v-if="isMobile"
+          variant="outline"
+          size="icon"
+          title="文章管理"
+          class="h-11 w-11 border-gray-400 dark:border-gray-600"
+          @click="store.isOpenPostSlider = true"
+        >
+          <Files class="size-5" />
+        </Button>
+
         <!-- 移动端工具栏切换 -->
         <Button
           v-if="isMobile"
