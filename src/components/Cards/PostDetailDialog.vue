@@ -281,12 +281,6 @@ function handleDelete() {
   emit(`close`)
 }
 
-// 处理调色板点击
-function handlePalette() {
-  // TODO: 实现调色板功能
-  console.log(`调色板功能待实现`)
-}
-
 // 处理标签按钮点击 - 打开标签选择器
 function handleTag() {
   isTagSelectorOpen.value = true

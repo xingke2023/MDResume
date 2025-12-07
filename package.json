@@ -55,6 +55,7 @@
     "marked": "^15.0.6",
     "mermaid": "^11.6.0",
     "node-fetch": "^3.3.2",
+    "openai": "^6.10.0",
     "pinia": "^3.0.1",
     "qiniu-js": "^3.4.2",
     "radix-vue": "^1.9.12",

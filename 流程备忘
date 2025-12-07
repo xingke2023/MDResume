@@ -1,0 +1,16 @@
+内容管理 /Users/mi/github/md/src/components/CodemirrorEditor/PostSlider/index.vue
+右上角的三横线菜单中
+/Users/mi/github/md/src/components/CodemirrorEditor/EditorHeader/StyleDropdown.vue
+在菜单中的"草稿箱"开关入口
+
+笔记页面的路由是 /notes，对应的组件是：/Users/mi/github/md/src/views/CardsView.vue
+
+在 notes 页面点击文章后，打开的详情对话框（PostDetailDialog）下部有以下几个按钮
+位置：/Users/mi/github/md/src/components/Cards/PostDetailDialog.vue
+
+PostSlider（文章管理）
+
+
+
+
+
