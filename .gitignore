@@ -66,3 +66,4 @@ CLAUDE.local.md
 # Backup files
 backup.zip
 *.zip
+.vercel
