@@ -1480,14 +1480,14 @@ function handleMobileEditButtonClick() {
           </DropdownMenuContent>
         </DropdownMenu>
 
-        <!-- 笔记按钮 -->
+        <!-- 便笺按钮 -->
         <Button
           variant="outline"
           class="sm:border-input sm:dark:border-input h-11 min-w-0 flex-1 border-gray-400 px-1 sm:h-10 dark:border-gray-600 sm:px-2 !text-sm sm:!text-base"
-          title="笔记"
+          title="便笺"
           @click="router.push('/notes')"
         >
-          笔记
+          便笺
         </Button>
 
         <!-- 主题选择 -->
