@@ -1,12 +1,19 @@
 <script setup lang="ts">
 import { useStorage } from '@vueuse/core'
-import { ArrowUpNarrowWide, ChevronsDownUp, ChevronsUpDown, FileText, PlusSquare, X } from 'lucide-vue-next'
+import { ArrowUpNarrowWide, ChevronsDownUp, ChevronsUpDown, FileText, Plus, X } from 'lucide-vue-next'
 import { computed, nextTick, onMounted, onUnmounted, ref, toRaw, watch } from 'vue'
 import { toast } from 'vue-sonner'
 import { useStore } from '@/stores'
 import { addPrefix } from '@/utils'
 
 const store = useStore()
+
+/* ============ 筛选笔记 ============ */
+const showNotesOnly = ref(false)
+
+function toggleNotesFilter() {
+  showNotesOnly.value = !showNotesOnly.value
+}
 
 // ESC 键关闭对话框
 function handleEscapeKey(event: KeyboardEvent) {
@@ -45,7 +52,8 @@ const addPostInputVal = ref(``)
 watch(isOpenAddDialog, (o) => {
   if (o) {
     addPostInputVal.value = ``
-    parentId.value = null
+    // 如果当前在灵感笔记筛选模式，设置 parentId 为 notes-parent
+    parentId.value = showNotesOnly.value ? store.NOTES_PARENT_ID : null
   }
 })
 
@@ -59,8 +67,6 @@ function openAddPostDialog(id: string) {
 function addPost() {
   if (!addPostInputVal.value.trim())
     return toast.error(`内容标题不可为空`)
-  if (store.posts.some((post: any) => post.title === addPostInputVal.value.trim()))
-    return toast.error(`内容标题已存在`)
   store.addPost(addPostInputVal.value.trim(), parentId.value)
   isOpenAddDialog.value = false
   toast.success(`内容新增成功`)
@@ -79,14 +85,6 @@ function startRenamePost(id: string) {
 function renamePost() {
   if (!renamePostInputVal.value.trim()) {
     return toast.error(`内容标题不可为空`)
-  }
-
-  if (
-    store.posts.some(
-      (post: any) => post.title === renamePostInputVal.value.trim() && post.id !== editId.value,
-    )
-  ) {
-    return toast.error(`内容标题已存在`)
   }
 
   if (renamePostInputVal.value === store.getPostById(editId.value!)?.title) {
@@ -140,13 +138,6 @@ function recoverHistory() {
   toRaw(store.editor!).setValue(content)
   toast.success(`记录恢复成功`)
   isOpenHistoryDialog.value = false
-}
-
-/* ============ 筛选笔记 ============ */
-const showNotesOnly = ref(false)
-
-function toggleNotesFilter() {
-  showNotesOnly.value = !showNotesOnly.value
 }
 
 /* ============ 排序 ============ */
@@ -253,13 +244,12 @@ function handleDragEnd() {
     >
       <!-- 顶部：新增 + 排序按钮 -->
       <div class="mb-4 flex shrink-0 items-center justify-between gap-3 px-2">
-        <!-- 左侧：新增按钮 - 显著位置 -->
+        <!-- 左侧：新增按钮 - 桌面端显示 -->
         <Dialog v-model:open="isOpenAddDialog">
           <DialogTrigger>
             <Button
-              class="from-blue-500 to-blue-600 bg-gradient-to-r hover:from-blue-600 hover:to-blue-700 h-8 flex items-center gap-2 border-0 px-3 py-1 text-white shadow-md transition-all hover:shadow-lg"
+              class="from-blue-500 to-blue-600 bg-gradient-to-r hover:from-blue-600 hover:to-blue-700 h-8 hidden sm:flex items-center gap-2 border-0 px-3 py-1 text-white shadow-md transition-all hover:shadow-lg"
             >
-              <PlusSquare class="size-4" />
               <span class="text-sm font-medium">新增文章</span>
             </Button>
           </DialogTrigger>
@@ -290,7 +280,7 @@ function handleDragEnd() {
                   @click="toggleNotesFilter"
                 >
                   <FileText class="size-4" />
-                  <span class="text-xs">笔记</span>
+                  <span class="text-xs">灵感笔记</span>
                 </Button>
               </TooltipTrigger>
               <TooltipContent side="bottom">
@@ -305,8 +295,9 @@ function handleDragEnd() {
               <TooltipProvider :delay-duration="200">
                 <Tooltip>
                   <TooltipTrigger as-child>
-                    <Button variant="ghost" size="xs" class="h-max p-1">
-                      <ArrowUpNarrowWide class="size-5" />
+                    <Button variant="ghost" size="xs" class="h-max px-2 py-1 flex items-center gap-1">
+                      <ArrowUpNarrowWide class="size-4" />
+                      <span class="text-xs">排序</span>
                     </Button>
                   </TooltipTrigger>
                   <TooltipContent side="bottom">
@@ -344,9 +335,10 @@ function handleDragEnd() {
           <TooltipProvider :delay-duration="200">
             <Tooltip>
               <TooltipTrigger as-child>
-                <Button variant="ghost" size="xs" class="h-max p-1" @click="toggleExpandAll">
-                  <ChevronsDownUp v-if="isAllExpanded" class="size-5" />
-                  <ChevronsUpDown v-else class="size-5" />
+                <Button variant="ghost" size="xs" class="h-max px-2 py-1 flex items-center gap-1" @click="toggleExpandAll">
+                  <ChevronsDownUp v-if="isAllExpanded" class="size-4" />
+                  <ChevronsUpDown v-else class="size-4" />
+                  <span class="text-xs">折叠</span>
                 </Button>
               </TooltipTrigger>
               <TooltipContent side="bottom">
@@ -486,6 +478,17 @@ function handleDragEnd() {
             </AlertDialog>
           </DialogFooter>
         </DialogContent>
+      </Dialog>
+
+      <!-- 手机端：右下角浮动新增按钮 -->
+      <Dialog v-model:open="isOpenAddDialog">
+        <DialogTrigger>
+          <Button
+            class="sm:hidden from-blue-500 to-blue-600 bg-gradient-to-r hover:from-blue-600 hover:to-blue-700 fixed bottom-6 right-6 z-[120] size-14 rounded-full border-0 p-0 text-white shadow-lg transition-all hover:shadow-xl"
+          >
+            <Plus class="size-6" />
+          </Button>
+        </DialogTrigger>
       </Dialog>
     </nav>
     </div>
