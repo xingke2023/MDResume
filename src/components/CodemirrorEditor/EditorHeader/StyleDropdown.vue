@@ -92,9 +92,6 @@ function openSettings() {
       <Menu class="size-5 sm:size-4" />
     </MenubarTrigger>
     <MenubarContent class="w-40 py-2" align="start">
-      <MenubarCheckboxItem class="py-2" :checked="isOpenPostSlider" @click="isOpenPostSlider = !isOpenPostSlider">
-        草稿箱
-      </MenubarCheckboxItem>
       <MenubarSub>
         <MenubarSubTrigger class="py-2" inset>
           导入导出
