@@ -242,8 +242,6 @@ export const mwebCleanTheme: Theme = {
       'font-weight': `bold`,
       'font-size': `inherit`,
       'color': `#000`,
-      'background-color': `#fffacd`,
-      'border-radius': `2px`,
     },
 
     em: {
