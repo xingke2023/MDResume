@@ -331,7 +331,7 @@ export async function exportWord(markdown: string, title = `untitled`) {
                   hanging: convertInchesToTwip(0.25),
                 },
               },
-              run: { font: { name: FONT }, size: SIZE - 4 },
+              run: { font: { name: FONT }, size: 10 },
             },
           })),
         },
