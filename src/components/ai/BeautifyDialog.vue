@@ -9,9 +9,13 @@ defineProps<{
 }>()
 
 const emit = defineEmits<{
+  // eslint-disable-next-line quotes
   'update:confirmVisible': [value: boolean]
+  // eslint-disable-next-line quotes
   'update:loadingVisible': [value: boolean]
+  // eslint-disable-next-line quotes
   'confirm': [mode: string, customRequirement: string]
+  // eslint-disable-next-line quotes
   'stop': []
 }>()
 
@@ -147,7 +151,7 @@ function handleConfirm() {
       </div>
 
       <!-- 底部提示和停止按钮 -->
-      <div class="mt-6 space-y-3 border-t border-gray-200 pt-4 dark:border-gray-700">
+      <div class="space-y-3 mt-6 border-t border-gray-200 pt-4 dark:border-gray-700">
         <p class="text-center text-xs text-gray-500 dark:text-gray-400">
           💡 美化完成后内容将自动替换到编辑器中
         </p>
@@ -155,7 +159,7 @@ function handleConfirm() {
         <div class="flex justify-center">
           <Button
             variant="outline"
-            class="border-red-200 text-red-600 hover:bg-red-50 dark:border-red-800 dark:text-red-400 dark:hover:bg-red-950/30"
+            class="border-red-200 text-red-600 dark:border-red-800 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-950/30"
             @click="emit('stop')"
           >
             <XCircle class="mr-2 h-4 w-4" />
