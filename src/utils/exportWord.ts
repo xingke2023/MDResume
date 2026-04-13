@@ -26,7 +26,7 @@ type InlineChild = TextRun | ExternalHyperlink
 // ─── 工具函数 ──────────────────────────────────────────────
 
 function run(text: string, opts: Record<string, unknown> = {}): TextRun {
-  return new TextRun({ text, font: { name: FONT }, size: SIZE, ...opts })
+  return new TextRun({ text, font: { name: FONT }, size: SIZE, color: `000000`, italics: false, ...opts })
 }
 
 function processInline(tokens: Token[], extra: Record<string, unknown> = {}): InlineChild[] {
@@ -51,7 +51,7 @@ function processInline(tokens: Token[], extra: Record<string, unknown> = {}): In
       }
       case `em`: {
         const t = tok as Tokens.Em
-        result.push(...processInline(t.tokens ?? [], { ...extra, italics: true }))
+        result.push(...processInline(t.tokens ?? [], extra))
         break
       }
       case `del`: {
@@ -65,6 +65,8 @@ function processInline(tokens: Token[], extra: Record<string, unknown> = {}): In
           text: t.text,
           font: { name: `Courier New` },
           size: SIZE,
+          color: `000000`,
+          italics: false,
           shading: { fill: `F0F0F0` },
         }))
         break
@@ -161,7 +163,7 @@ function buildBlockquote(tok: Tokens.Blockquote): Paragraph[] {
 function buildCodeBlock(tok: Tokens.Code): Paragraph[] {
   const lines = tok.text.split(`\n`)
   return lines.map((line, i) => new Paragraph({
-    children: [new TextRun({ text: line, font: { name: `Courier New` }, size: SIZE - 2 })],
+    children: [new TextRun({ text: line, font: { name: `Courier New` }, size: SIZE - 2, color: `000000`, italics: false })],
     spacing: {
       before: i === 0 ? 120 : 0,
       after: i === lines.length - 1 ? 120 : 0,
@@ -329,7 +331,7 @@ export async function exportWord(markdown: string, title = `untitled`) {
                   hanging: convertInchesToTwip(0.25),
                 },
               },
-              run: { font: { name: FONT }, size: SIZE, bold: true },
+              run: { font: { name: FONT }, size: SIZE - 4 },
             },
           })),
         },
