@@ -22,6 +22,7 @@ import {
   exportHTML,
   exportPDF,
   exportPureHTML,
+  exportWord,
   formatDoc,
   sanitizeTitle,
 } from '@/utils'
@@ -688,6 +689,12 @@ export const useStore = defineStore(`store`, () => {
     downloadMD(editor.value!.getValue(), posts.value[currentPostIndex.value].title)
   }
 
+  // 导出编辑器内容为 Word
+  const exportEditorContent2Word = async () => {
+    await exportWord(primaryColor.value, posts.value[currentPostIndex.value].title)
+    document.querySelector(`#output`)!.innerHTML = output.value
+  }
+
   // 导入默认文档
   const importDefaultContent = () => {
     toRaw(editor.value!).setValue(DEFAULT_CONTENT)
@@ -796,6 +803,7 @@ export const useStore = defineStore(`store`, () => {
     exportEditorContent2PureHTML,
     exportEditorContent2MD,
     exportEditorContent2PDF,
+    exportEditorContent2Word,
     downloadAsCardImage,
 
     importDefaultContent,

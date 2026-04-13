@@ -14,6 +14,7 @@ const store = useStore()
 const {
   exportEditorContent2PDF,
   exportEditorContent2HTML,
+  exportEditorContent2Word,
 } = store
 
 // 发布到小红书
@@ -59,6 +60,10 @@ function publishToZhihu() {
     <DropdownMenuItem class="py-3 text-base" @click="exportEditorContent2HTML()">
       <Code2 class="mr-2 size-5" />
       导出.html
+    </DropdownMenuItem>
+    <DropdownMenuItem class="py-3 text-base" @click="exportEditorContent2Word()">
+      <FileText class="mr-2 size-5" />
+      导出.docx(Word)
     </DropdownMenuItem>
   </DropdownMenuContent>
 </template>

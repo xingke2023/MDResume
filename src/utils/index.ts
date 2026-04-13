@@ -309,6 +309,27 @@ export function exportHTML(primaryColor: string, title: string = `untitled`) {
   downloadFile(fullHtml, `${sanitizeTitle(title)}.html`, `text/html`)
 }
 
+export async function exportWord(primaryColor: string, title: string = `untitled`) {
+  const { asBlob } = await import(`html-docx-js-typescript`)
+  const htmlStr = processHtmlContent(primaryColor)
+    .replace(/<ul(\s[^>]*)?>/g, `<div$1>`)
+    .replace(/<\/ul>/g, `</div>`)
+    .replace(/<ol(\s[^>]*)?>/g, `<div$1>`)
+    .replace(/<\/ol>/g, `</div>`)
+    .replace(/<li(\s[^>]*)?>/g, `<div$1>`)
+    .replace(/<\/li>/g, `</div>`)
+  const fullHtml = `<html><head><meta charset="utf-8" /></head><body><div style="width: 750px; margin: auto;">${htmlStr}</div></body></html>`
+  const blob = await asBlob(fullHtml) as Blob
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement(`a`)
+  a.href = url
+  a.download = `${sanitizeTitle(title)}.docx`
+  document.body.appendChild(a)
+  a.click()
+  document.body.removeChild(a)
+  URL.revokeObjectURL(url)
+}
+
 export async function exportPureHTML(raw: string, title: string = `untitled`) {
   const safeTitle = sanitizeTitle(title)
 
