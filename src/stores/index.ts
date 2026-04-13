@@ -22,10 +22,10 @@ import {
   exportHTML,
   exportPDF,
   exportPureHTML,
-  exportWord,
   formatDoc,
   sanitizeTitle,
 } from '@/utils'
+import { exportWord } from '@/utils/exportWord'
 import { css2json, customCssWithTemplate, customizeTheme, postProcessHtml, renderMarkdown } from '@/utils/'
 import { copyPlain } from '@/utils/clipboard'
 
@@ -691,8 +691,9 @@ export const useStore = defineStore(`store`, () => {
 
   // 导出编辑器内容为 Word
   const exportEditorContent2Word = async () => {
-    await exportWord(primaryColor.value, posts.value[currentPostIndex.value].title)
-    document.querySelector(`#output`)!.innerHTML = output.value
+    const markdown = editor.value!.getValue()
+    const title = posts.value[currentPostIndex.value].title
+    await exportWord(markdown, title)
   }
 
   // 导入默认文档
