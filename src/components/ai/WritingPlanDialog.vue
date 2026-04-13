@@ -7,6 +7,7 @@ defineProps<{
 }>()
 
 const emit = defineEmits<{
+  // eslint-disable-next-line quotes
   'update:visible': [value: boolean]
 }>()
 

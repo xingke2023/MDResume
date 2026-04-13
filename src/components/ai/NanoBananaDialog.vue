@@ -12,6 +12,7 @@ defineProps<{
 }>()
 
 const emit = defineEmits<{
+  // eslint-disable-next-line quotes
   'update:visible': [value: boolean]
 }>()
 
@@ -327,7 +328,7 @@ async function insertImageToEditor(imageUrl: string, imagePrompt: string) {
         <!-- 插入宽度百分比设置 -->
         <div>
           <div class="flex items-center gap-2">
-            <label class="text-sm text-gray-700 font-medium whitespace-nowrap dark:text-gray-300">
+            <label class="whitespace-nowrap text-sm text-gray-700 font-medium dark:text-gray-300">
               插入图片宽度 (%):
             </label>
             <Input

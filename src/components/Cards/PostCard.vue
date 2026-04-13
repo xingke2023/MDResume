@@ -15,6 +15,7 @@ const props = defineProps<{
 }>()
 
 const emit = defineEmits<{
+  // eslint-disable-next-line quotes
   'card-click': [postId: string]
 }>()
 
